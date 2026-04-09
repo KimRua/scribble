@@ -10,7 +10,7 @@ import type { Annotation, AutomationRule, Candle, NotificationItem, Strategy } f
 import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/utils/annotation';
 import { getState, updateState } from './services/fileStore';
 import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
-import { getAvailableMarkets, getMarketCandles, isRealMarketDataEnabled } from './services/marketDataService';
+import { getAvailableMarkets, getMarketCandles, getMarketSnapshot, isRealMarketDataEnabled } from './services/marketDataService';
 import { createId } from './utils/ids';
 import { sendError, sendSuccess } from './utils/response';
 
@@ -97,7 +97,7 @@ app.get('/api/v1/market-data/stream', async (request, response) => {
 
   const pushSnapshot = async () => {
     try {
-      const { candles, source } = await getMarketCandles(symbol, timeframe);
+      const { candles, source } = await getMarketSnapshot(symbol, timeframe);
       if (closed) {
         return;
       }
