@@ -40,6 +40,7 @@ API 기본 주소: `http://localhost:8787`
 - `MARKET_DATA_BASE_URL`: 기본값 `https://api.binance.com`
 - `MARKET_DATA_WS_BASE_URL`: 기본값 `wss://stream.binance.com:9443/ws`
 - `MARKET_STREAM_INTERVAL_MS`: 서버 SSE 푸시 주기(ms), 기본값 `5000`
+- `VITE_OPBNB_EXPLORER_BASE_URL`: 기본값 `https://opbnb-testnet.bscscan.com`, proof/tx 링크 생성에 사용
 - `ENABLE_ONCHAIN_PROOF`: `true`면 onchain proof 기록 시도
 - `OPENAI_API_KEY`: 실제 AI 분석 사용 시 필요
 - `OPENAI_MODEL`: 예: `gpt-4.1-mini`, `gpt-4o-mini` 등 JSON 응답 가능한 모델

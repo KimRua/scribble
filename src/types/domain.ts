@@ -157,6 +157,9 @@ export interface Execution {
   liquidityChain: 'bsc';
   executionChainTxHash: string;
   liquidityChainTxHash: string;
+  proofRecorded?: boolean;
+  proofRegistryId?: string | null;
+  proofContractAddress?: string | null;
   filledPrice?: number;
   filledAt?: string;
 }

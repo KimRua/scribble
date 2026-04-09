@@ -10,6 +10,8 @@ import {
   getAuditLogs,
   getCandles,
   getHealth,
+  getOpbnbAddressUrl,
+  getOpbnbTxUrl,
   getMarkets,
   getNotifications,
   previewExecution,
@@ -62,6 +64,7 @@ export function TradingPage() {
   const [lastExecution, setLastExecution] = useState<Execution | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [llmConfigured, setLlmConfigured] = useState(false);
+  const [onchainConfigured, setOnchainConfigured] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -94,6 +97,7 @@ export function TradingPage() {
 
       setConnectionStatus(health.ok ? 'connected' : 'disconnected');
       setLlmConfigured(health.llmConfigured);
+      setOnchainConfigured(health.onchainConfigured ?? false);
       setMarkets(nextMarkets);
       setCandles(nextCandles);
       setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
@@ -348,6 +352,9 @@ export function TradingPage() {
           liquidityChain: 'bsc',
           executionChainTxHash: result.execution_chain_tx_hash,
           liquidityChainTxHash: result.liquidity_chain_tx_hash,
+          proofRecorded: result.proof_recorded,
+          proofRegistryId: result.proof_registry_id,
+          proofContractAddress: result.proof_contract_address,
           filledPrice: selectedAnnotation.strategy.entryPrice,
           filledAt: new Date().toISOString()
         });
@@ -469,6 +476,7 @@ export function TradingPage() {
           parsingNotes={[
             ...parsingNotes,
             llmConfigured ? 'LLM 연동 준비됨' : 'LLM 키 미설정: fallback 분석 사용 중',
+            onchainConfigured ? 'opBNB proof 기록 준비됨' : 'opBNB proof 미설정: 로컬 실행 로그만 기록',
             saving ? '변경사항 저장 중' : '변경사항 자동 저장'
           ]}
           auditEvents={auditEvents}
@@ -488,6 +496,24 @@ export function TradingPage() {
         <div>
           <p className="eyebrow">Execution</p>
           <strong>{lastExecution ? `${lastExecution.status} · ${lastExecution.executionChain}` : '아직 실행 없음'}</strong>
+          {lastExecution ? (
+            <div className="status-meta">
+              <span className={`pill ${lastExecution.proofRecorded ? 'executed' : 'triggered'}`}>
+                {lastExecution.proofRecorded ? 'Proof recorded' : 'Proof pending'}
+              </span>
+              <div className="status-links">
+                <a href={getOpbnbTxUrl(lastExecution.executionChainTxHash)} target="_blank" rel="noreferrer">
+                  실행 Tx
+                </a>
+                {lastExecution.proofContractAddress ? (
+                  <a href={getOpbnbAddressUrl(lastExecution.proofContractAddress)} target="_blank" rel="noreferrer">
+                    Registry
+                  </a>
+                ) : null}
+              </div>
+              {lastExecution.proofRegistryId ? <small className="muted">{lastExecution.proofRegistryId.slice(0, 12)}…</small> : null}
+            </div>
+          ) : null}
         </div>
         <div>
           <p className="eyebrow">Automation</p>
@@ -512,6 +538,7 @@ export function TradingPage() {
         preview={executionPreview}
         validation={validation}
         mode={executionMode}
+        onchainConfigured={onchainConfigured}
         onClose={() => setExecutionModalOpen(false)}
         onConfirm={() => void confirmExecution()}
       />

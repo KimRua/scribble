@@ -7,6 +7,7 @@ interface ExecutionModalProps {
   preview: ExecutionPlan | null;
   validation: StrategyValidation | null;
   mode: 'execute' | 'conditional';
+  onchainConfigured: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -17,6 +18,7 @@ export function ExecutionModal({
   preview,
   validation,
   mode,
+  onchainConfigured,
   onClose,
   onConfirm
 }: ExecutionModalProps) {
@@ -68,6 +70,16 @@ export function ExecutionModal({
             {preview.guardrailCheck.passed
               ? '리스크 기준을 통과했습니다. 승인 후 실행할 수 있습니다.'
               : preview.guardrailCheck.violations.join(' / ')}
+          </p>
+        </div>
+        <div className="info-banner">
+          <strong>Onchain Proof</strong>
+          <p>
+            {mode === 'execute'
+              ? onchainConfigured
+                ? '승인 시 opBNB에 실행 proof 기록을 함께 시도합니다.'
+                : '현재 opBNB proof 설정이 없어 앱 내부 감사 로그만 기록합니다.'
+              : '조건부 주문은 체결 시점에 proof 기록 여부가 결정됩니다.'}
           </p>
         </div>
         <div className="modal-actions">

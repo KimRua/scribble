@@ -390,6 +390,14 @@ label span,
   border: 1px solid rgba(251, 191, 36, 0.18);
 }
 
+.info-banner {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  margin-top: 0.8rem;
+}
+
 .warning-box.compact {
   margin-top: 0.7rem;
 }
@@ -416,6 +424,27 @@ label span,
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 18px;
+}
+
+.status-meta {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.status-links {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.status-links a {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.status-links a:hover {
+  text-decoration: underline;
 }
 
 .bottom-action-bar {

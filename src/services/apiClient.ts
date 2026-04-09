@@ -1,6 +1,7 @@
 import type { Annotation, AuditEvent, AutomationRule, Candle, Execution, ExecutionPlan, MarketOption, NotificationItem, StrategyValidation } from '../types/domain';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787';
+const OPBNB_EXPLORER_BASE_URL = import.meta.env.VITE_OPBNB_EXPLORER_BASE_URL ?? 'https://opbnb-testnet.bscscan.com';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -33,7 +34,13 @@ function normalizeAnnotation(annotation: Annotation) {
 }
 
 export async function getHealth() {
-  return request<{ ok: boolean; llmConfigured: boolean; marketDataEnabled?: boolean; marketDataProvider?: 'binance' | 'mock' }>('/api/v1/health');
+  return request<{
+    ok: boolean;
+    llmConfigured: boolean;
+    marketDataEnabled?: boolean;
+    marketDataProvider?: 'binance' | 'mock';
+    onchainConfigured?: boolean;
+  }>('/api/v1/health');
 }
 
 export async function getMarkets() {
@@ -155,11 +162,27 @@ export async function previewExecution(strategyId: string) {
 }
 
 export async function createExecution(strategyId: string) {
-  const data = await request<{ execution_id: string; status: Execution['status']; execution_chain_tx_hash: string; liquidity_chain_tx_hash: string; }>(`/api/v1/executions`, {
+  const data = await request<{
+    execution_id: string;
+    status: Execution['status'];
+    execution_chain_tx_hash: string;
+    liquidity_chain_tx_hash: string;
+    proof_recorded: boolean;
+    proof_registry_id: string | null;
+    proof_contract_address: string | null;
+  }>(`/api/v1/executions`, {
     method: 'POST',
     body: JSON.stringify({ strategy_id: strategyId, mode: 'manual_confirmed' })
   });
   return data;
+}
+
+export function getOpbnbTxUrl(txHash: string) {
+  return `${OPBNB_EXPLORER_BASE_URL}/tx/${txHash}`;
+}
+
+export function getOpbnbAddressUrl(address: string) {
+  return `${OPBNB_EXPLORER_BASE_URL}/address/${address}`;
 }
 
 export async function createAutomation(strategyId: string, config: { maxPositionSizeRatio: number; maxLeverage: number; maxLossRatio: number; maxDailyExecutions: number; }) {
