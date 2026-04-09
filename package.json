@@ -9,12 +9,14 @@
     "dev:api": "tsx server/index.ts",
     "api": "tsx server/index.ts",
     "build": "tsc -b && vite build",
+    "deploy:registry": "tsx scripts/deployExecutionRegistry.ts",
     "preview": "vite preview",
     "test": "vitest run"
   },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
+    "ethers": "^6.16.0",
     "express": "^5.2.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

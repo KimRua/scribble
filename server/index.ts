@@ -11,6 +11,7 @@ import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/uti
 import { getState, updateState } from './services/fileStore';
 import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
 import { getAvailableMarkets, getMarketCandles, getMarketSnapshot, isRealMarketDataEnabled } from './services/marketDataService';
+import { getOnchainConfigStatus, recordOnchainExecution } from './services/onchainExecutionService';
 import { createId } from './utils/ids';
 import { sendError, sendSuccess } from './utils/response';
 
@@ -56,7 +57,8 @@ app.get('/api/v1/health', (_request, response) => {
     ok: true,
     llmConfigured: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL),
     marketDataEnabled: isRealMarketDataEnabled(),
-    marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock'
+    marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock',
+    onchainConfigured: getOnchainConfigStatus().ready
   });
 });
 
@@ -407,7 +409,7 @@ app.post('/api/v1/executions/preview', async (request, response) => {
   });
 });
 
-app.post('/api/v1/executions', (request, response) => {
+app.post('/api/v1/executions', async (request, response) => {
   const strategyId = String(request.body.strategy_id ?? '');
   const state = getState();
   const annotation = state.annotations.find((item) => item.strategy.strategyId === strategyId);
@@ -415,9 +417,16 @@ app.post('/api/v1/executions', (request, response) => {
     return sendError(response, 'NOT_FOUND', 'strategy not found');
   }
   const execution = executeStrategy(annotation.strategy);
+  const onchainReceipt = await recordOnchainExecution(annotation.strategy);
+  const persistedExecution = onchainReceipt.resultTxHash
+    ? {
+        ...execution,
+        executionChainTxHash: onchainReceipt.resultTxHash
+      }
+    : execution;
   updateState((current) => ({
     ...current,
-    executions: [execution, ...current.executions],
+    executions: [persistedExecution, ...current.executions],
     annotations: current.annotations.map((item) =>
       item.annotationId === annotation.annotationId
         ? { ...item, status: 'Executed', updatedAt: new Date().toISOString() }
@@ -433,12 +442,20 @@ app.post('/api/v1/executions', (request, response) => {
     createdAt: new Date().toISOString(),
     read: false
   });
-  appendAudit('execute_confirmed', 'execution', execution.executionId, { executionChain: 'opbnb', liquidityChain: 'bsc' });
+  appendAudit('execute_confirmed', 'execution', persistedExecution.executionId, {
+    executionChain: 'opbnb',
+    liquidityChain: 'bsc',
+    proofRecorded: Boolean(onchainReceipt.resultTxHash),
+    onchainReady: onchainReceipt.ready
+  });
   return sendSuccess(response, {
-    execution_id: execution.executionId,
-    status: execution.status,
-    execution_chain_tx_hash: execution.executionChainTxHash,
-    liquidity_chain_tx_hash: execution.liquidityChainTxHash
+    execution_id: persistedExecution.executionId,
+    status: persistedExecution.status,
+    execution_chain_tx_hash: persistedExecution.executionChainTxHash,
+    liquidity_chain_tx_hash: persistedExecution.liquidityChainTxHash,
+    proof_recorded: Boolean(onchainReceipt.resultTxHash),
+    proof_registry_id: onchainReceipt.registryId ?? null,
+    proof_contract_address: onchainReceipt.contractAddress ?? null
   });
 });
 

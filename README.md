@@ -10,6 +10,7 @@
 - AI 분석/주석 파싱의 `LLM 우선 + fallback` 구조
 - Binance REST + WebSocket 기반 실마켓 캔들/마켓 조회 + mock fallback
 - SSE 기반 실시간 시세 스트림 연결
+- `ethers` 기반 opBNB onchain proof 기록 경로
 - 실행 프리뷰 / 주문 실행 / 자동화 / 알림 / 감사 로그 API
 - opBNB proof 레이어 샘플 `ExecutionRegistry` 컨트랙트
 
@@ -39,6 +40,7 @@ API 기본 주소: `http://localhost:8787`
 - `MARKET_DATA_BASE_URL`: 기본값 `https://api.binance.com`
 - `MARKET_DATA_WS_BASE_URL`: 기본값 `wss://stream.binance.com:9443/ws`
 - `MARKET_STREAM_INTERVAL_MS`: 서버 SSE 푸시 주기(ms), 기본값 `5000`
+- `ENABLE_ONCHAIN_PROOF`: `true`면 onchain proof 기록 시도
 - `OPENAI_API_KEY`: 실제 AI 분석 사용 시 필요
 - `OPENAI_MODEL`: 예: `gpt-4.1-mini`, `gpt-4o-mini` 등 JSON 응답 가능한 모델
 
@@ -47,6 +49,7 @@ API 기본 주소: `http://localhost:8787`
 - `OPBNB_RPC_URL`
 - `BSC_RPC_URL`
 - `EXECUTOR_PRIVATE_KEY`
+- `EXECUTION_REGISTRY_ADDRESS`
 
 시장 데이터 provider가 실패하거나 비활성화되면 앱은 mock 시세로 계속 동작합니다.
 LLM 키가 없으면 앱은 fallback 분석기로 계속 동작합니다.
@@ -56,6 +59,12 @@ LLM 키가 없으면 앱은 fallback 분석기로 계속 동작합니다.
 ```zsh
 npm test
 npm run build
+```
+
+ExecutionRegistry 배포:
+
+```zsh
+npm run deploy:registry
 ```
 
 ## 주요 경로
@@ -70,7 +79,7 @@ npm run build
 
 - 가격 데이터는 Binance REST로 초기화되고, 이후 WebSocket으로 최신 캔들을 저지연 갱신합니다. 실패 시 데모용 생성 데이터로 fallback 합니다.
 - 웹 앱은 `/api/v1/market-data/stream` SSE를 통해 최신 시세를 자동 구독합니다.
-- 주문 실행은 실거래소/DEX에 연결되지 않았습니다.
+- 주문 실행은 여전히 mock 체결이지만, 설정이 있으면 opBNB `ExecutionRegistry`에 proof 트랜잭션을 기록합니다.
 - 온체인 기록은 컨트랙트 샘플과 ABI 검증까지 구현되어 있고, 실제 체인 송신은 다음 단계입니다.
 
 ## 다음 완성 단계
