@@ -6,12 +6,13 @@ import { buildSeedAnnotations, defaultUserSettings } from '../src/data/mockMarke
 import { createAuditEvent } from '../src/services/auditLogService';
 import { armAutomation, createExecutionPreview, executeStrategy } from '../src/services/executionService';
 import { validateStrategy } from '../src/utils/strategy';
-import type { Annotation, AutomationRule, Candle, Execution, NotificationItem, Strategy } from '../src/types/domain';
+import type { Annotation, AutomationRule, Candle, DelegatedAutomationPolicy, Execution, NotificationItem, Strategy } from '../src/types/domain';
 import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/utils/annotation';
 import { getState, updateState } from './services/fileStore';
 import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
 import { getAvailableMarkets, getMarketCandles, getMarketSnapshot, isRealMarketDataEnabled } from './services/marketDataService';
 import { executeDexSwap, getDexExecutionConfigStatus } from './services/dexExecutionService';
+import { getDelegatedAutomationConfigStatus } from './services/delegatedAutomationService';
 import { getOnchainConfigStatus, recordOnchainExecution } from './services/onchainExecutionService';
 import { createId } from './utils/ids';
 import { sendError, sendSuccess } from './utils/response';
@@ -60,7 +61,100 @@ app.get('/api/v1/health', (_request, response) => {
     marketDataEnabled: isRealMarketDataEnabled(),
     marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock',
     onchainConfigured: getOnchainConfigStatus().ready,
-    dexConfigured: getDexExecutionConfigStatus().ready
+    dexConfigured: getDexExecutionConfigStatus().ready,
+    delegatedAutomationConfigured: getDelegatedAutomationConfigStatus().ready,
+    delegatedExecutorAddress: getDelegatedAutomationConfigStatus().executorAddress,
+    delegationVaultAddress: getDelegatedAutomationConfigStatus().vaultAddress
+  });
+});
+
+app.get('/api/v1/delegations/config', (_request, response) => {
+  return sendSuccess(response, getDelegatedAutomationConfigStatus());
+});
+
+app.get('/api/v1/delegations', (request, response) => {
+  const ownerAddress = request.query.owner_address ? String(request.query.owner_address).toLowerCase() : null;
+  const strategyId = request.query.strategy_id ? String(request.query.strategy_id) : null;
+  const state = getState();
+  const policies = state.delegatedPolicies.filter((policy) => {
+    if (ownerAddress && policy.ownerAddress.toLowerCase() !== ownerAddress) {
+      return false;
+    }
+    if (strategyId && policy.strategyId !== strategyId) {
+      return false;
+    }
+    return true;
+  });
+
+  return sendSuccess(response, {
+    policies,
+    ...getDelegatedAutomationConfigStatus()
+  });
+});
+
+app.post('/api/v1/delegations', (request, response) => {
+  const bodySchema = z.object({
+    strategy_id: z.string().min(1),
+    owner_address: z.string().min(42),
+    market_symbol: z.string().min(1),
+    max_order_size_usd: z.number().positive(),
+    max_slippage_bps: z.number().int().min(1).max(1_000),
+    daily_loss_limit_usd: z.number().positive(),
+    valid_until: z.string().min(1),
+    approval_tx_hash: z.string().optional().nullable()
+  });
+
+  const parsedBody = bodySchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid delegation payload', parsedBody.error.flatten());
+  }
+
+  const data = parsedBody.data;
+  const state = getState();
+  const annotation = state.annotations.find((item) => item.strategy.strategyId === data.strategy_id);
+  if (!annotation) {
+    return sendError(response, 'NOT_FOUND', 'strategy not found');
+  }
+
+  const config = getDelegatedAutomationConfigStatus();
+  const now = new Date().toISOString();
+  const existing = state.delegatedPolicies.find(
+    (policy) => policy.strategyId === data.strategy_id && policy.ownerAddress.toLowerCase() === data.owner_address.toLowerCase()
+  );
+
+  const policy: DelegatedAutomationPolicy = {
+    policyId: existing?.policyId ?? createId('dlg'),
+    strategyId: data.strategy_id,
+    ownerAddress: data.owner_address,
+    delegateAddress: config.executorAddress ?? '0x0000000000000000000000000000000000000000',
+    marketSymbol: data.market_symbol,
+    status: data.approval_tx_hash ? 'active' : 'pending_approval',
+    maxOrderSizeUsd: data.max_order_size_usd,
+    maxSlippageBps: data.max_slippage_bps,
+    dailyLossLimitUsd: data.daily_loss_limit_usd,
+    validUntil: data.valid_until,
+    approvalTxHash: data.approval_tx_hash ?? null,
+    vaultAddress: config.vaultAddress,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now
+  };
+
+  updateState((current) => ({
+    ...current,
+    delegatedPolicies: [policy, ...current.delegatedPolicies.filter((item) => item.policyId !== policy.policyId)]
+  }));
+  appendAudit('automation_enabled', 'automation', policy.policyId, {
+    strategyId: policy.strategyId,
+    delegated: true,
+    maxOrderSizeUsd: policy.maxOrderSizeUsd,
+    maxSlippageBps: policy.maxSlippageBps
+  });
+
+  return sendSuccess(response, {
+    policy,
+    executor_address: config.executorAddress,
+    vault_address: config.vaultAddress,
+    ready: config.ready
   });
 });
 

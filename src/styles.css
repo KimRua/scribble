@@ -267,6 +267,10 @@ label span,
   border-radius: 16px;
 }
 
+.header-wallet-button {
+  min-width: 116px;
+}
+
 .header-field select {
   padding: 0.72rem 0.8rem;
   border-radius: 14px;
@@ -691,6 +695,10 @@ label span,
   margin-top: 0.6rem;
 }
 
+.form-span-2 {
+  grid-column: span 2;
+}
+
 .form-grid.compact {
   gap: 0.7rem;
 }
@@ -708,6 +716,32 @@ label span,
   background: #eef5ff;
   border: 1px solid rgba(49, 130, 246, 0.16);
   margin-top: 0.8rem;
+}
+
+.delegation-banner {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.delegation-banner p {
+  margin: 0;
+}
+
+.delegation-meta {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.delegation-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(49, 130, 246, 0.12);
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .warning-box.compact {

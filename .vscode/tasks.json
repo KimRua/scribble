@@ -53,6 +53,23 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "dev:web persistent",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:web",
+				"--",
+				"--host",
+				"127.0.0.1",
+				"--port",
+				"5173"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

@@ -16,6 +16,7 @@ export type OrderStatus =
   | 'Cancelled'
   | 'Failed';
 export type AutomationStatus = 'Disabled' | 'Armed' | 'Monitoring' | 'Triggered' | 'Executing' | 'Completed' | 'Halted';
+export type DelegationStatus = 'pending_approval' | 'active' | 'paused' | 'revoked' | 'expired';
 export type EntryType = 'market' | 'limit' | 'conditional';
 export type Bias = 'bullish' | 'bearish' | 'neutral';
 export type RiskLevel = 'conservative' | 'balanced' | 'aggressive';
@@ -177,6 +178,35 @@ export interface AutomationRule {
   maxLossRatio: number;
   maxDailyExecutions: number;
   stopConditions: string[];
+}
+
+export interface DelegatedAutomationPolicy {
+  policyId: string;
+  strategyId: string;
+  ownerAddress: string;
+  delegateAddress: string;
+  marketSymbol: string;
+  status: DelegationStatus;
+  maxOrderSizeUsd: number;
+  maxSlippageBps: number;
+  dailyLossLimitUsd: number;
+  validUntil: string;
+  approvalTxHash?: string | null;
+  vaultAddress?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DelegatedAutomationConfig {
+  ready: boolean;
+  executorAddress: string | null;
+  vaultAddress: string | null;
+  missing: string[];
+}
+
+export interface WalletSession {
+  address: string;
+  chainId: number;
 }
 
 export interface UserSettings {

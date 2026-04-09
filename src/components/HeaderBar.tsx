@@ -5,10 +5,13 @@ interface HeaderBarProps {
   timeframe: string;
   connectionStatus: 'connected' | 'disconnected';
   markets: MarketOption[];
+  walletAddress: string | null;
   onChangeSymbol: (symbol: string) => void;
   onChangeTimeframe: (timeframe: string) => void;
   onToggleNotifications: () => void;
   onToggleStrategies: () => void;
+  onConnectWallet: () => void;
+  onDisconnectWallet: () => void;
 }
 
 const timeframes = ['15m', '1h', '4h'];
@@ -19,10 +22,13 @@ export function HeaderBar(props: HeaderBarProps) {
     timeframe,
     connectionStatus,
     markets,
+    walletAddress,
     onChangeSymbol,
     onChangeTimeframe,
     onToggleNotifications,
-    onToggleStrategies
+    onToggleStrategies,
+    onConnectWallet,
+    onDisconnectWallet
   } = props;
 
   return (
@@ -66,6 +72,15 @@ export function HeaderBar(props: HeaderBarProps) {
           <div className={`status-badge ${connectionStatus}`}>
             {connectionStatus === 'connected' ? '연결됨' : '연결 끊김'}
           </div>
+          {walletAddress ? (
+            <button className="ghost-button header-wallet-button" onClick={onDisconnectWallet}>
+              {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
+            </button>
+          ) : (
+            <button className="secondary header-wallet-button" onClick={onConnectWallet}>
+              지갑 연결
+            </button>
+          )}
           <div className="header-shortcuts">
             <button className="ghost-button" onClick={onToggleNotifications}>
               알림

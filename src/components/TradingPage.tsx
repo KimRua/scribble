@@ -5,7 +5,10 @@ import {
   createAlert,
   createAnnotation,
   createAutomation,
+  createDelegationPolicy,
   createExecution,
+  getDelegationConfig,
+  getDelegationPolicies,
   getExecutions,
   getAnnotations,
   getAuditLogs,
@@ -19,10 +22,13 @@ import {
   subscribeMarketStream,
   updateAnnotation
 } from '../services/apiClient';
+import { connectInjectedWallet, getInjectedWalletSession } from '../services/walletService';
 import type {
   Annotation,
   AuditEvent,
   AutomationRule,
+  DelegatedAutomationConfig,
+  DelegatedAutomationPolicy,
   DrawingObject,
   DrawingMode,
   Execution,
@@ -30,7 +36,8 @@ import type {
   MarketOption,
   NotificationItem,
   Strategy,
-  StrategyValidation
+  StrategyValidation,
+  WalletSession
 } from '../types/domain';
 import { syncAnnotationWithStrategy } from '../utils/annotation';
 import { determineAnnotationStatus, validateStrategy } from '../utils/strategy';
@@ -56,6 +63,7 @@ export function TradingPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [automationByStrategyId, setAutomationByStrategyId] = useState<Record<string, AutomationRule>>({});
+  const [delegatedPolicyByStrategyId, setDelegatedPolicyByStrategyId] = useState<Record<string, DelegatedAutomationPolicy>>({});
   const [executionPreview, setExecutionPreview] = useState<ExecutionPlan | null>(null);
   const [executionMode, setExecutionMode] = useState<'execute' | 'conditional'>('execute');
   const [executionModalOpen, setExecutionModalOpen] = useState(false);
@@ -68,6 +76,13 @@ export function TradingPage() {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [llmConfigured, setLlmConfigured] = useState(false);
   const [onchainConfigured, setOnchainConfigured] = useState(false);
+  const [delegationConfig, setDelegationConfig] = useState<DelegatedAutomationConfig>({
+    ready: false,
+    executorAddress: null,
+    vaultAddress: null,
+    missing: []
+  });
+  const [walletSession, setWalletSession] = useState<WalletSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -102,6 +117,12 @@ export function TradingPage() {
       setConnectionStatus(health.ok ? 'connected' : 'disconnected');
       setLlmConfigured(health.llmConfigured);
       setOnchainConfigured(health.onchainConfigured ?? false);
+      setDelegationConfig({
+        ready: health.delegatedAutomationConfigured ?? false,
+        executorAddress: health.delegatedExecutorAddress ?? null,
+        vaultAddress: health.delegationVaultAddress ?? null,
+        missing: []
+      });
       setMarkets(nextMarkets);
       setCandles(nextCandles);
       setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
@@ -125,6 +146,27 @@ export function TradingPage() {
   useEffect(() => {
     void loadWorkspace();
   }, [selectedSymbol, timeframe]);
+
+  useEffect(() => {
+    void getInjectedWalletSession().then(setWalletSession).catch(() => undefined);
+    void getDelegationConfig().then(setDelegationConfig).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (!walletSession?.address) {
+      setDelegatedPolicyByStrategyId({});
+      return;
+    }
+
+    void getDelegationPolicies({ ownerAddress: walletSession.address })
+      .then((result) => {
+        setDelegationConfig(result.config);
+        setDelegatedPolicyByStrategyId(
+          Object.fromEntries(result.policies.map((policy) => [policy.strategyId, policy]))
+        );
+      })
+      .catch(() => undefined);
+  }, [walletSession?.address]);
 
   useEffect(() => {
     const unsubscribe = subscribeMarketStream(selectedSymbol, timeframe, {
@@ -389,13 +431,38 @@ export function TradingPage() {
     maxLeverage: number;
     maxLossRatio: number;
     maxDailyExecutions: number;
+    maxOrderSizeUsd: number;
+    maxSlippageBps: number;
+    dailyLossLimitUsd: number;
+    validUntil: string;
+    approvalTxHash?: string | null;
   }) => {
     if (!selectedAnnotation) {
       return;
     }
 
+    if (!walletSession?.address) {
+      setErrorMessage('자동거래 권한 위임을 위해 먼저 지갑을 연결해 주세요.');
+      return;
+    }
+
     try {
+      const delegation = await createDelegationPolicy({
+        strategyId: selectedAnnotation.strategy.strategyId,
+        ownerAddress: walletSession.address,
+        marketSymbol: selectedAnnotation.marketSymbol,
+        maxOrderSizeUsd: config.maxOrderSizeUsd,
+        maxSlippageBps: config.maxSlippageBps,
+        dailyLossLimitUsd: config.dailyLossLimitUsd,
+        validUntil: new Date(config.validUntil).toISOString(),
+        approvalTxHash: config.approvalTxHash ?? null
+      });
       const result = await createAutomation(selectedAnnotation.strategy.strategyId, config);
+      setDelegationConfig(delegation.config);
+      setDelegatedPolicyByStrategyId((prev) => ({
+        ...prev,
+        [selectedAnnotation.strategy.strategyId]: delegation.policy
+      }));
       setAutomationByStrategyId((prev) => ({
         ...prev,
         [selectedAnnotation.strategy.strategyId]: {
@@ -435,6 +502,19 @@ export function TradingPage() {
     advancePrice(selectedAnnotation.strategy.entryPrice);
   };
 
+  const handleConnectWallet = async () => {
+    try {
+      const session = await connectInjectedWallet();
+      setWalletSession(session);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '지갑 연결에 실패했습니다.');
+    }
+  };
+
+  const handleDisconnectWallet = () => {
+    setWalletSession(null);
+  };
+
   return (
     <div className="app-shell">
       <HeaderBar
@@ -442,10 +522,13 @@ export function TradingPage() {
         timeframe={timeframe}
         connectionStatus={connectionStatus}
         markets={markets}
+        walletAddress={walletSession?.address ?? null}
         onChangeSymbol={setSelectedSymbol}
         onChangeTimeframe={setTimeframe}
         onToggleNotifications={() => setNotificationsOpen((prev) => !prev)}
         onToggleStrategies={() => setStrategiesOpen((prev) => !prev)}
+        onConnectWallet={() => void handleConnectWallet()}
+        onDisconnectWallet={handleDisconnectWallet}
       />
 
       {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
@@ -617,7 +700,12 @@ export function TradingPage() {
         open={automationModalOpen}
         selectedAnnotation={selectedAnnotation}
         automation={selectedAnnotation ? automationByStrategyId[selectedAnnotation.strategy.strategyId] ?? null : null}
+        connectedWalletAddress={walletSession?.address ?? null}
+        delegatedPolicy={selectedAnnotation ? delegatedPolicyByStrategyId[selectedAnnotation.strategy.strategyId] ?? null : null}
+        executorAddress={delegationConfig.executorAddress}
+        vaultAddress={delegationConfig.vaultAddress}
         onClose={() => setAutomationModalOpen(false)}
+        onConnectWallet={() => void handleConnectWallet()}
         onSave={(config) => void handleSaveAutomation(config)}
       />
 

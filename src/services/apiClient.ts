@@ -1,4 +1,16 @@
-import type { Annotation, AuditEvent, AutomationRule, Candle, Execution, ExecutionPlan, MarketOption, NotificationItem, StrategyValidation } from '../types/domain';
+import type {
+  Annotation,
+  AuditEvent,
+  AutomationRule,
+  Candle,
+  DelegatedAutomationConfig,
+  DelegatedAutomationPolicy,
+  Execution,
+  ExecutionPlan,
+  MarketOption,
+  NotificationItem,
+  StrategyValidation
+} from '../types/domain';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787';
 const OPBNB_EXPLORER_BASE_URL = import.meta.env.VITE_OPBNB_EXPLORER_BASE_URL ?? 'https://opbnb-testnet.bscscan.com';
@@ -41,7 +53,81 @@ export async function getHealth() {
     marketDataProvider?: 'binance' | 'mock';
     onchainConfigured?: boolean;
     dexConfigured?: boolean;
+    delegatedAutomationConfigured?: boolean;
+    delegatedExecutorAddress?: string | null;
+    delegationVaultAddress?: string | null;
   }>('/api/v1/health');
+}
+
+function normalizeDelegatedPolicy(policy: DelegatedAutomationPolicy) {
+  return policy;
+}
+
+export async function getDelegationConfig() {
+  return request<DelegatedAutomationConfig>('/api/v1/delegations/config');
+}
+
+export async function getDelegationPolicies(filters?: { ownerAddress?: string; strategyId?: string }) {
+  const query = new URLSearchParams();
+  if (filters?.ownerAddress) query.set('owner_address', filters.ownerAddress);
+  if (filters?.strategyId) query.set('strategy_id', filters.strategyId);
+  const data = await request<{
+    policies: DelegatedAutomationPolicy[];
+    ready: boolean;
+    executorAddress: string | null;
+    vaultAddress: string | null;
+    missing: string[];
+  }>(`/api/v1/delegations${query.toString() ? `?${query.toString()}` : ''}`);
+
+  return {
+    policies: data.policies.map(normalizeDelegatedPolicy),
+    config: {
+      ready: data.ready,
+      executorAddress: data.executorAddress,
+      vaultAddress: data.vaultAddress,
+      missing: data.missing
+    } satisfies DelegatedAutomationConfig
+  };
+}
+
+export async function createDelegationPolicy(input: {
+  strategyId: string;
+  ownerAddress: string;
+  marketSymbol: string;
+  maxOrderSizeUsd: number;
+  maxSlippageBps: number;
+  dailyLossLimitUsd: number;
+  validUntil: string;
+  approvalTxHash?: string | null;
+}) {
+  const data = await request<{
+    policy: DelegatedAutomationPolicy;
+    executor_address: string | null;
+    vault_address: string | null;
+    ready: boolean;
+  }>('/api/v1/delegations', {
+    method: 'POST',
+    body: JSON.stringify({
+      strategy_id: input.strategyId,
+      owner_address: input.ownerAddress,
+      market_symbol: input.marketSymbol,
+      max_order_size_usd: input.maxOrderSizeUsd,
+      max_slippage_bps: input.maxSlippageBps,
+      daily_loss_limit_usd: input.dailyLossLimitUsd,
+      valid_until: input.validUntil,
+      approval_tx_hash: input.approvalTxHash ?? null
+    })
+  });
+
+  return {
+    policy: normalizeDelegatedPolicy(data.policy),
+    config: {
+      ready: data.ready,
+      executorAddress: data.executor_address,
+      vaultAddress: data.vault_address,
+      missing: []
+    } satisfies DelegatedAutomationConfig
+  };
 }
 
 export async function getMarkets() {

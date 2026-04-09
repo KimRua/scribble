@@ -959,6 +959,15 @@
   ],
   "notifications": [
     {
+      "notificationId": "noti_1775758799320_ds73hn",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BTCUSDT 71820 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "createdAt": "2026-04-09T18:19:59.320Z",
+      "read": false
+    },
+    {
       "notificationId": "noti_1775756584209_26gxh4",
       "type": "execution_filled",
       "title": "주문 실행 완료",
@@ -1032,6 +1041,16 @@
     }
   ],
   "auditEvents": [
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775758799324",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "timestamp": "2026-04-09T18:19:59.324Z",
+      "metadata": {
+        "alertValue": "71820"
+      }
+    },
     {
       "eventId": "evt_exe_str_ann_ai_1775756281170_cdocqs_1775756570285_1775756584211",
       "eventType": "execute_confirmed",
