@@ -78,6 +78,17 @@ export function TradingPage() {
 
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
 
+  const refreshMarketData = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
+    try {
+      const nextCandles = await getCandles(symbol, nextTimeframe);
+      setCandles(nextCandles);
+      setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
+      setConnectionStatus('connected');
+    } catch {
+      setConnectionStatus('disconnected');
+    }
+  };
+
   const loadWorkspace = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
     setLoading(true);
     setErrorMessage(null);
@@ -113,6 +124,14 @@ export function TradingPage() {
 
   useEffect(() => {
     void loadWorkspace();
+  }, [selectedSymbol, timeframe]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void refreshMarketData(selectedSymbol, timeframe);
+    }, 15000);
+
+    return () => window.clearInterval(interval);
   }, [selectedSymbol, timeframe]);
 
   useEffect(() => {

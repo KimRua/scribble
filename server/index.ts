@@ -2,7 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { z } from 'zod';
-import { buildSeedAnnotations, defaultUserSettings, generateCandles, marketOptions } from '../src/data/mockMarket';
+import { buildSeedAnnotations, defaultUserSettings } from '../src/data/mockMarket';
 import { createAuditEvent } from '../src/services/auditLogService';
 import { armAutomation, createExecutionPreview, executeStrategy } from '../src/services/executionService';
 import { validateStrategy } from '../src/utils/strategy';
@@ -10,6 +10,7 @@ import type { Annotation, AutomationRule, Candle, NotificationItem, Strategy } f
 import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/utils/annotation';
 import { getState, updateState } from './services/fileStore';
 import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
+import { getAvailableMarkets, getMarketCandles, isRealMarketDataEnabled } from './services/marketDataService';
 import { createId } from './utils/ids';
 import { sendError, sendSuccess } from './utils/response';
 
@@ -19,18 +20,12 @@ const port = Number(process.env.API_PORT ?? 8787);
 app.use(cors());
 app.use(express.json());
 
-const chartCache = new Map<string, Candle[]>();
-
-function getCandles(symbol: string, timeframe: string) {
-  const key = `${symbol}:${timeframe}`;
-  if (!chartCache.has(key)) {
-    chartCache.set(key, generateCandles(symbol, timeframe));
-  }
-  return chartCache.get(key) ?? [];
+async function getCandles(symbol: string, timeframe: string) {
+  return (await getMarketCandles(symbol, timeframe)).candles;
 }
 
-function ensureSeedState(symbol: string, timeframe: string) {
-  const candles = getCandles(symbol, timeframe);
+async function ensureSeedState(symbol: string, timeframe: string) {
+  const candles = await getCandles(symbol, timeframe);
   const seed = buildSeedAnnotations(symbol, timeframe, candles);
   const state = getState();
   if (!state.annotations.some((annotation) => annotation.marketSymbol === symbol && annotation.timeframe === timeframe)) {
@@ -56,20 +51,27 @@ function appendAudit(eventType: Parameters<typeof createAuditEvent>[0], entityTy
 }
 
 app.get('/api/v1/health', (_request, response) => {
-  sendSuccess(response, { ok: true, llmConfigured: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL) });
+  sendSuccess(response, {
+    ok: true,
+    llmConfigured: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL),
+    marketDataEnabled: isRealMarketDataEnabled(),
+    marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock'
+  });
 });
 
-app.get('/api/v1/markets', (_request, response) => {
-  sendSuccess(response, { markets: marketOptions });
+app.get('/api/v1/markets', async (_request, response) => {
+  const { markets, source } = await getAvailableMarkets();
+  sendSuccess(response, { markets, source });
 });
 
-app.get('/api/v1/market-data/candles', (request, response) => {
+app.get('/api/v1/market-data/candles', async (request, response) => {
   const symbol = String(request.query.symbol ?? 'BTCUSDT');
   const timeframe = String(request.query.timeframe ?? '1h');
-  const candles = getCandles(symbol, timeframe);
+  const { candles, source } = await getMarketCandles(symbol, timeframe);
   sendSuccess(response, {
     symbol,
     timeframe,
+    source,
     candles: candles.map((candle) => ({
       open_time: candle.openTime,
       open: String(candle.open),
@@ -81,10 +83,10 @@ app.get('/api/v1/market-data/candles', (request, response) => {
   });
 });
 
-app.get('/api/v1/annotations', (request, response) => {
+app.get('/api/v1/annotations', async (request, response) => {
   const symbol = String(request.query.symbol ?? 'BTCUSDT');
   const timeframe = String(request.query.timeframe ?? '1h');
-  ensureSeedState(symbol, timeframe);
+  await ensureSeedState(symbol, timeframe);
   const state = getState();
   const annotations = state.annotations.filter((annotation) => annotation.marketSymbol === symbol && annotation.timeframe === timeframe);
   sendSuccess(response, { annotations });
@@ -113,7 +115,7 @@ app.post('/api/v1/annotations', async (request, response) => {
   }
 
   const data = parsedBody.data;
-  const candles = getCandles(data.market_symbol, data.timeframe);
+  const candles = await getCandles(data.market_symbol, data.timeframe);
   const visibleLevels = candles.slice(-10).flatMap((candle) => [candle.high, candle.low, candle.close]);
   const annotationId = createId('ann');
   const parsed = await parseAnnotationWithLlm({
@@ -152,7 +154,7 @@ app.patch('/api/v1/annotations/:annotationId', async (request, response) => {
   }
 
   const nextText = typeof request.body.text === 'string' ? request.body.text : annotation.text;
-  const candles = getCandles(annotation.marketSymbol, annotation.timeframe);
+  const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
   const visibleLevels = candles.slice(-10).flatMap((candle) => [candle.high, candle.low, candle.close]);
   const parsed = await parseAnnotationWithLlm({
     text: nextText,
@@ -238,7 +240,7 @@ app.post('/api/v1/ai/analyze', async (request, response) => {
   }
 
   const { market_symbol, timeframe, user_preferences } = parsedBody.data;
-  const candles = getCandles(market_symbol, timeframe);
+  const candles = await getCandles(market_symbol, timeframe);
   const analysis = await analyzeChartWithLlm({
     marketSymbol: market_symbol,
     timeframe,
@@ -302,13 +304,13 @@ app.post('/api/v1/ai/parse-annotation', async (request, response) => {
   return sendSuccess(response, { strategy: result.strategy, parsing_notes: result.parsingNotes, missing_fields: result.missingFields, provider: result.provider });
 });
 
-app.post('/api/v1/strategies/:strategyId/validate', (request, response) => {
+app.post('/api/v1/strategies/:strategyId/validate', async (request, response) => {
   const state = getState();
   const annotation = state.annotations.find((item) => item.strategy.strategyId === request.params.strategyId);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'strategy not found');
   }
-  const candles = getCandles(annotation.marketSymbol, annotation.timeframe);
+  const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
   const currentPrice = candles.at(-1)?.close ?? annotation.strategy.entryPrice;
   const validation = validateStrategy(annotation.strategy, currentPrice, defaultUserSettings);
   appendAudit(validation.isValid ? 'strategy_validated' : 'strategy_invalid', 'strategy', annotation.strategy.strategyId, { currentPrice });
@@ -324,14 +326,14 @@ app.post('/api/v1/strategies/:strategyId/validate', (request, response) => {
   });
 });
 
-app.post('/api/v1/executions/preview', (request, response) => {
+app.post('/api/v1/executions/preview', async (request, response) => {
   const strategyId = String(request.body.strategy_id ?? '');
   const state = getState();
   const annotation = state.annotations.find((item) => item.strategy.strategyId === strategyId);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'strategy not found');
   }
-  const candles = getCandles(annotation.marketSymbol, annotation.timeframe);
+  const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
   const preview = createExecutionPreview(annotation.strategy, candles.at(-1)?.close ?? annotation.strategy.entryPrice, defaultUserSettings);
   return sendSuccess(response, {
     execution_plan: {

@@ -8,6 +8,7 @@
 - Express 기반 실제 API 서버
 - 파일 영속 저장소 (`data/app-state.json`)
 - AI 분석/주석 파싱의 `LLM 우선 + fallback` 구조
+- Binance public REST 기반 실마켓 캔들/마켓 조회 + mock fallback
 - 실행 프리뷰 / 주문 실행 / 자동화 / 알림 / 감사 로그 API
 - opBNB proof 레이어 샘플 `ExecutionRegistry` 컨트랙트
 
@@ -32,6 +33,9 @@ API 기본 주소: `http://localhost:8787`
 
 ### 지금 바로 있으면 좋은 값
 
+- `ENABLE_REAL_MARKET_DATA`: `true`면 Binance 실데이터 우선 사용, 실패 시 mock fallback
+- `MARKET_DATA_PROVIDER`: 현재 `binance` 지원
+- `MARKET_DATA_BASE_URL`: 기본값 `https://api.binance.com`
 - `OPENAI_API_KEY`: 실제 AI 분석 사용 시 필요
 - `OPENAI_MODEL`: 예: `gpt-4.1-mini`, `gpt-4o-mini` 등 JSON 응답 가능한 모델
 
@@ -41,7 +45,8 @@ API 기본 주소: `http://localhost:8787`
 - `BSC_RPC_URL`
 - `EXECUTOR_PRIVATE_KEY`
 
-키가 없으면 앱은 fallback 분석기로 계속 동작합니다.
+시장 데이터 provider가 실패하거나 비활성화되면 앱은 mock 시세로 계속 동작합니다.
+LLM 키가 없으면 앱은 fallback 분석기로 계속 동작합니다.
 
 ## 테스트 및 빌드
 
@@ -60,7 +65,7 @@ npm run build
 
 ## 현재 한계
 
-- 가격 데이터는 아직 데모용 생성 데이터입니다.
+- 가격 데이터는 Binance public API를 우선 사용하며, 실패 시 데모용 생성 데이터로 fallback 합니다.
 - 주문 실행은 실거래소/DEX에 연결되지 않았습니다.
 - 온체인 기록은 컨트랙트 샘플과 ABI 검증까지 구현되어 있고, 실제 체인 송신은 다음 단계입니다.
 
