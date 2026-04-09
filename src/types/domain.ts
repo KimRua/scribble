@@ -157,6 +157,9 @@ export interface Execution {
   liquidityChain: 'bsc';
   executionChainTxHash: string;
   liquidityChainTxHash: string;
+  settlementMode?: 'mock' | 'dex';
+  dexExecuted?: boolean;
+  dexRouterAddress?: string | null;
   proofRecorded?: boolean;
   proofRegistryId?: string | null;
   proofContractAddress?: string | null;

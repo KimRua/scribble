@@ -6,11 +6,12 @@ import { buildSeedAnnotations, defaultUserSettings } from '../src/data/mockMarke
 import { createAuditEvent } from '../src/services/auditLogService';
 import { armAutomation, createExecutionPreview, executeStrategy } from '../src/services/executionService';
 import { validateStrategy } from '../src/utils/strategy';
-import type { Annotation, AutomationRule, Candle, NotificationItem, Strategy } from '../src/types/domain';
+import type { Annotation, AutomationRule, Candle, Execution, NotificationItem, Strategy } from '../src/types/domain';
 import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/utils/annotation';
 import { getState, updateState } from './services/fileStore';
 import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
 import { getAvailableMarkets, getMarketCandles, getMarketSnapshot, isRealMarketDataEnabled } from './services/marketDataService';
+import { executeDexSwap, getDexExecutionConfigStatus } from './services/dexExecutionService';
 import { getOnchainConfigStatus, recordOnchainExecution } from './services/onchainExecutionService';
 import { createId } from './utils/ids';
 import { sendError, sendSuccess } from './utils/response';
@@ -58,7 +59,8 @@ app.get('/api/v1/health', (_request, response) => {
     llmConfigured: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL),
     marketDataEnabled: isRealMarketDataEnabled(),
     marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock',
-    onchainConfigured: getOnchainConfigStatus().ready
+    onchainConfigured: getOnchainConfigStatus().ready,
+    dexConfigured: getDexExecutionConfigStatus().ready
   });
 });
 
@@ -454,61 +456,71 @@ app.get('/api/v1/executions', (request, response) => {
 });
 
 app.post('/api/v1/executions', async (request, response) => {
-  const strategyId = String(request.body.strategy_id ?? '');
-  const state = getState();
-  const annotation = state.annotations.find((item) => item.strategy.strategyId === strategyId);
-  if (!annotation) {
-    return sendError(response, 'NOT_FOUND', 'strategy not found');
+  try {
+    const strategyId = String(request.body.strategy_id ?? '');
+    const state = getState();
+    const annotation = state.annotations.find((item) => item.strategy.strategyId === strategyId);
+    if (!annotation) {
+      return sendError(response, 'NOT_FOUND', 'strategy not found');
+    }
+
+    const execution = executeStrategy(annotation.strategy);
+    const dexReceipt = await executeDexSwap(annotation.strategy, annotation.marketSymbol);
+    const onchainReceipt = await recordOnchainExecution(annotation.strategy);
+
+    const persistedExecution: Execution = {
+      ...execution,
+      liquidityChainTxHash: dexReceipt.txHash ?? execution.liquidityChainTxHash,
+      executionChainTxHash: onchainReceipt.resultTxHash ?? execution.executionChainTxHash,
+      settlementMode: dexReceipt.executed ? 'dex' : 'mock',
+      dexExecuted: dexReceipt.executed,
+      dexRouterAddress: dexReceipt.routerAddress ?? null,
+      proofRecorded: Boolean(onchainReceipt.resultTxHash),
+      proofRegistryId: onchainReceipt.registryId ?? null,
+      proofContractAddress: onchainReceipt.contractAddress ?? null
+    };
+
+    updateState((current) => ({
+      ...current,
+      executions: [persistedExecution, ...current.executions],
+      annotations: current.annotations.map((item) =>
+        item.annotationId === annotation.annotationId
+          ? { ...item, status: 'Executed', updatedAt: new Date().toISOString() }
+          : item
+      )
+    }));
+    appendNotification({
+      notificationId: createId('noti'),
+      type: 'execution_filled',
+      title: '주문 실행 완료',
+      body: `${annotation.marketSymbol} 전략이 ${dexReceipt.executed ? 'DEX 실주문으로' : 'mock 모드로'} 실행되었습니다.`,
+      annotationId: annotation.annotationId,
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+    appendAudit('execute_confirmed', 'execution', persistedExecution.executionId, {
+      executionChain: 'opbnb',
+      liquidityChain: 'bsc',
+      proofRecorded: Boolean(onchainReceipt.resultTxHash),
+      onchainReady: onchainReceipt.ready,
+      dexExecuted: dexReceipt.executed,
+      dexReady: dexReceipt.ready
+    });
+    return sendSuccess(response, {
+      execution_id: persistedExecution.executionId,
+      status: persistedExecution.status,
+      execution_chain_tx_hash: persistedExecution.executionChainTxHash,
+      liquidity_chain_tx_hash: persistedExecution.liquidityChainTxHash,
+      settlement_mode: persistedExecution.settlementMode,
+      dex_executed: persistedExecution.dexExecuted,
+      dex_router_address: persistedExecution.dexRouterAddress ?? null,
+      proof_recorded: Boolean(onchainReceipt.resultTxHash),
+      proof_registry_id: onchainReceipt.registryId ?? null,
+      proof_contract_address: onchainReceipt.contractAddress ?? null
+    });
+  } catch (error) {
+    return sendError(response, 'EXECUTION_ERROR', error instanceof Error ? error.message : 'execution failed');
   }
-  const execution = executeStrategy(annotation.strategy);
-  const onchainReceipt = await recordOnchainExecution(annotation.strategy);
-  const persistedExecution = onchainReceipt.resultTxHash
-    ? {
-        ...execution,
-        executionChainTxHash: onchainReceipt.resultTxHash,
-        proofRecorded: true,
-        proofRegistryId: onchainReceipt.registryId ?? null,
-        proofContractAddress: onchainReceipt.contractAddress ?? null
-      }
-    : {
-        ...execution,
-        proofRecorded: false,
-        proofRegistryId: onchainReceipt.registryId ?? null,
-        proofContractAddress: onchainReceipt.contractAddress ?? null
-      };
-  updateState((current) => ({
-    ...current,
-    executions: [persistedExecution, ...current.executions],
-    annotations: current.annotations.map((item) =>
-      item.annotationId === annotation.annotationId
-        ? { ...item, status: 'Executed', updatedAt: new Date().toISOString() }
-        : item
-    )
-  }));
-  appendNotification({
-    notificationId: createId('noti'),
-    type: 'execution_filled',
-    title: '주문 실행 완료',
-    body: `${annotation.marketSymbol} 전략이 실행되었습니다.`,
-    annotationId: annotation.annotationId,
-    createdAt: new Date().toISOString(),
-    read: false
-  });
-  appendAudit('execute_confirmed', 'execution', persistedExecution.executionId, {
-    executionChain: 'opbnb',
-    liquidityChain: 'bsc',
-    proofRecorded: Boolean(onchainReceipt.resultTxHash),
-    onchainReady: onchainReceipt.ready
-  });
-  return sendSuccess(response, {
-    execution_id: persistedExecution.executionId,
-    status: persistedExecution.status,
-    execution_chain_tx_hash: persistedExecution.executionChainTxHash,
-    liquidity_chain_tx_hash: persistedExecution.liquidityChainTxHash,
-    proof_recorded: Boolean(onchainReceipt.resultTxHash),
-    proof_registry_id: onchainReceipt.registryId ?? null,
-    proof_contract_address: onchainReceipt.contractAddress ?? null
-  });
 });
 
 app.post('/api/v1/automations', (request, response) => {

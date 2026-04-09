@@ -40,6 +40,7 @@ export async function getHealth() {
     marketDataEnabled?: boolean;
     marketDataProvider?: 'binance' | 'mock';
     onchainConfigured?: boolean;
+    dexConfigured?: boolean;
   }>('/api/v1/health');
 }
 
@@ -73,6 +74,9 @@ function normalizeExecution(execution: {
   liquidity_chain: Execution['liquidityChain'];
   execution_chain_tx_hash: string;
   liquidity_chain_tx_hash: string;
+  settlement_mode?: 'mock' | 'dex';
+  dex_executed?: boolean;
+  dex_router_address?: string | null;
   proof_recorded?: boolean;
   proof_registry_id?: string | null;
   proof_contract_address?: string | null;
@@ -87,6 +91,9 @@ function normalizeExecution(execution: {
     liquidityChain: execution.liquidity_chain,
     executionChainTxHash: execution.execution_chain_tx_hash,
     liquidityChainTxHash: execution.liquidity_chain_tx_hash,
+    settlementMode: execution.settlement_mode,
+    dexExecuted: execution.dex_executed,
+    dexRouterAddress: execution.dex_router_address ?? null,
     proofRecorded: execution.proof_recorded,
     proofRegistryId: execution.proof_registry_id ?? null,
     proofContractAddress: execution.proof_contract_address ?? null,
@@ -108,6 +115,9 @@ export async function getExecutions(symbol?: string, timeframe?: string) {
       liquidity_chain: Execution['liquidityChain'];
       execution_chain_tx_hash: string;
       liquidity_chain_tx_hash: string;
+      settlement_mode?: 'mock' | 'dex';
+      dex_executed?: boolean;
+      dex_router_address?: string | null;
       proof_recorded?: boolean;
       proof_registry_id?: string | null;
       proof_contract_address?: string | null;
@@ -220,6 +230,9 @@ export async function createExecution(strategyId: string) {
     status: Execution['status'];
     execution_chain_tx_hash: string;
     liquidity_chain_tx_hash: string;
+    settlement_mode?: 'mock' | 'dex';
+    dex_executed?: boolean;
+    dex_router_address: string | null;
     proof_recorded: boolean;
     proof_registry_id: string | null;
     proof_contract_address: string | null;
