@@ -13,6 +13,7 @@ import {
   getMarkets,
   getNotifications,
   previewExecution,
+  subscribeMarketStream,
   updateAnnotation
 } from '../services/apiClient';
 import type {
@@ -78,17 +79,6 @@ export function TradingPage() {
 
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
 
-  const refreshMarketData = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
-    try {
-      const nextCandles = await getCandles(symbol, nextTimeframe);
-      setCandles(nextCandles);
-      setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
-      setConnectionStatus('connected');
-    } catch {
-      setConnectionStatus('disconnected');
-    }
-  };
-
   const loadWorkspace = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
     setLoading(true);
     setErrorMessage(null);
@@ -127,11 +117,27 @@ export function TradingPage() {
   }, [selectedSymbol, timeframe]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      void refreshMarketData(selectedSymbol, timeframe);
-    }, 15000);
+    const unsubscribe = subscribeMarketStream(selectedSymbol, timeframe, {
+      onMessage: (payload) => {
+        setCandles(
+          payload.candles.map((candle) => ({
+            openTime: candle.open_time,
+            open: Number(candle.open),
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+            volume: Number(candle.volume)
+          }))
+        );
+        setCurrentPrice(payload.current_price);
+        setConnectionStatus('connected');
+      },
+      onError: () => {
+        setConnectionStatus('disconnected');
+      }
+    });
 
-    return () => window.clearInterval(interval);
+    return () => unsubscribe();
   }, [selectedSymbol, timeframe]);
 
   useEffect(() => {

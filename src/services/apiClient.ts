@@ -33,7 +33,7 @@ function normalizeAnnotation(annotation: Annotation) {
 }
 
 export async function getHealth() {
-  return request<{ ok: boolean; llmConfigured: boolean }>('/api/v1/health');
+  return request<{ ok: boolean; llmConfigured: boolean; marketDataEnabled?: boolean; marketDataProvider?: 'binance' | 'mock' }>('/api/v1/health');
 }
 
 export async function getMarkets() {
@@ -42,7 +42,7 @@ export async function getMarkets() {
 }
 
 export async function getCandles(symbol: string, timeframe: string) {
-  const data = await request<{ symbol: string; timeframe: string; candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>; }>(`/api/v1/market-data/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`);
+  const data = await request<{ symbol: string; timeframe: string; source?: 'binance' | 'mock'; candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>; }>(`/api/v1/market-data/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`);
   return data.candles.map<Candle>((candle) => ({
     openTime: candle.open_time,
     open: Number(candle.open),
@@ -203,4 +203,40 @@ export async function getAuditLogs(filters?: { annotationId?: string; strategyId
   if (filters?.executionId) query.set('execution_id', filters.executionId);
   const data = await request<{ events: AuditEvent[] }>(`/api/v1/audit-logs${query.toString() ? `?${query.toString()}` : ''}`);
   return data.events;
+}
+
+export function subscribeMarketStream(
+  symbol: string,
+  timeframe: string,
+  handlers: {
+    onMessage: (payload: {
+      symbol: string;
+      timeframe: string;
+      source: 'binance' | 'mock';
+      current_price: number;
+      candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>;
+    }) => void;
+    onError?: () => void;
+  }
+) {
+  const streamUrl = new URL(`/api/v1/market-data/stream?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`, API_BASE_URL).toString();
+  const eventSource = new EventSource(streamUrl);
+
+  eventSource.onmessage = (event) => {
+    handlers.onMessage(JSON.parse(event.data) as {
+      symbol: string;
+      timeframe: string;
+      source: 'binance' | 'mock';
+      current_price: number;
+      candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>;
+    });
+  };
+
+  eventSource.onerror = () => {
+    handlers.onError?.();
+  };
+
+  return () => {
+    eventSource.close();
+  };
 }

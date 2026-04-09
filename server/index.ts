@@ -16,6 +16,7 @@ import { sendError, sendSuccess } from './utils/response';
 
 const app = express();
 const port = Number(process.env.API_PORT ?? 8787);
+const marketStreamIntervalMs = Number(process.env.MARKET_STREAM_INTERVAL_MS ?? 5000);
 
 app.use(cors());
 app.use(express.json());
@@ -80,6 +81,61 @@ app.get('/api/v1/market-data/candles', async (request, response) => {
       close: String(candle.close),
       volume: String(candle.volume)
     }))
+  });
+});
+
+app.get('/api/v1/market-data/stream', async (request, response) => {
+  const symbol = String(request.query.symbol ?? 'BTCUSDT');
+  const timeframe = String(request.query.timeframe ?? '1h');
+
+  response.setHeader('Content-Type', 'text/event-stream');
+  response.setHeader('Cache-Control', 'no-cache, no-transform');
+  response.setHeader('Connection', 'keep-alive');
+  response.flushHeaders();
+
+  let closed = false;
+
+  const pushSnapshot = async () => {
+    try {
+      const { candles, source } = await getMarketCandles(symbol, timeframe);
+      if (closed) {
+        return;
+      }
+
+      response.write(`data: ${JSON.stringify({
+        symbol,
+        timeframe,
+        source,
+        current_price: candles.at(-1)?.close ?? 0,
+        candles: candles.map((candle) => ({
+          open_time: candle.openTime,
+          open: String(candle.open),
+          high: String(candle.high),
+          low: String(candle.low),
+          close: String(candle.close),
+          volume: String(candle.volume)
+        }))
+      })}\n\n`);
+    } catch (error) {
+      if (closed) {
+        return;
+      }
+
+      response.write(`event: error\ndata: ${JSON.stringify({ message: error instanceof Error ? error.message : 'stream failed' })}\n\n`);
+    }
+  };
+
+  response.write(': connected\n\n');
+  await pushSnapshot();
+
+  const interval = setInterval(() => {
+    void pushSnapshot();
+  }, marketStreamIntervalMs);
+
+  request.on('close', () => {
+    closed = true;
+    clearInterval(interval);
+    response.end();
   });
 });
 
