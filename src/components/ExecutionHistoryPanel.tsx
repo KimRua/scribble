@@ -45,46 +45,50 @@ export function ExecutionHistoryPanel({ executions }: ExecutionHistoryPanelProps
           <p className="muted">주문 실행 후 이 영역에서 proof 상태와 트랜잭션 링크를 빠르게 확인할 수 있습니다.</p>
         </div>
       ) : (
-        <div className="history-list">
+        <div className="history-table">
+          <div className="history-table-head">
+            <span>실행</span>
+            <span>체결가</span>
+            <span>실행 시각</span>
+            <span>전략</span>
+            <span>링크</span>
+          </div>
           {executions.map((execution) => (
-            <article key={execution.executionId} className="history-item">
-              <div className="history-main">
-                <div>
-                  <p className="eyebrow">{execution.executionId}</p>
-                  <strong>
-                    {execution.status} · {execution.executionChain}
-                  </strong>
-                </div>
+            <article key={execution.executionId} className="history-row">
+              <div className="history-col history-col-main">
+                <p className="eyebrow">{execution.executionId}</p>
+                <strong>
+                  {execution.status} · {execution.executionChain}
+                </strong>
                 <span className={`pill ${execution.proofRecorded ? 'executed' : 'triggered'}`}>
                   {execution.proofRecorded ? 'Proof recorded' : 'Proof pending'}
                 </span>
               </div>
-
-              <div className="history-metrics">
-                <div>
-                  <span>체결가</span>
-                  <strong>{formatPrice(execution.filledPrice)}</strong>
-                </div>
-                <div>
-                  <span>실행 시각</span>
-                  <strong>{formatDateTime(execution.filledAt)}</strong>
-                </div>
-                <div>
-                  <span>전략 ID</span>
-                  <strong>{execution.strategyId.slice(0, 12)}…</strong>
-                </div>
+              <div className="history-col">
+                <span className="history-mobile-label">체결가</span>
+                <strong>{formatPrice(execution.filledPrice)}</strong>
               </div>
-
-              <div className="status-links history-links">
-                <a href={getOpbnbTxUrl(execution.executionChainTxHash)} target="_blank" rel="noreferrer">
-                  실행 Tx
-                </a>
-                {execution.proofContractAddress ? (
-                  <a href={getOpbnbAddressUrl(execution.proofContractAddress)} target="_blank" rel="noreferrer">
-                    Registry
-                  </a>
-                ) : null}
+              <div className="history-col">
+                <span className="history-mobile-label">실행 시각</span>
+                <strong>{formatDateTime(execution.filledAt)}</strong>
+              </div>
+              <div className="history-col">
+                <span className="history-mobile-label">전략</span>
+                <strong>{execution.strategyId.slice(0, 12)}…</strong>
                 {execution.proofRegistryId ? <span className="history-proof-id">{execution.proofRegistryId.slice(0, 16)}…</span> : null}
+              </div>
+              <div className="history-col history-col-links">
+                <span className="history-mobile-label">링크</span>
+                <div className="status-links history-links">
+                  <a href={getOpbnbTxUrl(execution.executionChainTxHash)} target="_blank" rel="noreferrer">
+                    실행 Tx
+                  </a>
+                  {execution.proofContractAddress ? (
+                    <a href={getOpbnbAddressUrl(execution.proofContractAddress)} target="_blank" rel="noreferrer">
+                      Registry
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </article>
           ))}

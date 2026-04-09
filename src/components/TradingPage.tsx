@@ -109,7 +109,7 @@ export function TradingPage() {
       setSelectedAnnotationId((current) =>
         current && nextAnnotations.some((annotation) => annotation.annotationId === current)
           ? current
-          : nextAnnotations[0]?.annotationId ?? null
+          : null
       );
       setNotifications(nextNotifications);
       setExecutions(nextExecutions);
@@ -451,26 +451,72 @@ export function TradingPage() {
       {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
       {loading ? <div className="loading-banner panel">데이터를 불러오는 중입니다...</div> : null}
 
-      <section className="overview-grid">
-        <article className="overview-card panel">
-          <p className="eyebrow">Market</p>
-          <strong>{selectedSymbol}</strong>
-          <span>{currentPrice ? `${currentPrice.toLocaleString('ko-KR')} USDT` : '시세 로딩 중'}</span>
-        </article>
-        <article className="overview-card panel">
-          <p className="eyebrow">AI Engine</p>
-          <strong>{llmConfigured ? 'LLM Ready' : 'Fallback Active'}</strong>
-          <span>{llmConfigured ? '실시간 분석 가능' : '규칙 기반 분석 사용 중'}</span>
-        </article>
-        <article className="overview-card panel">
-          <p className="eyebrow">Onchain</p>
-          <strong>{onchainConfigured ? 'Proof Ready' : 'Local Only'}</strong>
-          <span>{onchainConfigured ? 'opBNB proof 기록 사용' : '감사 로그만 기록'}</span>
-        </article>
-        <article className="overview-card panel">
-          <p className="eyebrow">Selection</p>
-          <strong>{selectedAnnotation ? selectedAnnotation.strategy.bias.toUpperCase() : 'No Strategy'}</strong>
-          <span>{selectedAnnotation ? `${selectedAnnotation.strategy.entryType} · ${selectedAnnotation.status}` : '전략을 선택하세요'}</span>
+      <section className="dashboard-hero">
+        <div className="overview-grid">
+          <article className="overview-card panel">
+            <p className="eyebrow">Market</p>
+            <strong>{selectedSymbol}</strong>
+            <span>{currentPrice ? `${currentPrice.toLocaleString('ko-KR')} USDT` : '시세 로딩 중'}</span>
+          </article>
+          <article className="overview-card panel">
+            <p className="eyebrow">AI Engine</p>
+            <strong>{llmConfigured ? 'LLM Ready' : 'Fallback Active'}</strong>
+            <span>{llmConfigured ? '실시간 분석 가능' : '규칙 기반 분석 사용 중'}</span>
+          </article>
+          <article className="overview-card panel">
+            <p className="eyebrow">Onchain</p>
+            <strong>{onchainConfigured ? 'Proof Ready' : 'Local Only'}</strong>
+            <span>{onchainConfigured ? 'opBNB proof 기록 사용' : '감사 로그만 기록'}</span>
+          </article>
+          <article className="overview-card panel">
+            <p className="eyebrow">Selection</p>
+            <strong>{selectedAnnotation ? selectedAnnotation.strategy.bias.toUpperCase() : 'No Strategy'}</strong>
+            <span>{selectedAnnotation ? `${selectedAnnotation.strategy.entryType} · ${selectedAnnotation.status}` : '전략을 선택하세요'}</span>
+          </article>
+        </div>
+
+        <article className="selection-hero panel">
+          <div className="selection-hero-copy">
+            <p className="eyebrow">Selected Strategy</p>
+            <h2>
+              {selectedAnnotation
+                ? `${selectedAnnotation.marketSymbol} ${timeframe} · ${selectedAnnotation.strategy.bias.toUpperCase()}`
+                : '선택된 전략이 없습니다'}
+            </h2>
+            <p className="selection-hero-note">
+              {selectedAnnotation
+                ? selectedAnnotation.text
+                : '차트에서 주석을 선택하면 엔트리, 리스크, 액션이 이 영역에 요약됩니다.'}
+            </p>
+          </div>
+          <div className="selection-hero-metrics">
+            <div>
+              <span>Entry</span>
+              <strong>
+                {selectedAnnotation ? selectedAnnotation.strategy.entryPrice.toLocaleString('ko-KR') : '-'}
+              </strong>
+            </div>
+            <div>
+              <span>SL</span>
+              <strong>
+                {selectedAnnotation ? selectedAnnotation.strategy.stopLossPrice.toLocaleString('ko-KR') : '-'}
+              </strong>
+            </div>
+            <div>
+              <span>TP1</span>
+              <strong>
+                {selectedAnnotation
+                  ? (selectedAnnotation.strategy.takeProfitPrices[0] ?? 0).toLocaleString('ko-KR')
+                  : '-'}
+              </strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong>
+                {selectedAnnotation ? determineAnnotationStatus(selectedAnnotation, currentPrice) : '-'}
+              </strong>
+            </div>
+          </div>
         </article>
       </section>
 
@@ -508,7 +554,7 @@ export function TradingPage() {
         />
       </main>
 
-      <section className="status-strip panel">
+      <section className="status-strip">
         <div className="status-card">
           <p className="eyebrow">Lifecycle</p>
           <strong>

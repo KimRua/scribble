@@ -1,6 +1,149 @@
 {
   "annotations": [
     {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-09T16:15:00.000Z",
+        "price": 72062.61,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "draw_entry_seed",
+          "type": "line",
+          "role": "entry",
+          "price": 72062.61
+        },
+        {
+          "id": "draw_sl_seed",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 71630.23
+        },
+        {
+          "id": "draw_tp_seed_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72639.11
+        },
+        {
+          "id": "draw_zone_seed",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71630.23,
+          "priceTo": 72062.61
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai",
+        "annotationId": "ann_seed_ai",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 72062.61,
+        "stopLossPrice": 71630.23,
+        "takeProfitPrices": [
+          72639.11,
+          73143.55
+        ],
+        "invalidationCondition": "price closes below 71630.23",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:35:41.193Z",
+      "updatedAt": "2026-04-09T16:45:41.193Z"
+    },
+    {
+      "annotationId": "ann_ai_1775756281170_cdocqs",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h is showing short-term bullish momentum after reclaiming the 600-603 area and impulsing into 607 resistance. Prefer a continuation long only on a confirmed breakout above recent highs rather than chasing at market under resistance.",
+      "chartAnchor": {
+        "time": "2026-04-09T16:00:00.000Z",
+        "price": 608.1,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775756281170_cdocqs_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 608.1
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 603.4
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 612.5
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 616.8
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 621
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 603.4,
+          "priceTo": 608.1
+        },
+        {
+          "id": "ann_ai_1775756281170_cdocqs_note",
+          "type": "text",
+          "role": "note",
+          "text": "BNBUSDT 1h is showing short-term bullish momentum after reclaiming the 600-603 area and impulsing into 607 resistance. Prefer a continuation long only on a confirmed breakout above recent highs rather than chasing at market under resistance."
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_ai_1775756281170_cdocqs",
+        "annotationId": "ann_ai_1775756281170_cdocqs",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 608.1,
+        "stopLossPrice": 603.4,
+        "takeProfitPrices": [
+          612.5,
+          616.8,
+          621
+        ],
+        "invalidationCondition": "Invalidate the setup if price fails to break above 608.1 and instead closes below 603.4 on the 1h timeframe, or if momentum weakens with rejection from 607.8 resistance.",
+        "confidence": 0.67,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-09T17:38:01.170Z",
+      "updatedAt": "2026-04-09T17:43:04.207Z"
+    },
+    {
       "annotationId": "ann_ai_1775754003145_t8qr7m",
       "authorType": "ai",
       "authorId": "system",
@@ -816,6 +959,15 @@
   ],
   "notifications": [
     {
+      "notificationId": "noti_1775756584209_26gxh4",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BNBUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_ai_1775756281170_cdocqs",
+      "createdAt": "2026-04-09T17:43:04.209Z",
+      "read": false
+    },
+    {
       "notificationId": "noti_1775754251071_msc1gs",
       "type": "execution_filled",
       "title": "주문 실행 완료",
@@ -880,6 +1032,41 @@
     }
   ],
   "auditEvents": [
+    {
+      "eventId": "evt_exe_str_ann_ai_1775756281170_cdocqs_1775756570285_1775756584211",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775756281170_cdocqs_1775756570285",
+      "timestamp": "2026-04-09T17:43:04.211Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775756281170_cdocqs_1775756552325",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775756281170_cdocqs",
+      "timestamp": "2026-04-09T17:42:32.325Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775756281170_cdocqs_1775756281173",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775756281170_cdocqs",
+      "timestamp": "2026-04-09T17:38:01.173Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
     {
       "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775754236977_1775754251073",
       "eventType": "execute_confirmed",
@@ -1213,6 +1400,20 @@
     }
   ],
   "executions": [
+    {
+      "executionId": "exe_str_ann_ai_1775756281170_cdocqs_1775756570285",
+      "strategyId": "str_ann_ai_1775756281170_cdocqs",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x4a8318b737e23c82beb832a1920e45378fc075dc6d0de737c2469a6e2b942428",
+      "liquidityChainTxHash": "0x8129db29d4787",
+      "filledPrice": 608.1,
+      "filledAt": "2026-04-09T17:42:50.285Z",
+      "proofRecorded": true,
+      "proofRegistryId": "0x2229f0dac6a724168712d3fa35c9f886960d816f5333833285e0ca90f6b61636",
+      "proofContractAddress": "0x1B213823027930ef7D957BA882fc94692C4D9dE5"
+    },
     {
       "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775754236977",
       "strategyId": "str_ann_ai_1775753999511_q1u7i6",

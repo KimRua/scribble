@@ -1,0 +1,58 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "dev:web",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:web",
+				"--",
+				"--host",
+				"127.0.0.1",
+				"--port",
+				"5173"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "dev:api",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:api"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "noop",
+			"type": "shell",
+			"command": "true",
+			"args": [],
+			"isBackground": false
+		},
+		{
+			"label": "dev:web persistent",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:web",
+				"--",
+				"--host",
+				"127.0.0.1",
+				"--port",
+				"5173"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

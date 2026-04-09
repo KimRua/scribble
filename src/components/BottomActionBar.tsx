@@ -1,4 +1,5 @@
 import type { Annotation, StrategyValidation } from '../types/domain';
+import { formatPrice } from '../utils/strategy';
 
 interface BottomActionBarProps {
   selectedAnnotation: Annotation | null;
@@ -22,10 +23,16 @@ export function BottomActionBar({
 
   return (
     <div className="bottom-action-bar panel">
-      <div>
-        <p className="eyebrow">Actions</p>
-        <strong>{selectedAnnotation ? selectedAnnotation.text : '선택된 전략 없음'}</strong>
-        {disabled ? <p className="muted">{reason}</p> : null}
+      <div className="bottom-action-copy">
+        <p className="eyebrow">Quick Actions</p>
+        <strong>
+          {selectedAnnotation
+            ? `${selectedAnnotation.marketSymbol} · ${selectedAnnotation.strategy.bias.toUpperCase()} · ${formatPrice(selectedAnnotation.strategy.entryPrice)}`
+            : '선택된 전략 없음'}
+        </strong>
+        <p className="bottom-action-note">
+          {selectedAnnotation ? selectedAnnotation.text : reason}
+        </p>
       </div>
       <div className="action-buttons">
         <button disabled={disabled} onClick={onExecute}>

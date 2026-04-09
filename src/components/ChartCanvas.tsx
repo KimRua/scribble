@@ -15,7 +15,7 @@ interface ChartCanvasProps {
   drawingMode: DrawingMode;
   currentPrice: number;
   onChangeMode: (mode: DrawingMode) => void;
-  onSelectAnnotation: (annotationId: string) => void;
+  onSelectAnnotation: (annotationId: string | null) => void;
   onCreateAnnotation: (text: string, anchor: ChartAnchor) => void;
   onAddLineToSelected: (price: number) => void;
   onAddBoxToSelected: (priceFrom: number, priceTo: number) => void;
@@ -32,17 +32,30 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number) {
-  const charsPerLine = 24;
+function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number, isFullView: boolean) {
+  if (!isFullView) {
+    // 호버 시 작은 미리보기 - 2줄 제한
+    const width = 180;
+    const height = 52;
+    return {
+      width,
+      height,
+      x: clamp(anchorX + 8, 8, WIDTH - width - 8),
+      y: clamp(anchorY - height - 32, 8, HEIGHT - height - 8)
+    };
+  }
+
+  // 선택 시 전체 보기
+  const charsPerLine = 26;
   const estimatedLines = Math.max(2, Math.ceil(text.length / charsPerLine));
-  const width = text.length > 110 ? 280 : 250;
-  const height = clamp(72 + estimatedLines * 18, 98, 178);
+  const width = text.length > 100 ? 260 : 220;
+  const height = clamp(64 + estimatedLines * 16, 88, 160);
 
   return {
     width,
     height,
-    x: clamp(anchorX + 12, 12, WIDTH - width - 12),
-    y: clamp(anchorY - height - 14, 14, HEIGHT - height - 14)
+    x: clamp(anchorX + 8, 8, WIDTH - width - 8),
+    y: clamp(anchorY - height - 32, 8, HEIGHT - height - 8)
   };
 }
 
@@ -74,6 +87,7 @@ export function ChartCanvas({
   const [draftComposer, setDraftComposer] = useState<DraftComposer | null>(null);
   const [draftText, setDraftText] = useState('');
   const [boxStartPrice, setBoxStartPrice] = useState<number | null>(null);
+  const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
 
   const extent = useMemo(() => priceExtent(marketData, currentPrice), [marketData, currentPrice]);
   const xStep = (WIDTH - PADDING * 2) / Math.max(marketData.length - 1, 1);
@@ -110,6 +124,12 @@ export function ChartCanvas({
 
   const handleCanvasClick = (event: React.MouseEvent<SVGSVGElement>) => {
     const anchor = anchorFromClient(event.clientX, event.clientY);
+
+    if (drawingMode === 'none') {
+      onSelectAnnotation(null);
+      return;
+    }
+
     if (drawingMode === 'text') {
       const rect = containerRef.current?.getBoundingClientRect();
       setDraftComposer({
@@ -212,11 +232,23 @@ export function ChartCanvas({
           />
           {annotations.map((annotation) => {
             const selected = annotation.annotationId === selectedAnnotationId;
+            const hovered = annotation.annotationId === hoveredAnnotationId && !selected;
             const anchorX = PADDING + annotation.chartAnchor.index * xStep;
             const anchorY = yForPrice(annotation.chartAnchor.price);
-            const bubbleBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY);
+            const previewBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, false);
+            const fullBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, true);
+            const previewText = annotation.text.length > 36 ? annotation.text.slice(0, 36) + '…' : annotation.text;
             return (
-              <g key={annotation.annotationId} onClick={() => onSelectAnnotation(annotation.annotationId)}>
+              <g
+                key={annotation.annotationId}
+                className={`annotation-pin-group ${selected ? 'selected' : ''} ${hovered ? 'hovered' : ''}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectAnnotation(annotation.annotationId);
+                }}
+                onMouseEnter={() => setHoveredAnnotationId(annotation.annotationId)}
+                onMouseLeave={() => setHoveredAnnotationId((current) => (current === annotation.annotationId ? null : current))}
+              >
                 {annotation.drawingObjects.map((object) => {
                   if (object.type === 'line') {
                     return (
@@ -248,17 +280,29 @@ export function ChartCanvas({
 
                   return null;
                 })}
-                <circle cx={anchorX} cy={anchorY} r={selected ? 7 : 5} className="anchor-dot" />
-                <foreignObject x={bubbleBox.x} y={bubbleBox.y} width={bubbleBox.width} height={bubbleBox.height}>
-                  <div className={`annotation-bubble ${selected ? 'selected' : ''}`}>
-                    <div className="list-row">
-                      <span className={`pill ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>
-                      <span className="badge-author">{annotation.authorType.toUpperCase()}</span>
+                <line x1={anchorX} x2={anchorX} y1={anchorY - 12} y2={anchorY - 2} className="annotation-pin-stem" />
+                <circle cx={anchorX} cy={anchorY - 16} r={selected ? 7 : 5} className="annotation-pin" />
+                <circle cx={anchorX} cy={anchorY - 16} r="2" className="annotation-pin-core" />
+                {hovered && (
+                  <foreignObject x={previewBox.x} y={previewBox.y} width={previewBox.width} height={previewBox.height}>
+                    <div className="annotation-preview">
+                      <span className={`pill-mini ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>
+                      <p>{previewText}</p>
                     </div>
-                    <p>{annotation.text}</p>
-                    <span>{formatPrice(annotation.strategy.entryPrice)}</span>
-                  </div>
-                </foreignObject>
+                  </foreignObject>
+                )}
+                {selected && (
+                  <foreignObject x={fullBox.x} y={fullBox.y} width={fullBox.width} height={fullBox.height}>
+                    <div className="annotation-bubble selected">
+                      <div className="list-row annotation-bubble-header">
+                        <span className={`pill ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>
+                        <span className="badge-author">{annotation.authorType.toUpperCase()}</span>
+                      </div>
+                      <p>{annotation.text}</p>
+                      <span className="muted">{formatPrice(annotation.strategy.entryPrice)}</span>
+                    </div>
+                  </foreignObject>
+                )}
               </g>
             );
           })}
