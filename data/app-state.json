@@ -1,42 +1,156 @@
 {
   "annotations": [
     {
-      "annotationId": "ann_seed_ai",
-      "authorType": "ai",
-      "authorId": "system",
-      "marketSymbol": "BTCUSDT",
+      "annotationId": "ann_1775752286992_97rr3g",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BNBUSDT",
       "timeframe": "1h",
-      "text": "84137.43 지지 재테스트 시 단기 롱 진입 가능. 83632.61 이탈 시 시나리오 무효.",
+      "text": "여기 어때",
       "chartAnchor": {
-        "time": "2026-04-09T05:00:07.086Z",
-        "price": 84137.43,
-        "index": 32
+        "time": "2026-04-08T10:00:00.000Z",
+        "price": 616.64,
+        "index": 89
       },
       "drawingObjects": [
         {
-          "id": "draw_entry_seed",
+          "id": "ann_1775752286992_97rr3g_entry",
           "type": "line",
           "role": "entry",
-          "price": 84137.43
+          "price": 0
         },
         {
-          "id": "draw_sl_seed",
+          "id": "ann_1775752286992_97rr3g_sl",
           "type": "line",
           "role": "stop_loss",
-          "price": 83632.61
+          "price": 0
         },
         {
-          "id": "draw_tp_seed_1",
+          "id": "ann_1775752286992_97rr3g_tp_0",
           "type": "line",
           "role": "take_profit",
-          "price": 84810.53
+          "price": 606.01
         },
         {
-          "id": "draw_zone_seed",
+          "id": "ann_1775752286992_97rr3g_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 607.34
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 607.41
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_tp_3",
+          "type": "line",
+          "role": "take_profit",
+          "price": 603.73
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_tp_4",
+          "type": "line",
+          "role": "take_profit",
+          "price": 603.29
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_tp_5",
+          "type": "line",
+          "role": "take_profit",
+          "price": 603.04
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_zone",
           "type": "box",
           "role": "zone",
-          "priceFrom": 83632.61,
-          "priceTo": 84137.43
+          "priceFrom": 0,
+          "priceTo": 0
+        },
+        {
+          "id": "ann_1775752286992_97rr3g_note",
+          "type": "text",
+          "role": "note",
+          "text": "여기 어때"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775752286992_97rr3g",
+        "annotationId": "ann_1775752286992_97rr3g",
+        "bias": "neutral",
+        "entryType": "conditional",
+        "entryPrice": 0,
+        "stopLossPrice": 0,
+        "takeProfitPrices": [
+          606.01,
+          607.34,
+          607.41,
+          603.73,
+          603.29,
+          603.04
+        ],
+        "invalidationCondition": "1h 기준 603.0 아래 안착 시 단기 약세, 607.4 위 안착 시 단기 강세로 중립 시나리오 무효",
+        "confidence": 0.34,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.01,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:31:33.163Z",
+      "updatedAt": "2026-04-09T16:31:33.163Z"
+    },
+    {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "ETHUSDT",
+      "timeframe": "1h",
+      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-09T09:00:00.000Z",
+        "price": 2194.14,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 602.76
+        },
+        {
+          "id": "ann_seed_ai_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 599.14
+        },
+        {
+          "id": "ann_seed_ai_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 607.58
+        },
+        {
+          "id": "ann_seed_ai_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 611.8
+        },
+        {
+          "id": "ann_seed_ai_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 599.14,
+          "priceTo": 602.76
+        },
+        {
+          "id": "ann_seed_ai_note",
+          "type": "text",
+          "role": "note",
+          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
         }
       ],
       "strategy": {
@@ -44,27 +158,864 @@
         "annotationId": "ann_seed_ai",
         "bias": "bullish",
         "entryType": "conditional",
-        "entryPrice": 84137.43,
-        "stopLossPrice": 83632.61,
+        "entryPrice": 602.76,
+        "stopLossPrice": 599.14,
         "takeProfitPrices": [
-          84810.53,
-          85399.49
+          607.58,
+          611.8
         ],
-        "invalidationCondition": "price closes below 83632.61",
+        "invalidationCondition": "price closes below 599.14",
         "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:08:29.171Z",
+      "updatedAt": "2026-04-09T16:34:01.094Z"
+    },
+    {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "ETHUSDT",
+      "timeframe": "1h",
+      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-09T09:00:00.000Z",
+        "price": 2194.14,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 602.76
+        },
+        {
+          "id": "ann_seed_ai_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 599.14
+        },
+        {
+          "id": "ann_seed_ai_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 607.58
+        },
+        {
+          "id": "ann_seed_ai_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 611.8
+        },
+        {
+          "id": "ann_seed_ai_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 599.14,
+          "priceTo": 602.76
+        },
+        {
+          "id": "ann_seed_ai_note",
+          "type": "text",
+          "role": "note",
+          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai",
+        "annotationId": "ann_seed_ai",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 602.76,
+        "stopLossPrice": 599.14,
+        "takeProfitPrices": [
+          607.58,
+          611.8
+        ],
+        "invalidationCondition": "price closes below 599.14",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:08:29.171Z",
+      "updatedAt": "2026-04-09T16:34:01.094Z"
+    },
+    {
+      "annotationId": "ann_ai_1775748198889_8v5ncm",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h shows a strong, steady bullish trend with higher highs and higher lows across the recent candles. Momentum remains intact, but price is near short-term extension, so a pullback entry is preferable over chasing. Plan: buy on a modest retracement into prior breakout/support zone around 84720. Invalidation is a clean loss of the recent structure below 84480. Targets are set at 85180 and 85550, with a stretch target at 86000 if momentum continues.",
+      "chartAnchor": {
+        "time": "2026-04-09T13:23:09.363Z",
+        "price": 84720,
+        "index": 38
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 84720
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 84480
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85180
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85550
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 86000
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775748198889_p7midg",
+        "annotationId": "ann_ai_1775748198889_8v5ncm",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 84720,
+        "stopLossPrice": 84480,
+        "takeProfitPrices": [
+          85180,
+          85550,
+          86000
+        ],
+        "invalidationCondition": "Cancel the long setup if BTCUSDT closes below 84480 on the 1h timeframe before entry, or exit if price breaks and holds below that level after entry.",
+        "confidence": 0.76,
         "riskLevel": "balanced",
         "positionSizeRatio": 0.1,
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Active",
+      "status": "Draft",
       "visibility": "private",
-      "createdAt": "2026-04-09T12:40:07.086Z",
-      "updatedAt": "2026-04-09T12:50:07.086Z"
+      "createdAt": "2026-04-09T15:23:18.890Z",
+      "updatedAt": "2026-04-09T15:23:18.890Z"
+    },
+    {
+      "annotationId": "ann_ai_1775748080265_wsy1e9",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h is in a strong short-term uptrend with consistent higher closes and no clear reversal signal in the provided candles. Momentum remains bullish, but price is extended after a steady grind higher, so the better plan is to buy on a mild pullback rather than chase the current candle. A balanced setup is a limit long near the recent breakout/support zone, with risk defined below the latest higher-low structure.",
+      "chartAnchor": {
+        "time": "2026-04-09T13:21:12.918Z",
+        "price": 84720,
+        "index": 38
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 84720
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 84280
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85250
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85650
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 86100
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775748080265_ekw4y2",
+        "annotationId": "ann_ai_1775748080265_wsy1e9",
+        "bias": "long",
+        "entryType": "limit",
+        "entryPrice": 84720,
+        "stopLossPrice": 84280,
+        "takeProfitPrices": [
+          85250,
+          85650,
+          86100
+        ],
+        "invalidationCondition": "Invalidate the long setup if 1h price closes below 84280 or if momentum breaks structure with consecutive lower highs/lows before entry.",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T15:21:20.265Z",
+      "updatedAt": "2026-04-09T15:21:20.265Z"
+    },
+    {
+      "annotationId": "ann_ai_1775747380816_o8nyfa",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "84392.47 지지 재테스트 시 롱 관점 유지. 83843.92 종가 이탈 시 무효, 85067.61 / 85489.57 구간 분할 청산.",
+      "chartAnchor": {
+        "time": "2026-04-09T09:09:24.856Z",
+        "price": 84392.47,
+        "index": 34
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775747380816_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 84392.47
+        },
+        {
+          "id": "ann_ai_1775747380816_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 83843.92
+        },
+        {
+          "id": "ann_ai_1775747380816_tp1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85067.61
+        },
+        {
+          "id": "ann_ai_1775747380816_tp2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85489.57
+        },
+        {
+          "id": "ann_ai_1775747380816_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 83843.92,
+          "priceTo": 84392.47
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775747380816_l1oz13",
+        "annotationId": "ann_ai_1775747380816_o8nyfa",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 84392.47,
+        "stopLossPrice": 83843.92,
+        "takeProfitPrices": [
+          85067.61,
+          85489.57
+        ],
+        "invalidationCondition": "price closes below 83843.92",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T15:09:40.816Z",
+      "updatedAt": "2026-04-09T15:09:40.816Z"
+    },
+    {
+      "annotationId": "ann_ai_1775747320780_hu6yar",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "84392.47 지지 재테스트 시 롱 관점 유지. 83843.92 종가 이탈 시 무효, 85067.61 / 85489.57 구간 분할 청산.",
+      "chartAnchor": {
+        "time": "2026-04-09T07:00:07.086Z",
+        "price": 84392.47,
+        "index": 34
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775747320780_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 84392.47
+        },
+        {
+          "id": "ann_ai_1775747320780_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 83843.92
+        },
+        {
+          "id": "ann_ai_1775747320780_tp1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85067.61
+        },
+        {
+          "id": "ann_ai_1775747320780_tp2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85489.57
+        },
+        {
+          "id": "ann_ai_1775747320780_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 83843.92,
+          "priceTo": 84392.47
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775747320780_u7hyuu",
+        "annotationId": "ann_ai_1775747320780_hu6yar",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 84392.47,
+        "stopLossPrice": 83843.92,
+        "takeProfitPrices": [
+          85067.61,
+          85489.57
+        ],
+        "invalidationCondition": "price closes below 83843.92",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T15:08:40.780Z",
+      "updatedAt": "2026-04-09T15:08:40.780Z"
+    },
+    {
+      "annotationId": "ann_ai_1775747216617_45cz0a",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "84392.47 지지 재테스트 시 롱 관점 유지. 83843.92 종가 이탈 시 무효, 85067.61 / 85489.57 구간 분할 청산.",
+      "chartAnchor": {
+        "time": "2026-04-09T07:00:07.086Z",
+        "price": 84392.47,
+        "index": 34
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775747216617_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 84392.47
+        },
+        {
+          "id": "ann_ai_1775747216617_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 83843.92
+        },
+        {
+          "id": "ann_ai_1775747216617_tp1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85067.61
+        },
+        {
+          "id": "ann_ai_1775747216617_tp2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 85489.57
+        },
+        {
+          "id": "ann_ai_1775747216617_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 83843.92,
+          "priceTo": 84392.47
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775747216617_jsr2n8",
+        "annotationId": "ann_ai_1775747216617_45cz0a",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 84392.47,
+        "stopLossPrice": 83843.92,
+        "takeProfitPrices": [
+          85067.61,
+          85489.57
+        ],
+        "invalidationCondition": "price closes below 83843.92",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T15:06:56.617Z",
+      "updatedAt": "2026-04-09T15:06:56.617Z"
+    },
+    {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "ETHUSDT",
+      "timeframe": "1h",
+      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-09T09:00:00.000Z",
+        "price": 2194.14,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 602.76
+        },
+        {
+          "id": "ann_seed_ai_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 599.14
+        },
+        {
+          "id": "ann_seed_ai_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 607.58
+        },
+        {
+          "id": "ann_seed_ai_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 611.8
+        },
+        {
+          "id": "ann_seed_ai_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 599.14,
+          "priceTo": 602.76
+        },
+        {
+          "id": "ann_seed_ai_note",
+          "type": "text",
+          "role": "note",
+          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai",
+        "annotationId": "ann_seed_ai",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 602.76,
+        "stopLossPrice": 599.14,
+        "takeProfitPrices": [
+          607.58,
+          611.8
+        ],
+        "invalidationCondition": "price closes below 599.14",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:08:29.171Z",
+      "updatedAt": "2026-04-09T16:34:01.094Z"
     }
   ],
-  "notifications": [],
-  "auditEvents": [],
-  "automations": [],
-  "executions": []
+  "notifications": [
+    {
+      "notificationId": "noti_1775752441095_bl7d2d",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "ETHUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_seed_ai",
+      "createdAt": "2026-04-09T16:34:01.095Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775752439873_bualmb",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "ETHUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_seed_ai",
+      "createdAt": "2026-04-09T16:33:59.873Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775752352343_15harp",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BNBUSDT 0 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775752286992_97rr3g",
+      "createdAt": "2026-04-09T16:32:32.343Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775752351261_wk23ha",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BNBUSDT 0 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775752286992_97rr3g",
+      "createdAt": "2026-04-09T16:32:31.261Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775750184154_u4cgse",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_seed_ai",
+      "createdAt": "2026-04-09T15:56:24.154Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775749885188_frveoi",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_seed_ai",
+      "createdAt": "2026-04-09T15:51:25.188Z",
+      "read": false
+    }
+  ],
+  "auditEvents": [
+    {
+      "eventId": "evt_exe_str_ann_seed_ai_1775752431960_1775752441096",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_seed_ai_1775752431960",
+      "timestamp": "2026-04-09T16:34:01.096Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_seed_ai_1775752430493_1775752439875",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_seed_ai_1775752430493",
+      "timestamp": "2026-04-09T16:33:59.875Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775752420196",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-09T16:33:40.196Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775752413992_e9pvgn_1775752413994",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775752413992_e9pvgn",
+      "timestamp": "2026-04-09T16:33:33.994Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775752413887",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-09T16:33:33.887Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775752405688_4dbyjm_1775752405690",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775752405688_4dbyjm",
+      "timestamp": "2026-04-09T16:33:25.690Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775752405573",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-09T16:33:25.573Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775752397762_r1bike_1775752397765",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775752397762_r1bike",
+      "timestamp": "2026-04-09T16:33:17.765Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_ann_1775752286992_97rr3g_1775752352346",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_1775752286992_97rr3g",
+      "timestamp": "2026-04-09T16:32:32.346Z",
+      "metadata": {
+        "alertValue": "0"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775752286992_97rr3g_1775752351264",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_1775752286992_97rr3g",
+      "timestamp": "2026-04-09T16:32:31.264Z",
+      "metadata": {
+        "alertValue": "0"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775752286992_97rr3g_1775752293166",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1775752286992_97rr3g",
+      "timestamp": "2026-04-09T16:31:33.166Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_seed_ai_1775750170263_1775750184155",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_seed_ai_1775750170263",
+      "timestamp": "2026-04-09T15:56:24.155Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_seed_ai_1775749885187_1775749885189",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_seed_ai_1775749885187",
+      "timestamp": "2026-04-09T15:51:25.189Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775748198889_8v5ncm_1775748198891",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775748198889_8v5ncm",
+      "timestamp": "2026-04-09T15:23:18.891Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775748080265_wsy1e9_1775748080266",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775748080265_wsy1e9",
+      "timestamp": "2026-04-09T15:21:20.266Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775747380816_o8nyfa_1775747380818",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747380816_o8nyfa",
+      "timestamp": "2026-04-09T15:09:40.818Z",
+      "metadata": {
+        "provider": "fallback",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775747320780_hu6yar_1775747320781",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747320780_hu6yar",
+      "timestamp": "2026-04-09T15:08:40.781Z",
+      "metadata": {
+        "provider": "fallback",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775747216617_45cz0a_1775747216618",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747216617_45cz0a",
+      "timestamp": "2026-04-09T15:06:56.618Z",
+      "metadata": {
+        "provider": "fallback",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    }
+  ],
+  "automations": [
+    {
+      "automationId": "auto_1775752413992_e9pvgn",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Armed",
+      "triggerPrice": 602.76,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775752405688_4dbyjm",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Armed",
+      "triggerPrice": 602.76,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775752397762_r1bike",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Armed",
+      "triggerPrice": 2194.14,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    }
+  ],
+  "executions": [
+    {
+      "executionId": "exe_str_ann_seed_ai_1775752431960",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x79ee16429b19eb0a5ba511ce90a75a421bb79e98c7530b6d24306a2dc2ab477c",
+      "liquidityChainTxHash": "0x279c6c65b2e8",
+      "filledPrice": 602.76,
+      "filledAt": "2026-04-09T16:33:51.960Z"
+    },
+    {
+      "executionId": "exe_str_ann_seed_ai_1775752430493",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xacc28c5f9d10d923d3d15b44d6ebfffe1da5eb2254d1a7d46f863bede0d794ca",
+      "liquidityChainTxHash": "0x11372e75c9112",
+      "filledPrice": 602.76,
+      "filledAt": "2026-04-09T16:33:50.493Z"
+    },
+    {
+      "executionId": "exe_str_ann_seed_ai_1775750170263",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x95487ec1ff5bc00014aef1a1972b7ff8df7baad43a43eaec3cbfc9efa5ecf1d8",
+      "liquidityChainTxHash": "0x3e4890442784c",
+      "filledPrice": 84137.43,
+      "filledAt": "2026-04-09T15:56:10.263Z"
+    },
+    {
+      "executionId": "exe_str_ann_seed_ai_1775749885187",
+      "strategyId": "str_ann_seed_ai",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xf752b606306a7",
+      "liquidityChainTxHash": "0x81953dded1358",
+      "filledPrice": 84137.43,
+      "filledAt": "2026-04-09T15:51:25.187Z"
+    }
+  ]
 }
