@@ -6,6 +6,7 @@ import {
   createAnnotation,
   createAutomation,
   createExecution,
+  getExecutions,
   getAnnotations,
   getAuditLogs,
   getCandles,
@@ -87,12 +88,13 @@ export function TradingPage() {
     setErrorMessage(null);
 
     try {
-      const [health, nextMarkets, nextCandles, nextAnnotations, nextNotifications] = await Promise.all([
+      const [health, nextMarkets, nextCandles, nextAnnotations, nextNotifications, nextExecutions] = await Promise.all([
         getHealth(),
         getMarkets(),
         getCandles(symbol, nextTimeframe),
         getAnnotations(symbol, nextTimeframe),
-        getNotifications()
+        getNotifications(),
+        getExecutions(symbol, nextTimeframe)
       ]);
 
       setConnectionStatus(health.ok ? 'connected' : 'disconnected');
@@ -108,6 +110,7 @@ export function TradingPage() {
           : nextAnnotations[0]?.annotationId ?? null
       );
       setNotifications(nextNotifications);
+      setLastExecution(nextExecutions[0] ?? null);
     } catch (error) {
       setConnectionStatus('disconnected');
       setErrorMessage(error instanceof Error ? error.message : '데이터를 불러오지 못했습니다.');
@@ -345,18 +348,9 @@ export function TradingPage() {
       } else {
         const result = await createExecution(selectedAnnotation.strategy.strategyId);
         setLastExecution({
-          executionId: result.execution_id,
-          strategyId: selectedAnnotation.strategy.strategyId,
-          status: result.status,
-          executionChain: 'opbnb',
-          liquidityChain: 'bsc',
-          executionChainTxHash: result.execution_chain_tx_hash,
-          liquidityChainTxHash: result.liquidity_chain_tx_hash,
-          proofRecorded: result.proof_recorded,
-          proofRegistryId: result.proof_registry_id,
-          proofContractAddress: result.proof_contract_address,
-          filledPrice: selectedAnnotation.strategy.entryPrice,
-          filledAt: new Date().toISOString()
+          ...result,
+          filledPrice: result.filledPrice ?? selectedAnnotation.strategy.entryPrice,
+          filledAt: result.filledAt ?? new Date().toISOString()
         });
         upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
           ...annotation,

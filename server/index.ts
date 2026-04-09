@@ -409,6 +409,50 @@ app.post('/api/v1/executions/preview', async (request, response) => {
   });
 });
 
+app.get('/api/v1/executions', (request, response) => {
+  const symbol = request.query.symbol ? String(request.query.symbol) : null;
+  const timeframe = request.query.timeframe ? String(request.query.timeframe) : null;
+  const state = getState();
+
+  const executions = state.executions.filter((execution) => {
+    if (!symbol && !timeframe) {
+      return true;
+    }
+
+    const annotation = state.annotations.find((item) => item.strategy.strategyId === execution.strategyId);
+    if (!annotation) {
+      return false;
+    }
+
+    if (symbol && annotation.marketSymbol !== symbol) {
+      return false;
+    }
+
+    if (timeframe && annotation.timeframe !== timeframe) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return sendSuccess(response, {
+    executions: executions.map((execution) => ({
+      execution_id: execution.executionId,
+      strategy_id: execution.strategyId,
+      status: execution.status,
+      execution_chain: execution.executionChain,
+      liquidity_chain: execution.liquidityChain,
+      execution_chain_tx_hash: execution.executionChainTxHash,
+      liquidity_chain_tx_hash: execution.liquidityChainTxHash,
+      proof_recorded: execution.proofRecorded ?? false,
+      proof_registry_id: execution.proofRegistryId ?? null,
+      proof_contract_address: execution.proofContractAddress ?? null,
+      filled_price: execution.filledPrice ?? null,
+      filled_at: execution.filledAt ?? null
+    }))
+  });
+});
+
 app.post('/api/v1/executions', async (request, response) => {
   const strategyId = String(request.body.strategy_id ?? '');
   const state = getState();
@@ -421,9 +465,17 @@ app.post('/api/v1/executions', async (request, response) => {
   const persistedExecution = onchainReceipt.resultTxHash
     ? {
         ...execution,
-        executionChainTxHash: onchainReceipt.resultTxHash
+        executionChainTxHash: onchainReceipt.resultTxHash,
+        proofRecorded: true,
+        proofRegistryId: onchainReceipt.registryId ?? null,
+        proofContractAddress: onchainReceipt.contractAddress ?? null
       }
-    : execution;
+    : {
+        ...execution,
+        proofRecorded: false,
+        proofRegistryId: onchainReceipt.registryId ?? null,
+        proofContractAddress: onchainReceipt.contractAddress ?? null
+      };
   updateState((current) => ({
     ...current,
     executions: [persistedExecution, ...current.executions],

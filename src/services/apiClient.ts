@@ -65,6 +65,59 @@ export async function getAnnotations(symbol: string, timeframe: string) {
   return data.annotations.map(normalizeAnnotation);
 }
 
+function normalizeExecution(execution: {
+  execution_id: string;
+  strategy_id: string;
+  status: Execution['status'];
+  execution_chain: Execution['executionChain'];
+  liquidity_chain: Execution['liquidityChain'];
+  execution_chain_tx_hash: string;
+  liquidity_chain_tx_hash: string;
+  proof_recorded?: boolean;
+  proof_registry_id?: string | null;
+  proof_contract_address?: string | null;
+  filled_price?: number | null;
+  filled_at?: string | null;
+}): Execution {
+  return {
+    executionId: execution.execution_id,
+    strategyId: execution.strategy_id,
+    status: execution.status,
+    executionChain: execution.execution_chain,
+    liquidityChain: execution.liquidity_chain,
+    executionChainTxHash: execution.execution_chain_tx_hash,
+    liquidityChainTxHash: execution.liquidity_chain_tx_hash,
+    proofRecorded: execution.proof_recorded,
+    proofRegistryId: execution.proof_registry_id ?? null,
+    proofContractAddress: execution.proof_contract_address ?? null,
+    filledPrice: execution.filled_price ?? undefined,
+    filledAt: execution.filled_at ?? undefined
+  };
+}
+
+export async function getExecutions(symbol?: string, timeframe?: string) {
+  const query = new URLSearchParams();
+  if (symbol) query.set('symbol', symbol);
+  if (timeframe) query.set('timeframe', timeframe);
+  const data = await request<{
+    executions: Array<{
+      execution_id: string;
+      strategy_id: string;
+      status: Execution['status'];
+      execution_chain: Execution['executionChain'];
+      liquidity_chain: Execution['liquidityChain'];
+      execution_chain_tx_hash: string;
+      liquidity_chain_tx_hash: string;
+      proof_recorded?: boolean;
+      proof_registry_id?: string | null;
+      proof_contract_address?: string | null;
+      filled_price?: number | null;
+      filled_at?: string | null;
+    }>;
+  }>(`/api/v1/executions${query.toString() ? `?${query.toString()}` : ''}`);
+  return data.executions.map(normalizeExecution);
+}
+
 export async function createAnnotation(input: { marketSymbol: string; timeframe: string; text: string; chartAnchor: { time: string; price: number; index: number; }; visibility?: 'private' | 'public' | 'unlisted'; }) {
   const data = await request<{ annotation: Annotation; parsing_notes: string[] }>(`/api/v1/annotations`, {
     method: 'POST',
@@ -174,7 +227,14 @@ export async function createExecution(strategyId: string) {
     method: 'POST',
     body: JSON.stringify({ strategy_id: strategyId, mode: 'manual_confirmed' })
   });
-  return data;
+  return normalizeExecution({
+    ...data,
+    strategy_id: strategyId,
+    execution_chain: 'opbnb',
+    liquidity_chain: 'bsc',
+    filled_price: null,
+    filled_at: null
+  });
 }
 
 export function getOpbnbTxUrl(txHash: string) {
