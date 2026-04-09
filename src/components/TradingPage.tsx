@@ -37,6 +37,7 @@ import { determineAnnotationStatus, validateStrategy } from '../utils/strategy';
 import { AutomationModal } from './AutomationModal';
 import { BottomActionBar } from './BottomActionBar';
 import { ChartCanvas } from './ChartCanvas';
+import { ExecutionHistoryPanel } from './ExecutionHistoryPanel';
 import { ExecutionModal } from './ExecutionModal';
 import { HeaderBar } from './HeaderBar';
 import { MyStrategiesPanel } from './MyStrategiesPanel';
@@ -63,6 +64,7 @@ export function TradingPage() {
   const [strategiesOpen, setStrategiesOpen] = useState(false);
   const [parsingNotesByAnnotationId, setParsingNotesByAnnotationId] = useState<Record<string, string[]>>({});
   const [lastExecution, setLastExecution] = useState<Execution | null>(null);
+  const [executions, setExecutions] = useState<Execution[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [llmConfigured, setLlmConfigured] = useState(false);
   const [onchainConfigured, setOnchainConfigured] = useState(false);
@@ -110,6 +112,7 @@ export function TradingPage() {
           : nextAnnotations[0]?.annotationId ?? null
       );
       setNotifications(nextNotifications);
+      setExecutions(nextExecutions);
       setLastExecution(nextExecutions[0] ?? null);
     } catch (error) {
       setConnectionStatus('disconnected');
@@ -347,11 +350,13 @@ export function TradingPage() {
         activateSelectedAnnotation();
       } else {
         const result = await createExecution(selectedAnnotation.strategy.strategyId);
-        setLastExecution({
+        const nextExecution = {
           ...result,
           filledPrice: result.filledPrice ?? selectedAnnotation.strategy.entryPrice,
           filledAt: result.filledAt ?? new Date().toISOString()
-        });
+        };
+        setLastExecution(nextExecution);
+        setExecutions((prev) => [nextExecution, ...prev.filter((execution) => execution.executionId !== nextExecution.executionId)].slice(0, 8));
         upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
           ...annotation,
           status: 'Executed',
@@ -446,6 +451,29 @@ export function TradingPage() {
       {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
       {loading ? <div className="loading-banner panel">데이터를 불러오는 중입니다...</div> : null}
 
+      <section className="overview-grid">
+        <article className="overview-card panel">
+          <p className="eyebrow">Market</p>
+          <strong>{selectedSymbol}</strong>
+          <span>{currentPrice ? `${currentPrice.toLocaleString('ko-KR')} USDT` : '시세 로딩 중'}</span>
+        </article>
+        <article className="overview-card panel">
+          <p className="eyebrow">AI Engine</p>
+          <strong>{llmConfigured ? 'LLM Ready' : 'Fallback Active'}</strong>
+          <span>{llmConfigured ? '실시간 분석 가능' : '규칙 기반 분석 사용 중'}</span>
+        </article>
+        <article className="overview-card panel">
+          <p className="eyebrow">Onchain</p>
+          <strong>{onchainConfigured ? 'Proof Ready' : 'Local Only'}</strong>
+          <span>{onchainConfigured ? 'opBNB proof 기록 사용' : '감사 로그만 기록'}</span>
+        </article>
+        <article className="overview-card panel">
+          <p className="eyebrow">Selection</p>
+          <strong>{selectedAnnotation ? selectedAnnotation.strategy.bias.toUpperCase() : 'No Strategy'}</strong>
+          <span>{selectedAnnotation ? `${selectedAnnotation.strategy.entryType} · ${selectedAnnotation.status}` : '전략을 선택하세요'}</span>
+        </article>
+      </section>
+
       <main className="workspace-grid">
         <ChartCanvas
           marketData={candles}
@@ -481,13 +509,13 @@ export function TradingPage() {
       </main>
 
       <section className="status-strip panel">
-        <div>
+        <div className="status-card">
           <p className="eyebrow">Lifecycle</p>
           <strong>
             {selectedAnnotation ? `${selectedAnnotation.status} → ${determineAnnotationStatus(selectedAnnotation, currentPrice)}` : '전략 없음'}
           </strong>
         </div>
-        <div>
+        <div className="status-card">
           <p className="eyebrow">Execution</p>
           <strong>{lastExecution ? `${lastExecution.status} · ${lastExecution.executionChain}` : '아직 실행 없음'}</strong>
           {lastExecution ? (
@@ -509,13 +537,15 @@ export function TradingPage() {
             </div>
           ) : null}
         </div>
-        <div>
+        <div className="status-card">
           <p className="eyebrow">Automation</p>
           <strong>
             {selectedAnnotation ? automationByStrategyId[selectedAnnotation.strategy.strategyId]?.status ?? 'Disabled' : 'Disabled'}
           </strong>
         </div>
       </section>
+
+      <ExecutionHistoryPanel executions={executions} />
 
       <BottomActionBar
         selectedAnnotation={selectedAnnotation}

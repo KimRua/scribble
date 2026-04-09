@@ -27,9 +27,10 @@ export function HeaderBar(props: HeaderBarProps) {
 
   return (
     <header className="header-bar panel">
-      <div>
+      <div className="header-copy">
         <p className="eyebrow">Scribble</p>
         <h1>차트 주석 기반 트레이딩 코파일럿</h1>
+        <p className="header-subtitle">차트 주석, 전략 검증, execution proof를 한 화면에서 관리합니다.</p>
       </div>
       <div className="header-controls">
         <label>
