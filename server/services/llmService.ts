@@ -2,6 +2,20 @@ import { parseAnnotationText } from '../../src/services/parserService';
 import type { Annotation, Candle, UserSettings } from '../../src/types/domain';
 import { generateAiAnnotation } from '../../src/services/aiService';
 
+type RawLlmStrategy = {
+  bias: string;
+  entry_type: string;
+  entry_price: number;
+  stop_loss_price: number;
+  take_profit_prices: number[];
+  invalidation_condition: string;
+  confidence: number;
+  risk_level: string;
+  position_size_ratio: number;
+  leverage: number;
+  auto_execute_enabled: boolean;
+};
+
 interface AnalyzeParams {
   marketSymbol: string;
   timeframe: string;
@@ -20,6 +34,59 @@ interface ParseParams {
 
 function hasOpenAiConfig() {
   return Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL);
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function normalizeBias(input: string): Annotation['strategy']['bias'] {
+  const value = input.toLowerCase();
+  if (['bullish', 'long', 'buy', 'up'].includes(value)) {
+    return 'bullish';
+  }
+  if (['bearish', 'short', 'sell', 'down'].includes(value)) {
+    return 'bearish';
+  }
+  return 'neutral';
+}
+
+function normalizeEntryType(input: string): Annotation['strategy']['entryType'] {
+  const value = input.toLowerCase();
+  if (value.includes('market')) {
+    return 'market';
+  }
+  if (value.includes('limit')) {
+    return 'limit';
+  }
+  return 'conditional';
+}
+
+function normalizeRiskLevel(input: string): Annotation['strategy']['riskLevel'] {
+  const value = input.toLowerCase();
+  if (['conservative', 'low'].includes(value)) {
+    return 'conservative';
+  }
+  if (['aggressive', 'high'].includes(value)) {
+    return 'aggressive';
+  }
+  return 'balanced';
+}
+
+export function normalizeLlmStrategyShape(raw: RawLlmStrategy) {
+  return {
+    bias: normalizeBias(raw.bias),
+    entryType: normalizeEntryType(raw.entry_type),
+    entryPrice: Number(raw.entry_price),
+    stopLossPrice: Number(raw.stop_loss_price),
+    takeProfitPrices: raw.take_profit_prices.map((price) => Number(price)),
+    invalidationCondition: raw.invalidation_condition,
+    confidence: clamp(Number(raw.confidence), 0, 1),
+    riskLevel: normalizeRiskLevel(raw.risk_level),
+    positionSizeRatio: clamp(Number(raw.position_size_ratio), 0.01, 1),
+    leverage: clamp(Number(raw.leverage), 1, 10),
+    autoExecuteEnabled: Boolean(raw.auto_execute_enabled)
+  };
 }
 
 async function callOpenAi(prompt: string) {
@@ -87,24 +154,13 @@ export async function analyzeChartWithLlm(params: AnalyzeParams): Promise<Pick<A
     const content = await callOpenAi(prompt);
     const parsed = JSON.parse(content) as {
       text: string;
-      strategy: {
-        bias: Annotation['strategy']['bias'];
-        entry_type: Annotation['strategy']['entryType'];
-        entry_price: number;
-        stop_loss_price: number;
-        take_profit_prices: number[];
-        invalidation_condition: string;
-        confidence: number;
-        risk_level: Annotation['strategy']['riskLevel'];
-        position_size_ratio: number;
-        leverage: number;
-        auto_execute_enabled: boolean;
-      };
+      strategy: RawLlmStrategy;
     };
+    const normalizedStrategy = normalizeLlmStrategyShape(parsed.strategy);
     const anchorIndex = Math.max(params.candles.length - 2, 0);
     const anchor = {
       time: params.candles[anchorIndex]?.openTime ?? new Date().toISOString(),
-      price: parsed.strategy.entry_price,
+      price: normalizedStrategy.entryPrice,
       index: anchorIndex
     };
 
@@ -112,24 +168,14 @@ export async function analyzeChartWithLlm(params: AnalyzeParams): Promise<Pick<A
       text: parsed.text,
       chartAnchor: anchor,
       drawingObjects: [
-        { id: 'llm_entry', type: 'line', role: 'entry', price: parsed.strategy.entry_price },
-        { id: 'llm_sl', type: 'line', role: 'stop_loss', price: parsed.strategy.stop_loss_price },
-        ...parsed.strategy.take_profit_prices.map((price, index) => ({ id: `llm_tp_${index}`, type: 'line' as const, role: 'take_profit' as const, price }))
+        { id: 'llm_entry', type: 'line', role: 'entry', price: normalizedStrategy.entryPrice },
+        { id: 'llm_sl', type: 'line', role: 'stop_loss', price: normalizedStrategy.stopLossPrice },
+        ...normalizedStrategy.takeProfitPrices.map((price, index) => ({ id: `llm_tp_${index}`, type: 'line' as const, role: 'take_profit' as const, price }))
       ],
       strategy: {
         strategyId: '',
         annotationId: '',
-        bias: parsed.strategy.bias,
-        entryType: parsed.strategy.entry_type,
-        entryPrice: parsed.strategy.entry_price,
-        stopLossPrice: parsed.strategy.stop_loss_price,
-        takeProfitPrices: parsed.strategy.take_profit_prices,
-        invalidationCondition: parsed.strategy.invalidation_condition,
-        confidence: parsed.strategy.confidence,
-        riskLevel: parsed.strategy.risk_level,
-        positionSizeRatio: parsed.strategy.position_size_ratio,
-        leverage: parsed.strategy.leverage,
-        autoExecuteEnabled: parsed.strategy.auto_execute_enabled
+        ...normalizedStrategy
       },
       provider: 'openai'
     };
@@ -175,38 +221,17 @@ export async function parseAnnotationWithLlm(params: ParseParams) {
     );
     const parsed = JSON.parse(content) as {
       text?: string;
-      strategy: {
-        bias: 'bullish' | 'bearish' | 'neutral';
-        entry_type: 'market' | 'limit' | 'conditional';
-        entry_price: number;
-        stop_loss_price: number;
-        take_profit_prices: number[];
-        invalidation_condition: string;
-        confidence: number;
-        risk_level: 'conservative' | 'balanced' | 'aggressive';
-        position_size_ratio: number;
-        leverage: number;
-        auto_execute_enabled: boolean;
-      };
+      strategy: RawLlmStrategy;
       parsing_notes?: string[];
       missing_fields?: string[];
     };
+    const normalizedStrategy = normalizeLlmStrategyShape(parsed.strategy);
 
     return {
       strategy: {
         strategyId: `str_${params.annotationId}`,
         annotationId: params.annotationId,
-        bias: parsed.strategy.bias,
-        entryType: parsed.strategy.entry_type,
-        entryPrice: parsed.strategy.entry_price,
-        stopLossPrice: parsed.strategy.stop_loss_price,
-        takeProfitPrices: parsed.strategy.take_profit_prices,
-        invalidationCondition: parsed.strategy.invalidation_condition,
-        confidence: parsed.strategy.confidence,
-        riskLevel: parsed.strategy.risk_level,
-        positionSizeRatio: parsed.strategy.position_size_ratio,
-        leverage: parsed.strategy.leverage,
-        autoExecuteEnabled: parsed.strategy.auto_execute_enabled
+        ...normalizedStrategy
       },
       parsingNotes: parsed.parsing_notes ?? [],
       missingFields: parsed.missing_fields ?? [],
