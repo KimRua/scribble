@@ -1,0 +1,70 @@
+{
+  "annotations": [
+    {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "84137.43 지지 재테스트 시 단기 롱 진입 가능. 83632.61 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-09T05:00:07.086Z",
+        "price": 84137.43,
+        "index": 32
+      },
+      "drawingObjects": [
+        {
+          "id": "draw_entry_seed",
+          "type": "line",
+          "role": "entry",
+          "price": 84137.43
+        },
+        {
+          "id": "draw_sl_seed",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 83632.61
+        },
+        {
+          "id": "draw_tp_seed_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 84810.53
+        },
+        {
+          "id": "draw_zone_seed",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 83632.61,
+          "priceTo": 84137.43
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai",
+        "annotationId": "ann_seed_ai",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 84137.43,
+        "stopLossPrice": 83632.61,
+        "takeProfitPrices": [
+          84810.53,
+          85399.49
+        ],
+        "invalidationCondition": "price closes below 83632.61",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-09T12:40:07.086Z",
+      "updatedAt": "2026-04-09T12:50:07.086Z"
+    }
+  ],
+  "notifications": [],
+  "auditEvents": [],
+  "automations": [],
+  "executions": []
+}

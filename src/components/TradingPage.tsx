@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildSeedAnnotations, defaultUserSettings, generateCandles, marketOptions } from '../data/mockMarket';
-import { createAuditEvent } from '../services/auditLogService';
-import { generateAiAnnotation } from '../services/aiService';
-import { armAutomation, createExecutionPreview, executeStrategy, simulatePriceTick } from '../services/executionService';
-import { parseAnnotationText } from '../services/parserService';
+import { defaultUserSettings, marketOptions as fallbackMarkets } from '../data/mockMarket';
+import {
+  analyzeChart,
+  createAlert,
+  createAnnotation,
+  createAutomation,
+  createExecution,
+  getAnnotations,
+  getAuditLogs,
+  getCandles,
+  getHealth,
+  getMarkets,
+  getNotifications,
+  previewExecution,
+  updateAnnotation
+} from '../services/apiClient';
 import type {
   Annotation,
   AuditEvent,
@@ -11,11 +22,13 @@ import type {
   DrawingObject,
   DrawingMode,
   Execution,
+  ExecutionPlan,
+  MarketOption,
   NotificationItem,
   Strategy,
   StrategyValidation
 } from '../types/domain';
-import { createAnnotationFromText, syncAnnotationWithStrategy } from '../utils/annotation';
+import { syncAnnotationWithStrategy } from '../utils/annotation';
 import { determineAnnotationStatus, validateStrategy } from '../utils/strategy';
 import { AutomationModal } from './AutomationModal';
 import { BottomActionBar } from './BottomActionBar';
@@ -29,15 +42,16 @@ import { RightPanel } from './RightPanel';
 export function TradingPage() {
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
   const [timeframe, setTimeframe] = useState('1h');
-  const [candles, setCandles] = useState(() => generateCandles('BTCUSDT', '1h'));
-  const [annotations, setAnnotations] = useState<Annotation[]>(() => buildSeedAnnotations('BTCUSDT', '1h', generateCandles('BTCUSDT', '1h')));
-  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>('ann_seed_ai');
+  const [markets, setMarkets] = useState<MarketOption[]>(fallbackMarkets);
+  const [candles, setCandles] = useState([] as Awaited<ReturnType<typeof getCandles>>);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   const [drawingMode, setDrawingMode] = useState<DrawingMode>('none');
-  const [currentPrice, setCurrentPrice] = useState(() => generateCandles('BTCUSDT', '1h').slice(-1)[0].close);
+  const [currentPrice, setCurrentPrice] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [automationByStrategyId, setAutomationByStrategyId] = useState<Record<string, AutomationRule>>({});
-  const [executionPreview, setExecutionPreview] = useState<ReturnType<typeof createExecutionPreview> | null>(null);
+  const [executionPreview, setExecutionPreview] = useState<ExecutionPlan | null>(null);
   const [executionMode, setExecutionMode] = useState<'execute' | 'conditional'>('execute');
   const [executionModalOpen, setExecutionModalOpen] = useState(false);
   const [automationModalOpen, setAutomationModalOpen] = useState(false);
@@ -45,78 +59,121 @@ export function TradingPage() {
   const [strategiesOpen, setStrategiesOpen] = useState(false);
   const [parsingNotesByAnnotationId, setParsingNotesByAnnotationId] = useState<Record<string, string[]>>({});
   const [lastExecution, setLastExecution] = useState<Execution | null>(null);
-
-  useEffect(() => {
-    const nextCandles = generateCandles(selectedSymbol, timeframe);
-    const nextAnnotations = buildSeedAnnotations(selectedSymbol, timeframe, nextCandles);
-    setCandles(nextCandles);
-    setAnnotations(nextAnnotations);
-    setSelectedAnnotationId(nextAnnotations[0]?.annotationId ?? null);
-    setCurrentPrice(nextCandles[nextCandles.length - 1]?.close ?? 0);
-    setAutomationByStrategyId({});
-    setLastExecution(null);
-  }, [selectedSymbol, timeframe]);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
+  const [llmConfigured, setLlmConfigured] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [syncRevision, setSyncRevision] = useState(0);
+  const [pendingSyncAnnotationId, setPendingSyncAnnotationId] = useState<string | null>(null);
 
   const selectedAnnotation = useMemo(
     () => annotations.find((annotation) => annotation.annotationId === selectedAnnotationId) ?? null,
     [annotations, selectedAnnotationId]
   );
 
-  const visibleLevels = useMemo(() => candles.slice(-10).flatMap((candle) => [candle.high, candle.low, candle.close]), [candles]);
-
   const validation: StrategyValidation | null = useMemo(() => {
     return selectedAnnotation ? validateStrategy(selectedAnnotation.strategy, currentPrice, defaultUserSettings) : null;
   }, [selectedAnnotation, currentPrice]);
 
-  const selectedAuditEvents = useMemo(() => {
-    if (!selectedAnnotation) {
-      return [];
-    }
-    return auditEvents.filter((event) => event.entityId === selectedAnnotation.annotationId || event.entityId === selectedAnnotation.strategy.strategyId).slice(0, 8);
-  }, [auditEvents, selectedAnnotation]);
-
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
+
+  const loadWorkspace = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
+    setLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const [health, nextMarkets, nextCandles, nextAnnotations, nextNotifications] = await Promise.all([
+        getHealth(),
+        getMarkets(),
+        getCandles(symbol, nextTimeframe),
+        getAnnotations(symbol, nextTimeframe),
+        getNotifications()
+      ]);
+
+      setConnectionStatus(health.ok ? 'connected' : 'disconnected');
+      setLlmConfigured(health.llmConfigured);
+      setMarkets(nextMarkets);
+      setCandles(nextCandles);
+      setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
+      setAnnotations(nextAnnotations);
+      setSelectedAnnotationId((current) =>
+        current && nextAnnotations.some((annotation) => annotation.annotationId === current)
+          ? current
+          : nextAnnotations[0]?.annotationId ?? null
+      );
+      setNotifications(nextNotifications);
+    } catch (error) {
+      setConnectionStatus('disconnected');
+      setErrorMessage(error instanceof Error ? error.message : '데이터를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadWorkspace();
+  }, [selectedSymbol, timeframe]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void getNotifications().then(setNotifications).catch(() => undefined);
+    }, 8000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!selectedAnnotation) {
+      setAuditEvents([]);
+      return;
+    }
+    void getAuditLogs({ annotationId: selectedAnnotation.annotationId })
+      .then(setAuditEvents)
+      .catch(() => undefined);
+  }, [selectedAnnotation?.annotationId]);
+
+  useEffect(() => {
+    if (!selectedAnnotation || pendingSyncAnnotationId !== selectedAnnotation.annotationId || syncRevision === 0) {
       return;
     }
 
     const timeout = window.setTimeout(() => {
-      const parsed = parseAnnotationText(selectedAnnotation.text, {
-        currentPrice,
-        visibleLevels,
-        annotationId: selectedAnnotation.annotationId
-      });
-      setParsingNotesByAnnotationId((prev) => ({ ...prev, [selectedAnnotation.annotationId]: parsed.parsingNotes }));
-      setAnnotations((prev) =>
-        prev.map((annotation) => {
-          if (annotation.annotationId !== selectedAnnotation.annotationId || annotation.authorType === 'ai') {
-            return annotation;
-          }
-          return syncAnnotationWithStrategy(annotation, {
-            ...annotation.strategy,
-            ...parsed.strategy,
-            positionSizeRatio: annotation.strategy.positionSizeRatio,
-            leverage: annotation.strategy.leverage,
-            autoExecuteEnabled: annotation.strategy.autoExecuteEnabled
-          });
+      setSaving(true);
+      void updateAnnotation(selectedAnnotation.annotationId, {
+        text: selectedAnnotation.text,
+        bias: selectedAnnotation.strategy.bias,
+        entryType: selectedAnnotation.strategy.entryType,
+        entryPrice: selectedAnnotation.strategy.entryPrice,
+        stopLossPrice: selectedAnnotation.strategy.stopLossPrice,
+        takeProfitPrices: selectedAnnotation.strategy.takeProfitPrices,
+        invalidationCondition: selectedAnnotation.strategy.invalidationCondition,
+        confidence: selectedAnnotation.strategy.confidence,
+        riskLevel: selectedAnnotation.strategy.riskLevel,
+        positionSizeRatio: selectedAnnotation.strategy.positionSizeRatio,
+        leverage: selectedAnnotation.strategy.leverage,
+        autoExecuteEnabled: selectedAnnotation.strategy.autoExecuteEnabled
+      })
+        .then((result) => {
+          setAnnotations((prev) =>
+            prev.map((annotation) => (annotation.annotationId === result.annotation.annotationId ? result.annotation : annotation))
+          );
+          setParsingNotesByAnnotationId((prev) => ({ ...prev, [selectedAnnotation.annotationId]: result.parsing_notes }));
+          setPendingSyncAnnotationId(null);
         })
-      );
-    }, 450);
+        .catch((error) => {
+          setErrorMessage(error instanceof Error ? error.message : '편집 저장에 실패했습니다.');
+        })
+        .finally(() => {
+          setSaving(false);
+        });
+    }, 700);
 
     return () => window.clearTimeout(timeout);
-  }, [currentPrice, selectedAnnotation?.annotationId, selectedAnnotation?.text, visibleLevels]);
+  }, [pendingSyncAnnotationId, selectedAnnotation, syncRevision]);
 
-  const recordAudit = (event: AuditEvent) => {
-    setAuditEvents((prev) => [event, ...prev]);
-  };
-
-  const pushNotifications = (items: NotificationItem[]) => {
-    if (items.length === 0) {
-      return;
-    }
-    setNotifications((prev) => [...items, ...prev].slice(0, 20));
+  const markDirty = (annotationId: string) => {
+    setPendingSyncAnnotationId(annotationId);
+    setSyncRevision((value) => value + 1);
   };
 
   const upsertAnnotation = (annotationId: string, updater: (annotation: Annotation) => Annotation) => {
@@ -132,42 +189,45 @@ export function TradingPage() {
       status: annotation.status === 'Draft' ? 'Active' : annotation.status,
       updatedAt: new Date().toISOString()
     }));
+    markDirty(selectedAnnotation.annotationId);
   };
 
-  const handleRequestAi = () => {
-    const annotation = generateAiAnnotation({
-      symbol: selectedSymbol,
-      timeframe,
-      candles,
-      settings: defaultUserSettings
-    });
-    setAnnotations((prev) => [annotation, ...prev]);
-    setSelectedAnnotationId(annotation.annotationId);
-    recordAudit(createAuditEvent('ai_analysis_requested', 'annotation', annotation.annotationId, { symbol: selectedSymbol, timeframe }));
+  const handleRequestAi = async () => {
+    try {
+      const result = await analyzeChart({
+        marketSymbol: selectedSymbol,
+        timeframe,
+        riskLevel: defaultUserSettings.riskLevel,
+        defaultPositionSizeRatio: defaultUserSettings.defaultPositionSize,
+        leverage: defaultUserSettings.leverage
+      });
+      setAnnotations((prev) => [result.annotation, ...prev]);
+      setSelectedAnnotationId(result.annotation.annotationId);
+      setParsingNotesByAnnotationId((prev) => ({
+        ...prev,
+        [result.annotation.annotationId]: [result.provider === 'openai' ? 'LLM 분석으로 생성됨' : 'fallback 분석으로 생성됨']
+      }));
+      setAuditEvents(await getAuditLogs({ annotationId: result.annotation.annotationId }));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'AI 분석 생성에 실패했습니다.');
+    }
   };
 
-  const handleCreateAnnotation = (text: string, anchor: Annotation['chartAnchor']) => {
-    const annotationId = `ann_user_${Date.now()}`;
-    const parsed = parseAnnotationText(text, {
-      currentPrice,
-      visibleLevels,
-      annotationId
-    });
-    const annotation = createAnnotationFromText({
-      annotationId,
-      symbol: selectedSymbol,
-      timeframe,
-      text,
-      authorType: 'user',
-      authorId: 'me',
-      anchor,
-      strategy: parsed.strategy
-    });
-    setAnnotations((prev) => [annotation, ...prev]);
-    setSelectedAnnotationId(annotationId);
-    setDrawingMode('none');
-    setParsingNotesByAnnotationId((prev) => ({ ...prev, [annotationId]: parsed.parsingNotes }));
-    recordAudit(createAuditEvent('annotation_created', 'annotation', annotationId, { symbol: selectedSymbol, timeframe }));
+  const handleCreateAnnotation = async (text: string, anchor: Annotation['chartAnchor']) => {
+    try {
+      const result = await createAnnotation({
+        marketSymbol: selectedSymbol,
+        timeframe,
+        text,
+        chartAnchor: anchor
+      });
+      setAnnotations((prev) => [result.annotation, ...prev]);
+      setSelectedAnnotationId(result.annotation.annotationId);
+      setDrawingMode('none');
+      setParsingNotesByAnnotationId((prev) => ({ ...prev, [result.annotation.annotationId]: result.parsing_notes }));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '주석 생성에 실패했습니다.');
+    }
   };
 
   const handleTextChange = (text: string) => {
@@ -179,7 +239,7 @@ export function TradingPage() {
       text,
       updatedAt: new Date().toISOString()
     }));
-    recordAudit(createAuditEvent('annotation_edited', 'annotation', selectedAnnotation.annotationId, { textLength: text.length }));
+    markDirty(selectedAnnotation.annotationId);
   };
 
   const handleStrategyChange = <K extends keyof Strategy>(key: K, value: Strategy[K]) => {
@@ -193,6 +253,7 @@ export function TradingPage() {
       };
       return syncAnnotationWithStrategy(annotation, nextStrategy);
     });
+    markDirty(selectedAnnotation.annotationId);
   };
 
   const handleAddLineToSelected = (price: number) => {
@@ -230,77 +291,69 @@ export function TradingPage() {
     }));
   };
 
-  const openExecutionFlow = (mode: 'execute' | 'conditional') => {
+  const openExecutionFlow = async (mode: 'execute' | 'conditional') => {
     if (!selectedAnnotation) {
       return;
     }
-    const preview = createExecutionPreview(selectedAnnotation.strategy, currentPrice, defaultUserSettings);
-    setExecutionPreview(preview);
-    setExecutionMode(mode);
-    setExecutionModalOpen(true);
-    recordAudit(createAuditEvent('execute_clicked', 'strategy', selectedAnnotation.strategy.strategyId, { mode }));
+    try {
+      const preview = await previewExecution(selectedAnnotation.strategy.strategyId);
+      setExecutionPreview(preview);
+      setExecutionMode(mode);
+      setExecutionModalOpen(true);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '실행 프리뷰 생성에 실패했습니다.');
+    }
   };
 
-  const confirmExecution = () => {
+  const confirmExecution = async () => {
     if (!selectedAnnotation) {
       return;
     }
+    try {
+      if (executionMode === 'conditional') {
+        await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
+        activateSelectedAnnotation();
+      } else {
+        const result = await createExecution(selectedAnnotation.strategy.strategyId);
+        setLastExecution({
+          executionId: result.execution_id,
+          strategyId: selectedAnnotation.strategy.strategyId,
+          status: result.status,
+          executionChain: 'opbnb',
+          liquidityChain: 'bsc',
+          executionChainTxHash: result.execution_chain_tx_hash,
+          liquidityChainTxHash: result.liquidity_chain_tx_hash,
+          filledPrice: selectedAnnotation.strategy.entryPrice,
+          filledAt: new Date().toISOString()
+        });
+        upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
+          ...annotation,
+          status: 'Executed',
+          updatedAt: new Date().toISOString()
+        }));
+      }
 
-    if (executionMode === 'conditional') {
-      activateSelectedAnnotation();
-      const notification: NotificationItem = {
-        notificationId: `noti_${Date.now()}_conditional`,
-        type: 'alert_fired',
-        title: '조건 주문 생성 완료',
-        body: `${selectedAnnotation.marketSymbol} 조건 주문이 등록되었습니다.`,
-        annotationId: selectedAnnotation.annotationId,
-        createdAt: new Date().toISOString(),
-        read: false
-      };
-      pushNotifications([notification]);
-    } else {
-      const execution = executeStrategy(selectedAnnotation.strategy);
-      setLastExecution(execution);
-      upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
-        ...annotation,
-        status: 'Executed',
-        updatedAt: new Date().toISOString()
-      }));
-      pushNotifications([
-        {
-          notificationId: `noti_${Date.now()}_filled`,
-          type: 'execution_filled',
-          title: '주문 실행 완료',
-          body: `${selectedAnnotation.marketSymbol} 전략이 실행되었습니다.`,
-          annotationId: selectedAnnotation.annotationId,
-          createdAt: new Date().toISOString(),
-          read: false
-        }
-      ]);
-      recordAudit(createAuditEvent('execute_confirmed', 'execution', execution.executionId, { executionChain: 'opbnb', liquidityChain: 'bsc' }));
+      setNotifications(await getNotifications());
+      setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
+      setExecutionModalOpen(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '실행 처리에 실패했습니다.');
     }
-
-    setExecutionModalOpen(false);
   };
 
-  const handleSetAlert = () => {
+  const handleSetAlert = async () => {
     if (!selectedAnnotation) {
       return;
     }
-    activateSelectedAnnotation();
-    const item: NotificationItem = {
-      notificationId: `noti_${Date.now()}_alert`,
-      type: 'alert_fired',
-      title: '알림 등록 완료',
-      body: `${selectedAnnotation.marketSymbol} ${selectedAnnotation.strategy.entryPrice} 조건 알림을 등록했습니다.`,
-      annotationId: selectedAnnotation.annotationId,
-      createdAt: new Date().toISOString(),
-      read: false
-    };
-    pushNotifications([item]);
+    try {
+      await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
+      setNotifications(await getNotifications());
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '알림 등록에 실패했습니다.');
+    }
   };
 
-  const handleSaveAutomation = (config: {
+  const handleSaveAutomation = async (config: {
     maxPositionSizeRatio: number;
     maxLeverage: number;
     maxLossRatio: number;
@@ -310,65 +363,38 @@ export function TradingPage() {
       return;
     }
 
-    const automation = {
-      ...armAutomation(selectedAnnotation.strategy, defaultUserSettings),
-      ...config,
-      status: 'Armed' as const
-    };
-    setAutomationByStrategyId((prev) => ({ ...prev, [selectedAnnotation.strategy.strategyId]: automation }));
-    upsertAnnotation(selectedAnnotation.annotationId, (annotation) =>
-      syncAnnotationWithStrategy(annotation, {
-        ...annotation.strategy,
-        autoExecuteEnabled: true
-      })
-    );
-    activateSelectedAnnotation();
-    pushNotifications([
-      {
-        notificationId: `noti_${Date.now()}_automation`,
-        type: 'alert_fired',
-        title: '자동 실행 Armed',
-        body: `${selectedAnnotation.marketSymbol} 전략 자동 실행이 활성화되었습니다.`,
-        annotationId: selectedAnnotation.annotationId,
-        createdAt: new Date().toISOString(),
-        read: false
-      }
-    ]);
-    recordAudit(createAuditEvent('automation_enabled', 'automation', automation.automationId, { maxLeverage: config.maxLeverage }));
-    setAutomationModalOpen(false);
+    try {
+      const result = await createAutomation(selectedAnnotation.strategy.strategyId, config);
+      setAutomationByStrategyId((prev) => ({
+        ...prev,
+        [selectedAnnotation.strategy.strategyId]: {
+          automationId: result.automation_id,
+          strategyId: selectedAnnotation.strategy.strategyId,
+          status: result.status,
+          triggerPrice: selectedAnnotation.strategy.entryPrice,
+          maxPositionSizeRatio: config.maxPositionSizeRatio,
+          maxLeverage: config.maxLeverage,
+          maxLossRatio: config.maxLossRatio,
+          maxDailyExecutions: config.maxDailyExecutions,
+          stopConditions: ['max daily executions reached', 'guardrail violation', 'manual halt']
+        }
+      }));
+      upsertAnnotation(selectedAnnotation.annotationId, (annotation) =>
+        syncAnnotationWithStrategy(annotation, {
+          ...annotation.strategy,
+          autoExecuteEnabled: true
+        })
+      );
+      markDirty(selectedAnnotation.annotationId);
+      setNotifications(await getNotifications());
+      setAutomationModalOpen(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '자동 실행 설정에 실패했습니다.');
+    }
   };
 
   const advancePrice = (nextPrice: number) => {
     setCurrentPrice(nextPrice);
-    const notificationsBuffer: NotificationItem[] = [];
-    let latestExecution: Execution | null = null;
-    const nextAutomationState: Record<string, AutomationRule> = { ...automationByStrategyId };
-
-    setAnnotations((prev) =>
-      prev.map((annotation) => {
-        const automation = automationByStrategyId[annotation.strategy.strategyId];
-        const simulation = simulatePriceTick(annotation, nextPrice, automation);
-        notificationsBuffer.push(...simulation.notifications);
-        if (simulation.execution) {
-          latestExecution = simulation.execution;
-        }
-        if (simulation.nextAutomation) {
-          nextAutomationState[annotation.strategy.strategyId] = simulation.nextAutomation;
-        }
-        const autoStatus = simulation.execution ? 'Executed' : simulation.nextStatus;
-        return {
-          ...annotation,
-          status: autoStatus,
-          updatedAt: new Date().toISOString()
-        };
-      })
-    );
-
-    setAutomationByStrategyId(nextAutomationState);
-    pushNotifications(notificationsBuffer);
-    if (latestExecution) {
-      setLastExecution(latestExecution);
-    }
   };
 
   const handleTriggerSelected = () => {
@@ -383,13 +409,16 @@ export function TradingPage() {
       <HeaderBar
         selectedSymbol={selectedSymbol}
         timeframe={timeframe}
-        connectionStatus="connected"
-        markets={marketOptions}
+        connectionStatus={connectionStatus}
+        markets={markets}
         onChangeSymbol={setSelectedSymbol}
         onChangeTimeframe={setTimeframe}
         onToggleNotifications={() => setNotificationsOpen((prev) => !prev)}
         onToggleStrategies={() => setStrategiesOpen((prev) => !prev)}
       />
+
+      {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
+      {loading ? <div className="loading-banner panel">데이터를 불러오는 중입니다...</div> : null}
 
       <main className="workspace-grid">
         <ChartCanvas
@@ -412,8 +441,12 @@ export function TradingPage() {
           selectedAnnotation={selectedAnnotation}
           validation={validation}
           currentPrice={currentPrice}
-          parsingNotes={parsingNotes}
-          auditEvents={selectedAuditEvents}
+          parsingNotes={[
+            ...parsingNotes,
+            llmConfigured ? 'LLM 연동 준비됨' : 'LLM 키 미설정: fallback 분석 사용 중',
+            saving ? '변경사항 저장 중' : '변경사항 자동 저장'
+          ]}
+          auditEvents={auditEvents}
           onChangeText={handleTextChange}
           onChangeStrategy={handleStrategyChange}
           onActivate={activateSelectedAnnotation}
@@ -442,9 +475,9 @@ export function TradingPage() {
       <BottomActionBar
         selectedAnnotation={selectedAnnotation}
         validation={validation}
-        onExecute={() => openExecutionFlow('execute')}
-        onConditionalOrder={() => openExecutionFlow('conditional')}
-        onSetAlert={handleSetAlert}
+        onExecute={() => void openExecutionFlow('execute')}
+        onConditionalOrder={() => void openExecutionFlow('conditional')}
+        onSetAlert={() => void handleSetAlert()}
         onAutoExecute={() => setAutomationModalOpen(true)}
       />
 
@@ -455,7 +488,7 @@ export function TradingPage() {
         validation={validation}
         mode={executionMode}
         onClose={() => setExecutionModalOpen(false)}
-        onConfirm={confirmExecution}
+        onConfirm={() => void confirmExecution()}
       />
 
       <AutomationModal
@@ -463,7 +496,7 @@ export function TradingPage() {
         selectedAnnotation={selectedAnnotation}
         automation={selectedAnnotation ? automationByStrategyId[selectedAnnotation.strategy.strategyId] ?? null : null}
         onClose={() => setAutomationModalOpen(false)}
-        onSave={handleSaveAutomation}
+        onSave={(config) => void handleSaveAutomation(config)}
       />
 
       <NotificationDrawer
