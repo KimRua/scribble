@@ -28,6 +28,24 @@ const WIDTH = 860;
 const HEIGHT = 480;
 const PADDING = 36;
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number) {
+  const charsPerLine = 24;
+  const estimatedLines = Math.max(2, Math.ceil(text.length / charsPerLine));
+  const width = text.length > 110 ? 280 : 250;
+  const height = clamp(72 + estimatedLines * 18, 98, 178);
+
+  return {
+    width,
+    height,
+    x: clamp(anchorX + 12, 12, WIDTH - width - 12),
+    y: clamp(anchorY - height - 14, 14, HEIGHT - height - 14)
+  };
+}
+
 function priceExtent(candles: Candle[], currentPrice: number) {
   const lows = candles.map((candle) => candle.low);
   const highs = candles.map((candle) => candle.high);
@@ -196,6 +214,7 @@ export function ChartCanvas({
             const selected = annotation.annotationId === selectedAnnotationId;
             const anchorX = PADDING + annotation.chartAnchor.index * xStep;
             const anchorY = yForPrice(annotation.chartAnchor.price);
+            const bubbleBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY);
             return (
               <g key={annotation.annotationId} onClick={() => onSelectAnnotation(annotation.annotationId)}>
                 {annotation.drawingObjects.map((object) => {
@@ -230,7 +249,7 @@ export function ChartCanvas({
                   return null;
                 })}
                 <circle cx={anchorX} cy={anchorY} r={selected ? 7 : 5} className="anchor-dot" />
-                <foreignObject x={Math.min(anchorX + 10, WIDTH - 250)} y={Math.max(anchorY - 72, 20)} width="230" height="90">
+                <foreignObject x={bubbleBox.x} y={bubbleBox.y} width={bubbleBox.width} height={bubbleBox.height}>
                   <div className={`annotation-bubble ${selected ? 'selected' : ''}`}>
                     <div className="list-row">
                       <span className={`pill ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>

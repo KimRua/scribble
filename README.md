@@ -139,6 +139,14 @@ npm run deploy:registry
 - `DEX_DEADLINE_SECONDS`: 스왑 deadline (기본 `300`)
 - `DEX_MARKET_MAP_JSON`: 마켓 심볼과 토큰 주소/decimals/amount/path 설정
 
+테스트넷에서 바로 시도할 수 있는 기본 예시는 아래 조합입니다.
+
+- `DEX_ROUTER_ADDRESS`: PancakeSwap v2 BSC testnet router `0xD99D1c33F9fC3444f8101754aBC46c52416550D1`
+- `BNBUSDT.baseTokenAddress`: WBNB testnet `0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd`
+- `BNBUSDT.quoteTokenAddress`: BUSD testnet `0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee`
+
+현재 저장소의 기본 마켓 중에서는 **`BNBUSDT`가 테스트넷 DEX 데모에 가장 현실적**입니다. `BTCUSDT`, `ETHUSDT`는 직접 사용할 토큰 주소를 별도로 검증해 넣는 것을 권장합니다.
+
 ### fallback 동작
 
 - LLM 설정이 없으면 fallback 분석 사용
@@ -299,6 +307,24 @@ lsof -nP -iTCP:8787 -sTCP:LISTEN
 - `DEX_ROUTER_ADDRESS`, `DEX_MARKET_MAP_JSON`, `BSC_RPC_URL`, `EXECUTOR_PRIVATE_KEY` 확인
 - 실행 지갑이 `inputToken` 잔고와 allowance를 충분히 가지고 있는지 확인
 - `DEX_MARKET_MAP_JSON`의 symbol 키가 현재 UI의 마켓 심볼(`BTCUSDT` 등)과 정확히 일치하는지 확인
+- BSC testnet에서는 **실제 풀이 없거나 유동성이 매우 얕을 수 있으므로** 주소가 맞아도 스왑이 실패할 수 있음
+
+### 테스트넷 예시 설정
+
+아래 예시는 `BNBUSDT` 전략을 선택했을 때, BUSD → WBNB 매수 또는 WBNB → BUSD 매도 스왑을 시도하는 샘플입니다.
+
+```zsh
+ENABLE_DEX_EXECUTION=true
+DEX_ROUTER_ADDRESS=0xD99D1c33F9fC3444f8101754aBC46c52416550D1
+DEX_SLIPPAGE_BPS=100
+DEX_DEADLINE_SECONDS=300
+DEX_MARKET_MAP_JSON={"BNBUSDT":{"baseTokenAddress":"0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd","quoteTokenAddress":"0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee","baseTokenDecimals":18,"quoteTokenDecimals":18,"buyAmount":"10","sellAmount":"0.02"}}
+```
+
+이 예시는 실행 지갑이 아래 중 하나를 보유하고 있다는 가정입니다.
+
+- bullish 전략: `BUSD` 잔고 필요
+- bearish 전략: `WBNB` 잔고 필요
 
 ### 시장 데이터가 안 들어오는 경우
 

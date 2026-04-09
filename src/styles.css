@@ -353,17 +353,24 @@ label span,
 }
 
 .annotation-bubble {
-  padding: 0.7rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.72rem 0.78rem;
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(148, 163, 184, 0.16);
-  min-height: 84px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.35rem;
+  overflow: hidden;
 }
 
 .annotation-bubble p {
-  margin: 0.4rem 0;
+  margin: 0;
   font-size: 0.84rem;
   line-height: 1.35;
+  word-break: break-word;
+  overflow: hidden;
 }
 
 .annotation-bubble.selected {

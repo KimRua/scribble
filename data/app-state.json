@@ -1,6 +1,155 @@
 {
   "annotations": [
     {
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h shows a strong impulsive breakout from the 70.5k–71.5k range into 72.3k resistance, with elevated volume confirming momentum. Price is extended after the breakout, so chasing at market is less favorable than buying a pullback into reclaimed support.",
+      "chartAnchor": {
+        "time": "2026-04-09T15:00:00.000Z",
+        "price": 71820,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 71820
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 71180
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72480
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72950
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73600
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1775754003145_6qcljm",
+        "annotationId": "ann_ai_1775754003145_t8qr7m",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 71820,
+        "stopLossPrice": 71180,
+        "takeProfitPrices": [
+          72480,
+          72950,
+          73600
+        ],
+        "invalidationCondition": "Invalidate the long setup if 1h closes below 71180 or if price loses 71500 support with accelerating sell volume before entry.",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-09T17:00:03.145Z",
+      "updatedAt": "2026-04-09T17:00:03.145Z"
+    },
+    {
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h shows a strong bullish impulse after the breakout from the 70.5k–71.6k consolidation, with momentum confirmed by the large expansion candle into 72.3k+. Prefer a continuation long rather than chasing aggressively. Best plan is to buy a mild pullback into the breakout/retest zone. If price fails back below the reclaimed structure, the setup is invalidated.",
+      "chartAnchor": {
+        "time": "2026-04-09T15:00:00.000Z",
+        "price": 71920,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 71920
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 71240
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72480
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72950
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73600
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71240,
+          "priceTo": 71920
+        },
+        {
+          "id": "ann_ai_1775753999511_q1u7i6_note",
+          "type": "text",
+          "role": "note",
+          "text": "BTCUSDT 1h shows a strong bullish impulse after the breakout from the 70.5k–71.6k consolidation, with momentum confirmed by the large expansion candle into 72.3k+. Prefer a continuation long rather than chasing aggressively. Best plan is to buy a mild pullback into the breakout/retest zone. If price fails back below the reclaimed structure, the setup is invalidated."
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+        "annotationId": "ann_ai_1775753999511_q1u7i6",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 71920,
+        "stopLossPrice": 71240,
+        "takeProfitPrices": [
+          72480,
+          72950,
+          73600
+        ],
+        "invalidationCondition": "Invalidate the long setup if BTCUSDT closes below 71240 on the 1h timeframe, indicating failed breakout retest and loss of bullish structure.",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-09T16:59:59.511Z",
+      "updatedAt": "2026-04-09T17:04:11.070Z"
+    },
+    {
       "annotationId": "ann_1775752286992_97rr3g",
       "authorType": "user",
       "authorId": "me",
@@ -667,6 +816,15 @@
   ],
   "notifications": [
     {
+      "notificationId": "noti_1775754251071_msc1gs",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "createdAt": "2026-04-09T17:04:11.071Z",
+      "read": false
+    },
+    {
       "notificationId": "noti_1775752441095_bl7d2d",
       "type": "execution_filled",
       "title": "주문 실행 완료",
@@ -722,6 +880,73 @@
     }
   ],
   "auditEvents": [
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775754236977_1775754251073",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775754236977",
+      "timestamp": "2026-04-09T17:04:11.073Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775754239932",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-09T17:03:59.932Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775754233015_irnkaw_1775754233018",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775754233015_irnkaw",
+      "timestamp": "2026-04-09T17:03:53.018Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775754226158",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-09T17:03:46.158Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775754003149",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "timestamp": "2026-04-09T17:00:03.149Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775753999514",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-09T16:59:59.514Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
     {
       "eventId": "evt_exe_str_ann_seed_ai_1775752431960_1775752441096",
       "eventType": "execute_confirmed",
@@ -927,6 +1152,21 @@
   ],
   "automations": [
     {
+      "automationId": "auto_1775754233015_irnkaw",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Armed",
+      "triggerPrice": 71920,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
       "automationId": "auto_1775752413992_e9pvgn",
       "strategyId": "str_ann_seed_ai",
       "status": "Armed",
@@ -973,6 +1213,20 @@
     }
   ],
   "executions": [
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775754236977",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xf06b5a61e407e9e15cc15b031bb192f8f604e9a65a8d7b95765f90aecf304080",
+      "liquidityChainTxHash": "0x94339dd45c551",
+      "filledPrice": 71920,
+      "filledAt": "2026-04-09T17:03:56.977Z",
+      "proofRecorded": true,
+      "proofRegistryId": "0xcd100a8bd18f1139205aace77853e38e6cbbd104ae265a30454b2a4c680a988f",
+      "proofContractAddress": "0x1B213823027930ef7D957BA882fc94692C4D9dE5"
+    },
     {
       "executionId": "exe_str_ann_seed_ai_1775752431960",
       "strategyId": "str_ann_seed_ai",
