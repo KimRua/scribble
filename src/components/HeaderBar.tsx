@@ -3,7 +3,6 @@ import type { MarketOption } from '../types/domain';
 interface HeaderBarProps {
   selectedSymbol: string;
   timeframe: string;
-  connectionStatus: 'connected' | 'disconnected';
   markets: MarketOption[];
   walletAddress: string | null;
   onChangeSymbol: (symbol: string) => void;
@@ -11,6 +10,7 @@ interface HeaderBarProps {
   onToggleNotifications: () => void;
   onToggleStrategies: () => void;
   onConnectWallet: () => void;
+  onSwitchWallet: () => void;
   onDisconnectWallet: () => void;
 }
 
@@ -20,7 +20,6 @@ export function HeaderBar(props: HeaderBarProps) {
   const {
     selectedSymbol,
     timeframe,
-    connectionStatus,
     markets,
     walletAddress,
     onChangeSymbol,
@@ -28,6 +27,7 @@ export function HeaderBar(props: HeaderBarProps) {
     onToggleNotifications,
     onToggleStrategies,
     onConnectWallet,
+    onSwitchWallet,
     onDisconnectWallet
   } = props;
 
@@ -41,14 +41,12 @@ export function HeaderBar(props: HeaderBarProps) {
             <span className="header-divider">·</span>
             <span className="header-mode">Trading Workspace</span>
           </div>
-          <h1>차트 주석 기반 트레이딩 코파일럿</h1>
-          <p className="header-subtitle">주석 작성부터 전략 검증, 실행까지 한 흐름으로 관리합니다.</p>
         </div>
       </div>
       <div className="header-controls">
         <div className="header-fields">
           <label className="header-field">
-            <span>마켓</span>
+            <span>Market</span>
             <select value={selectedSymbol} onChange={(event) => onChangeSymbol(event.target.value)}>
               {markets.map((market) => (
                 <option key={market.symbol} value={market.symbol}>
@@ -58,7 +56,7 @@ export function HeaderBar(props: HeaderBarProps) {
             </select>
           </label>
           <label className="header-field">
-            <span>타임프레임</span>
+            <span>Timeframe</span>
             <select value={timeframe} onChange={(event) => onChangeTimeframe(event.target.value)}>
               {timeframes.map((value) => (
                 <option key={value} value={value}>
@@ -68,27 +66,35 @@ export function HeaderBar(props: HeaderBarProps) {
             </select>
           </label>
         </div>
+
         <div className="header-meta">
-          <div className={`status-badge ${connectionStatus}`}>
-            {connectionStatus === 'connected' ? '연결됨' : '연결 끊김'}
-          </div>
+          {walletAddress ? <div className="header-wallet-chip">{walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}</div> : null}
+        </div>
+
+        <div className="header-wallet-actions">
           {walletAddress ? (
-            <button className="ghost-button header-wallet-button" onClick={onDisconnectWallet}>
-              {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
-            </button>
+            <>
+              <button className="secondary header-wallet-button" onClick={onSwitchWallet}>
+                Switch wallet
+              </button>
+              <button className="ghost-button header-wallet-button" onClick={onDisconnectWallet}>
+                Disconnect
+              </button>
+            </>
           ) : (
             <button className="secondary header-wallet-button" onClick={onConnectWallet}>
-              지갑 연결
+              Connect wallet
             </button>
           )}
-          <div className="header-shortcuts">
-            <button className="ghost-button" onClick={onToggleNotifications}>
-              알림
-            </button>
-            <button className="ghost-button" onClick={onToggleStrategies}>
-              내 전략
-            </button>
-          </div>
+        </div>
+
+        <div className="header-shortcuts">
+          <button className="ghost-button" onClick={onToggleNotifications}>
+            Alerts
+          </button>
+          <button className="ghost-button" onClick={onToggleStrategies}>
+            Strategies
+          </button>
         </div>
       </div>
     </header>

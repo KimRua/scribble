@@ -71,7 +71,7 @@ export function AutomationModal({
 
     setApprovalTxHashError(
       nextApprovalTxHash && !normalizeTxHash(nextApprovalTxHash)
-        ? '0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.'
+        ? 'Only a 64-byte hex tx hash starting with 0x can be saved.'
         : null
     );
   }, [automation, delegatedPolicy]);
@@ -85,7 +85,7 @@ export function AutomationModal({
     }
 
     setApprovalTxHashError(
-      normalizeTxHash(value) ? null : '0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.'
+      normalizeTxHash(value) ? null : 'Only a 64-byte hex tx hash starting with 0x can be saved.'
     );
   };
 
@@ -93,7 +93,7 @@ export function AutomationModal({
     const normalizedApprovalTxHash = form.approvalTxHash.trim();
 
     if (normalizedApprovalTxHash && !normalizeTxHash(normalizedApprovalTxHash)) {
-      setApprovalTxHashError('0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.');
+      setApprovalTxHashError('Only a 64-byte hex tx hash starting with 0x can be saved.');
       return;
     }
 
@@ -113,15 +113,15 @@ export function AutomationModal({
         <div className="modal-header">
           <div>
             <p className="eyebrow">Automation</p>
-            <h3>자동 실행 설정</h3>
+            <h3>Auto-execution rules</h3>
           </div>
           <button className="ghost-button" onClick={onClose}>
-            닫기
+            Close
           </button>
         </div>
         <div className="form-grid">
           <label>
-            <span>최대 포지션 비율</span>
+            <span>Max position ratio</span>
             <input
               type="number"
               min="0.01"
@@ -132,7 +132,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>최대 레버리지</span>
+            <span>Max leverage</span>
             <input
               type="number"
               min="1"
@@ -142,7 +142,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>최대 손실 비율</span>
+            <span>Max loss ratio</span>
             <input
               type="number"
               min="0.01"
@@ -153,7 +153,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>1일 최대 실행 횟수</span>
+            <span>Daily execution cap</span>
             <input
               type="number"
               min="1"
@@ -164,26 +164,26 @@ export function AutomationModal({
           </label>
         </div>
         <div className="info-banner delegation-banner">
-          <strong>지갑 위임 상태</strong>
+          <strong>Wallet delegation status</strong>
           <p>
             {connectedWalletAddress
-              ? `연결된 지갑 ${connectedWalletAddress.slice(0, 6)}...${connectedWalletAddress.slice(-4)} 에 자동거래 권한을 설정합니다.`
-              : '자동거래를 사용하려면 먼저 지갑을 연결해야 합니다.'}
+              ? `Automation permissions will be granted for wallet ${connectedWalletAddress.slice(0, 6)}...${connectedWalletAddress.slice(-4)}.`
+              : 'Connect a wallet first to enable automation.'}
           </p>
           <div className="delegation-meta">
-            <span>Executor {executorAddress ? `${executorAddress.slice(0, 6)}...${executorAddress.slice(-4)}` : '미설정'}</span>
-            <span>Vault {vaultAddress ? `${vaultAddress.slice(0, 6)}...${vaultAddress.slice(-4)}` : '초기화 전'}</span>
-            <span>상태 {delegatedPolicy?.status ?? 'not_configured'}</span>
+            <span>Executor {executorAddress ? `${executorAddress.slice(0, 6)}...${executorAddress.slice(-4)}` : 'Not set'}</span>
+            <span>Vault {vaultAddress ? `${vaultAddress.slice(0, 6)}...${vaultAddress.slice(-4)}` : 'Not initialized'}</span>
+            <span>Status {delegatedPolicy?.status ?? 'not_configured'}</span>
           </div>
           {!connectedWalletAddress ? (
             <button className="secondary" onClick={onConnectWallet}>
-              지갑 연결하기
+              Connect wallet
             </button>
           ) : null}
         </div>
         <div className="form-grid">
           <label>
-            <span>최대 주문 금액 (USD)</span>
+            <span>Max order size (USD)</span>
             <input
               type="number"
               min="10"
@@ -193,7 +193,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>최대 슬리피지 (bps)</span>
+            <span>Max slippage (bps)</span>
             <input
               type="number"
               min="10"
@@ -204,7 +204,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>일일 손실 한도 (USD)</span>
+            <span>Daily loss cap (USD)</span>
             <input
               type="number"
               min="10"
@@ -214,7 +214,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>권한 만료 시각</span>
+            <span>Permission expiry</span>
             <input
               type="datetime-local"
               value={form.validUntil}
@@ -222,10 +222,10 @@ export function AutomationModal({
             />
           </label>
           <label className="form-span-2">
-            <span>승인 트랜잭션 해시 (선택)</span>
+            <span>Approval transaction hash (optional)</span>
             <input
               type="text"
-              placeholder="온체인 승인 완료 후 tx hash를 저장"
+              placeholder="Save the tx hash after onchain approval completes"
               value={form.approvalTxHash}
               onChange={(event) => handleApprovalTxHashChange(event.target.value)}
             />
@@ -233,15 +233,15 @@ export function AutomationModal({
           </label>
         </div>
         <div className="warning-box">
-          <strong>생성 조건</strong>
-          <p>{selectedAnnotation.strategy.entryPrice} 도달 시 가드레일과 위임 한도를 모두 통과해야 실행됩니다.</p>
+          <strong>Trigger condition</strong>
+          <p>Execution only proceeds when price reaches {selectedAnnotation.strategy.entryPrice} and all guardrails plus delegation limits pass.</p>
         </div>
         <div className="modal-actions">
           <button className="secondary" onClick={onClose}>
-            취소
+            Cancel
           </button>
           <button disabled={!connectedWalletAddress || Boolean(approvalTxHashError)} onClick={handleSave}>
-            저장
+            Save
           </button>
         </div>
       </div>

@@ -14,12 +14,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.6.0",
+    "@react-three/postprocessing": "^3.0.4",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "ethers": "^6.16.0",
     "express": "^5.2.1",
+    "postprocessing": "^6.39.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "three": "^0.183.2",
     "ws": "^8.20.0",
     "zod": "^4.3.6"
   },

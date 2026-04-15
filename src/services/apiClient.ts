@@ -16,6 +16,7 @@ import { normalizeTxHash } from '../utils/txHash';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787';
 const OPBNB_EXPLORER_BASE_URL = import.meta.env.VITE_OPBNB_EXPLORER_BASE_URL ?? 'https://opbnb-testnet.bscscan.com';
 const CLIENT_SESSION_STORAGE_KEY = 'scribble.clientSessionId';
+const CLIENT_WALLET_STORAGE_KEY = 'scribble.clientWalletAddress';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -29,10 +30,12 @@ interface ApiResponse<T> {
 
 async function request<T>(path: string, init?: RequestInit) {
   const sessionId = getClientSessionId();
+  const walletAddress = getClientWalletAddress();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
+      ...(walletAddress ? { 'X-Wallet-Address': walletAddress } : {}),
       ...(init?.headers ?? {})
     },
     ...init
@@ -66,6 +69,32 @@ function getClientSessionId() {
   }
 
   return null;
+}
+
+function getClientWalletAddress() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const stored = window.localStorage.getItem(CLIENT_WALLET_STORAGE_KEY)?.trim().toLowerCase() ?? null;
+  if (stored && /^0x[a-f0-9]{40}$/.test(stored)) {
+    return stored;
+  }
+
+  return null;
+}
+
+export function setClientWalletAddress(address: string | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (address && /^0x[a-fA-F0-9]{40}$/.test(address)) {
+    window.localStorage.setItem(CLIENT_WALLET_STORAGE_KEY, address.toLowerCase());
+    return;
+  }
+
+  window.localStorage.removeItem(CLIENT_WALLET_STORAGE_KEY);
 }
 
 function normalizeAnnotation(annotation: Annotation) {
@@ -131,7 +160,7 @@ export async function createDelegationPolicy(input: {
   approvalTxHash?: string | null;
 }) {
   if (input.approvalTxHash && !normalizeTxHash(input.approvalTxHash)) {
-    throw new Error('승인 트랜잭션 해시는 0x로 시작하는 64자리 16진수여야 합니다.');
+    throw new Error('Approval transaction hashes must be 64-character hex strings starting with 0x.');
   }
 
   const data = await request<{
@@ -359,6 +388,7 @@ export async function updateAnnotation(annotationId: string, input: {
   positionSizeRatio?: number;
   leverage?: number;
   autoExecuteEnabled?: boolean;
+  drawingObjects?: Annotation['drawingObjects'];
 }) {
   const data = await request<{ annotation: Annotation; parsing_notes: string[] }>(`/api/v1/annotations/${annotationId}`, {
     method: 'PATCH',
@@ -374,7 +404,8 @@ export async function updateAnnotation(annotationId: string, input: {
       risk_level: input.riskLevel,
       position_size_ratio: input.positionSizeRatio,
       leverage: input.leverage,
-      auto_execute_enabled: input.autoExecuteEnabled
+      auto_execute_enabled: input.autoExecuteEnabled,
+      drawing_objects: input.drawingObjects
     })
   });
   return data;

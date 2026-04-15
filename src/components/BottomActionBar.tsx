@@ -19,7 +19,7 @@ export function BottomActionBar({
   onAutoExecute
 }: BottomActionBarProps) {
   const disabled = !selectedAnnotation || !validation?.isValid;
-  const reason = !selectedAnnotation ? '주석을 선택하세요' : validation?.violations[0];
+  const reason = !selectedAnnotation ? 'Select an annotation' : validation?.violations[0];
 
   return (
     <div className="bottom-action-bar panel">
@@ -28,7 +28,7 @@ export function BottomActionBar({
         <strong>
           {selectedAnnotation
             ? `${selectedAnnotation.marketSymbol} · ${selectedAnnotation.strategy.bias.toUpperCase()} · ${formatPrice(selectedAnnotation.strategy.entryPrice)}`
-            : '선택된 전략 없음'}
+            : 'No strategy selected'}
         </strong>
         <p className="bottom-action-note">
           {selectedAnnotation ? selectedAnnotation.text : reason}
@@ -36,16 +36,16 @@ export function BottomActionBar({
       </div>
       <div className="action-buttons">
         <button disabled={disabled} onClick={onExecute}>
-          주문 실행
+          Execute order
         </button>
         <button disabled={disabled} className="secondary" onClick={onConditionalOrder}>
-          조건 주문
+          Conditional order
         </button>
         <button disabled={!selectedAnnotation} className="secondary" onClick={onSetAlert}>
-          알림 설정
+          Set alert
         </button>
         <button disabled={disabled} className="accent" onClick={onAutoExecute}>
-          자동 실행
+          Auto-execute
         </button>
       </div>
     </div>

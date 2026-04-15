@@ -38,40 +38,40 @@ export function validateStrategy(strategy: Strategy, currentPrice: number, setti
   const isBearish = strategy.bias === 'bearish';
 
   if (strategy.positionSizeRatio <= 0 || strategy.positionSizeRatio > 1) {
-    violations.push('포지션 비중은 0보다 크고 1 이하여야 합니다.');
+    violations.push('Position size ratio must be greater than 0 and less than or equal to 1.');
   }
 
   if (strategy.leverage > settings.maxLeverage) {
-    violations.push(`레버리지는 최대 ${settings.maxLeverage}배까지만 허용됩니다.`);
+    violations.push(`Leverage cannot exceed ${settings.maxLeverage}x.`);
   }
 
   if (strategy.takeProfitPrices.length === 0) {
-    violations.push('최소 1개의 TP가 필요합니다.');
+    violations.push('At least one take-profit target is required.');
   }
 
   if (!strategy.invalidationCondition.trim()) {
-    violations.push('무효화 조건은 필수입니다.');
+    violations.push('An invalidation condition is required.');
   }
 
   if (isBullish && strategy.stopLossPrice >= strategy.entryPrice) {
-    violations.push('롱 전략의 손절가는 진입가보다 낮아야 합니다.');
+    violations.push('For bullish setups, the stop loss must be below the entry price.');
   }
 
   if (isBearish && strategy.stopLossPrice <= strategy.entryPrice) {
-    violations.push('숏 전략의 손절가는 진입가보다 높아야 합니다.');
+    violations.push('For bearish setups, the stop loss must be above the entry price.');
   }
 
   if (isBullish && strategy.takeProfitPrices.some((price) => price <= strategy.entryPrice)) {
-    violations.push('롱 전략의 TP는 진입가보다 높아야 합니다.');
+    violations.push('For bullish setups, take-profit targets must be above the entry price.');
   }
 
   if (isBearish && strategy.takeProfitPrices.some((price) => price >= strategy.entryPrice)) {
-    violations.push('숏 전략의 TP는 진입가보다 낮아야 합니다.');
+    violations.push('For bearish setups, take-profit targets must be below the entry price.');
   }
 
   const riskSummary = calculateRiskSummary(strategy, currentPrice, settings);
   if (riskSummary.maxLossRatio > 0.05) {
-    violations.push('예상 최대 손실이 계좌 대비 5%를 초과합니다.');
+    violations.push('Estimated max loss exceeds 5% of the account balance.');
   }
 
   return {
@@ -104,7 +104,7 @@ export function determineAnnotationStatus(annotation: Annotation, currentPrice: 
 }
 
 export function formatPrice(value: number) {
-  return new Intl.NumberFormat('ko-KR', {
+  return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2
   }).format(value);
 }

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import cors from 'cors';
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
 import { buildSeedAnnotations, defaultUserSettings } from '../src/data/mockMarket';
 import { createAuditEvent } from '../src/services/auditLogService';
@@ -61,11 +61,47 @@ async function getCandles(symbol: string, timeframe: string) {
   return (await getMarketCandles(symbol, timeframe)).candles;
 }
 
-async function ensureSeedState(symbol: string, timeframe: string) {
+function normalizeWalletAddress(value: unknown) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return /^0x[a-f0-9]{40}$/.test(normalized) ? normalized : null;
+}
+
+function resolveAnnotationOwnerKey(request: Request, response: Response) {
+  const walletAddress = normalizeWalletAddress(request.header('X-Wallet-Address'));
+  if (walletAddress) {
+    return `wallet:${walletAddress}`;
+  }
+
+  const { sessionId } = getRequestContext(response);
+  return `guest:${sessionId ?? 'anonymous'}`;
+}
+
+function isAnnotationVisibleToOwner(annotation: Annotation, ownerKey: string) {
+  return annotation.ownerKey === ownerKey;
+}
+
+function findScopedAnnotation(state: ReturnType<typeof getState>, annotationId: string, ownerKey: string) {
+  return state.annotations.find(
+    (item) => item.annotationId === annotationId && isAnnotationVisibleToOwner(item, ownerKey)
+  );
+}
+
+async function ensureSeedState(symbol: string, timeframe: string, ownerKey: string) {
   const candles = await getCandles(symbol, timeframe);
-  const seed = buildSeedAnnotations(symbol, timeframe, candles);
+  const seed = buildSeedAnnotations(symbol, timeframe, candles, ownerKey);
   const state = getState();
-  if (!state.annotations.some((annotation) => annotation.marketSymbol === symbol && annotation.timeframe === timeframe)) {
+  if (
+    !state.annotations.some(
+      (annotation) =>
+        annotation.marketSymbol === symbol &&
+        annotation.timeframe === timeframe &&
+        isAnnotationVisibleToOwner(annotation, ownerKey)
+    )
+  ) {
     updateState((current) => ({
       ...current,
       annotations: [...seed, ...current.annotations]
@@ -331,10 +367,6 @@ function buildExecutionAuditMetadata(
     }),
     executionChainTxStatus: receipt.executionChainTxStatus ?? 'unavailable',
     liquidityChainTxStatus: receipt.liquidityChainTxStatus ?? 'unavailable',
-    executionChainBlockNumber: receipt.executionChainBlockNumber ?? null,
-    liquidityChainBlockNumber: receipt.liquidityChainBlockNumber ?? null,
-    executionChainLogCount: receipt.executionChainLogCount ?? null,
-    liquidityChainLogCount: receipt.liquidityChainLogCount ?? null,
     liquidityChainTxHashVisible: receipt.liquidityChainTxHashVisible,
     liquidityChainTxHashValid: receipt.liquidityChainTxHashValid,
     invalidTxHashFiltered: Boolean(receipt.txHashWarning),
@@ -343,6 +375,10 @@ function buildExecutionAuditMetadata(
     proofErrorPresent: Boolean(proof.proofErrorMessage),
     proofRecorded: proof.proofRecorded,
     onchainReady: proof.onchainReady,
+    ...(receipt.executionChainBlockNumber != null ? { executionChainBlockNumber: receipt.executionChainBlockNumber } : {}),
+    ...(receipt.liquidityChainBlockNumber != null ? { liquidityChainBlockNumber: receipt.liquidityChainBlockNumber } : {}),
+    ...(receipt.executionChainLogCount != null ? { executionChainLogCount: receipt.executionChainLogCount } : {}),
+    ...(receipt.liquidityChainLogCount != null ? { liquidityChainLogCount: receipt.liquidityChainLogCount } : {}),
     ...(proof.proofErrorMessage ? { proofErrorMessage: proof.proofErrorMessage } : {}),
     ...(execution.dexRouterAddress ? { dexRouterAddress: execution.dexRouterAddress } : {}),
     ...(execution.dexInputTokenAddress ? { dexInputTokenAddress: execution.dexInputTokenAddress } : {}),
@@ -543,15 +579,22 @@ app.get('/api/v1/market-data/stream', async (request, response) => {
 app.get('/api/v1/annotations', async (request, response) => {
   const symbol = String(request.query.symbol ?? 'BTCUSDT');
   const timeframe = String(request.query.timeframe ?? '1h');
-  await ensureSeedState(symbol, timeframe);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  await ensureSeedState(symbol, timeframe, ownerKey);
   const state = getState();
-  const annotations = state.annotations.filter((annotation) => annotation.marketSymbol === symbol && annotation.timeframe === timeframe);
+  const annotations = state.annotations.filter(
+    (annotation) =>
+      annotation.marketSymbol === symbol &&
+      annotation.timeframe === timeframe &&
+      isAnnotationVisibleToOwner(annotation, ownerKey)
+  );
   sendSuccess(response, { annotations });
 });
 
 app.get('/api/v1/annotations/:annotationId', (request, response) => {
   const state = getState();
-  const annotation = state.annotations.find((item) => item.annotationId === request.params.annotationId);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const annotation = findScopedAnnotation(state, request.params.annotationId, ownerKey);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
@@ -573,6 +616,7 @@ app.post('/api/v1/annotations', async (request, response) => {
 
   const data = parsedBody.data;
   const { sessionId } = getRequestContext(response);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
   const candles = await getCandles(data.market_symbol, data.timeframe);
   const visibleLevels = candles.slice(-10).flatMap((candle) => [candle.high, candle.low, candle.close]);
   const annotationId = createId('ann');
@@ -590,7 +634,8 @@ app.post('/api/v1/annotations', async (request, response) => {
     timeframe: data.timeframe,
     text: data.text,
     authorType: 'user',
-    authorId: 'me',
+    authorId: ownerKey.startsWith('wallet:') ? ownerKey.slice('wallet:'.length) : 'guest',
+    ownerKey,
     anchor: {
       time: data.chart_anchor.time,
       price: Number(data.chart_anchor.price),
@@ -607,7 +652,8 @@ app.post('/api/v1/annotations', async (request, response) => {
 app.patch('/api/v1/annotations/:annotationId', async (request, response) => {
   const state = getState();
   const { sessionId } = getRequestContext(response);
-  const annotation = state.annotations.find((item) => item.annotationId === request.params.annotationId);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const annotation = findScopedAnnotation(state, request.params.annotationId, ownerKey);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
@@ -624,9 +670,58 @@ app.patch('/api/v1/annotations/:annotationId', async (request, response) => {
     annotationId: annotation.annotationId
   });
 
+  const nextDrawingObjects = Array.isArray(request.body.drawing_objects)
+    ? request.body.drawing_objects.map((object: any) => {
+        if (object?.type === 'line') {
+          return {
+            id: String(object.id),
+            type: 'line' as const,
+            role: object.role,
+            price: Number(object.price)
+          };
+        }
+
+        if (object?.type === 'box') {
+          return {
+            id: String(object.id),
+            type: 'box' as const,
+            role: object.role,
+            priceFrom: Number(object.priceFrom),
+            priceTo: Number(object.priceTo)
+          };
+        }
+
+        if (object?.type === 'segment') {
+          return {
+            id: String(object.id),
+            type: 'segment' as const,
+            role: object.role,
+            startAnchor: {
+              time: String(object.startAnchor?.time ?? annotation.chartAnchor.time),
+              price: Number(object.startAnchor?.price ?? annotation.chartAnchor.price),
+              index: Number(object.startAnchor?.index ?? annotation.chartAnchor.index)
+            },
+            endAnchor: {
+              time: String(object.endAnchor?.time ?? annotation.chartAnchor.time),
+              price: Number(object.endAnchor?.price ?? annotation.chartAnchor.price),
+              index: Number(object.endAnchor?.index ?? annotation.chartAnchor.index)
+            }
+          };
+        }
+
+        return {
+          id: String(object.id),
+          type: 'text' as const,
+          role: object.role,
+          text: String(object.text ?? '')
+        };
+      })
+    : annotation.drawingObjects;
+
   const nextAnnotation = syncAnnotationWithStrategy(
     {
       ...annotation,
+      drawingObjects: nextDrawingObjects,
       text: nextText,
       updatedAt: new Date().toISOString()
     },
@@ -661,7 +756,8 @@ app.patch('/api/v1/annotations/:annotationId', async (request, response) => {
 app.post('/api/v1/annotations/:annotationId/cancel-order', (request, response) => {
   const state = getState();
   const { sessionId } = getRequestContext(response);
-  const annotation = state.annotations.find((item) => item.annotationId === request.params.annotationId);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const annotation = findScopedAnnotation(state, request.params.annotationId, ownerKey);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
@@ -712,7 +808,8 @@ app.post('/api/v1/annotations/:annotationId/close-position', async (request, res
 
   const state = getState();
   const { sessionId } = getRequestContext(response);
-  const annotation = state.annotations.find((item) => item.annotationId === request.params.annotationId);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const annotation = findScopedAnnotation(state, request.params.annotationId, ownerKey);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
@@ -819,7 +916,8 @@ app.post('/api/v1/alerts', (request, response) => {
   const value = String(request.body.value ?? '');
   const { sessionId } = getRequestContext(response);
   const state = getState();
-  const annotation = state.annotations.find((item) => item.annotationId === annotationId);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const annotation = findScopedAnnotation(state, annotationId, ownerKey);
   if (!annotation) {
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
@@ -858,6 +956,7 @@ app.post('/api/v1/ai/analyze', async (request, response) => {
 
   const { market_symbol, timeframe, user_preferences } = parsedBody.data;
   const { sessionId } = getRequestContext(response);
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
   const candles = await getCandles(market_symbol, timeframe);
   const analysis = await analyzeChartWithLlm({
     marketSymbol: market_symbol,
@@ -876,6 +975,7 @@ app.post('/api/v1/ai/analyze', async (request, response) => {
     annotationId,
     authorType: 'ai',
     authorId: 'system',
+    ownerKey,
     marketSymbol: market_symbol,
     timeframe,
     text: analysis.text,
@@ -1357,7 +1457,7 @@ app.post('/api/v1/executions', async (request, response) => {
           dexReady: dexReceipt.ready
         }
       ),
-      sessionId
+      sessionId: sessionId ?? 'unknown'
     });
     return sendSuccess(response, toExecutionResponse({
       ...persistedExecution,

@@ -1,5 +1,15 @@
 import type { Annotation, ChartAnchor, DrawingObject, Strategy } from '../types/domain';
 
+function isStrategyManagedDrawingObject(annotationId: string, object: DrawingObject) {
+  return (
+    object.id === `${annotationId}_entry` ||
+    object.id === `${annotationId}_sl` ||
+    object.id.startsWith(`${annotationId}_tp_`) ||
+    object.id === `${annotationId}_zone` ||
+    object.id === `${annotationId}_note`
+  );
+}
+
 export function buildDrawingObjectsFromStrategy(strategy: Strategy, noteText?: string): DrawingObject[] {
   const objects: DrawingObject[] = [
     { id: `${strategy.annotationId}_entry`, type: 'line', role: 'entry', price: strategy.entryPrice },
@@ -38,6 +48,7 @@ export function createAnnotationFromText(params: {
   text: string;
   authorType: Annotation['authorType'];
   authorId: string;
+  ownerKey?: string | null;
   anchor: ChartAnchor;
   strategy: Strategy;
 }): Annotation {
@@ -46,6 +57,7 @@ export function createAnnotationFromText(params: {
     annotationId: params.annotationId,
     authorType: params.authorType,
     authorId: params.authorId,
+    ownerKey: params.ownerKey ?? null,
     marketSymbol: params.symbol,
     timeframe: params.timeframe,
     text: params.text,
@@ -60,11 +72,15 @@ export function createAnnotationFromText(params: {
 }
 
 export function syncAnnotationWithStrategy(annotation: Annotation, strategy: Strategy, text = annotation.text): Annotation {
+  const customDrawingObjects = annotation.drawingObjects.filter(
+    (object) => !isStrategyManagedDrawingObject(annotation.annotationId, object)
+  );
+
   return {
     ...annotation,
     text,
     strategy,
-    drawingObjects: buildDrawingObjectsFromStrategy(strategy, text),
+    drawingObjects: [...buildDrawingObjectsFromStrategy(strategy, text), ...customDrawingObjects],
     updatedAt: new Date().toISOString()
   };
 }

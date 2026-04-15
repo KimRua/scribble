@@ -35,32 +35,32 @@ export function ExecutionModal({
             <h3>{selectedAnnotation.marketSymbol}</h3>
           </div>
           <button className="ghost-button" onClick={onClose}>
-            닫기
+            Close
           </button>
         </div>
         <div className="grid two-columns">
           <div className="info-block">
-            <span>진입 방식</span>
+            <span>Entry mode</span>
             <strong>{selectedAnnotation.strategy.entryType}</strong>
           </div>
           <div className="info-block">
-            <span>진입 가격</span>
+            <span>Entry price</span>
             <strong>{formatPrice(preview.entryPrice)}</strong>
           </div>
           <div className="info-block">
-            <span>수량/비중</span>
+            <span>Size / allocation</span>
             <strong>{preview.positionSize} USDT</strong>
           </div>
           <div className="info-block">
-            <span>슬리피지 제한</span>
+            <span>Slippage cap</span>
             <strong>{formatPercent(preview.estimatedSlippage)}</strong>
           </div>
           <div className="info-block">
-            <span>예상 최대 손실</span>
+            <span>Estimated max loss</span>
             <strong>{formatPercent(validation.riskSummary.maxLossRatio)}</strong>
           </div>
           <div className="info-block">
-            <span>예상 수수료</span>
+            <span>Estimated fee</span>
             <strong>${preview.estimatedFee}</strong>
           </div>
         </div>
@@ -68,7 +68,7 @@ export function ExecutionModal({
           <strong>Guardrail</strong>
           <p>
             {preview.guardrailCheck.passed
-              ? '리스크 기준을 통과했습니다. 승인 후 실행할 수 있습니다.'
+              ? 'Risk guardrails passed. You can approve and execute this plan.'
               : preview.guardrailCheck.violations.join(' / ')}
           </p>
         </div>
@@ -77,17 +77,17 @@ export function ExecutionModal({
           <p>
             {mode === 'execute'
               ? onchainConfigured
-                ? '승인 시 opBNB에 실행 proof 기록을 함께 시도합니다.'
-                : '현재 opBNB proof 설정이 없어 앱 내부 감사 로그만 기록합니다.'
-              : '조건부 주문은 체결 시점에 proof 기록 여부가 결정됩니다.'}
+                ? 'Approval will also attempt to record execution proof on opBNB.'
+                : 'opBNB proof is not configured, so only the in-app audit log will be recorded.'
+              : 'For conditional orders, proof recording is decided at fill time.'}
           </p>
         </div>
         <div className="modal-actions">
           <button className="secondary" onClick={onClose}>
-            취소
+            Cancel
           </button>
           <button disabled={!preview.guardrailCheck.passed} onClick={onConfirm}>
-            최종 승인
+            Final approve
           </button>
         </div>
       </div>

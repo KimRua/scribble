@@ -11,6 +11,7 @@ interface RightPanelProps {
   onChangeText: (text: string) => void;
   onChangeStrategy: <K extends keyof Strategy>(key: K, value: Strategy[K]) => void;
   onActivate: () => void;
+  onRemoveDrawingObject: (drawingObjectId: string) => void;
   onCancelOrder: () => void;
   onClosePosition: (input: { mode: 'market' | 'price'; closePrice?: number }) => void;
 }
@@ -24,6 +25,7 @@ export function RightPanel({
   onChangeText,
   onChangeStrategy,
   onActivate,
+  onRemoveDrawingObject,
   onCancelOrder,
   onClosePosition
 }: RightPanelProps) {
@@ -31,8 +33,8 @@ export function RightPanel({
     return (
       <aside className="right-panel panel empty-panel">
         <p className="eyebrow">Decision Panel</p>
-        <h3>차트에서 주석을 선택하세요</h3>
-        <p className="muted">AI 분석을 생성하거나 텍스트 모드에서 직접 주석을 작성하면 전략 상세가 이 패널에 표시됩니다.</p>
+        <h3>Select an annotation on the chart</h3>
+        <p className="muted">Generate an AI draft or add a note in text mode to view strategy details here.</p>
       </aside>
     );
   }
@@ -61,7 +63,7 @@ export function RightPanel({
             <h3>{strategy.bias.toUpperCase()}</h3>
           </div>
           <button className="secondary" onClick={onActivate}>
-            {selectedAnnotation.status === 'Draft' ? '전략 활성화' : '상태 유지'}
+            {selectedAnnotation.status === 'Draft' ? 'Activate strategy' : 'Keep current state'}
           </button>
         </div>
         <div className="summary-grid">
@@ -150,7 +152,7 @@ export function RightPanel({
             />
           </label>
           <label>
-            <span>비중</span>
+            <span>Size</span>
             <input
               type="number"
               min="0.01"
@@ -161,7 +163,7 @@ export function RightPanel({
             />
           </label>
           <label>
-            <span>레버리지</span>
+            <span>Leverage</span>
             <input
               type="number"
               min="1"
@@ -173,7 +175,7 @@ export function RightPanel({
         </div>
         <div className="quick-preset-grid">
           <div className="quick-preset-group">
-            <span className="muted">비중 프리셋</span>
+            <span className="muted">Size presets</span>
             <div className="quick-preset-row">
               {[0.05, 0.1, 0.25, 0.5].map((value) => (
                 <button
@@ -187,7 +189,7 @@ export function RightPanel({
             </div>
           </div>
           <div className="quick-preset-group">
-            <span className="muted">레버리지 프리셋</span>
+            <span className="muted">Leverage presets</span>
             <div className="quick-preset-row">
               {[1, 2, 3, 5].map((value) => (
                 <button
@@ -207,11 +209,11 @@ export function RightPanel({
         <p className="eyebrow">Risk Summary</p>
         <div className="summary-grid risk">
           <div>
-            <span>최대 손실</span>
+            <span>Max loss</span>
             <strong>{formatPercent(validation.riskSummary.maxLossRatio)}</strong>
           </div>
           <div>
-            <span>예상 손실금</span>
+            <span>Estimated loss</span>
             <strong>${validation.riskSummary.maxLossAmount}</strong>
           </div>
           <div>
@@ -225,7 +227,7 @@ export function RightPanel({
         </div>
         {!validation.isValid ? (
           <div className="warning-box compact">
-            <strong>가드레일 위반</strong>
+            <strong>Guardrail violation</strong>
             <p>{validation.violations.join(' / ')}</p>
           </div>
         ) : null}
@@ -239,16 +241,48 @@ export function RightPanel({
         />
       </section>
 
+      <section className="card-block">
+        <div className="list-row">
+          <p className="eyebrow">Chart Objects</p>
+          <span className="muted">{selectedAnnotation.drawingObjects.length} items</span>
+        </div>
+        <div className="drawing-object-list">
+          {selectedAnnotation.drawingObjects.length === 0 ? <p className="muted">No chart objects added yet.</p> : null}
+          {selectedAnnotation.drawingObjects.map((object) => {
+            const label =
+              object.type === 'line'
+                ? `Horizontal line · ${formatPrice(object.price)}`
+                : object.type === 'segment'
+                  ? `Diagonal line · ${formatPrice(object.startAnchor.price)} → ${formatPrice(object.endAnchor.price)}`
+                  : object.type === 'box'
+                    ? `Zone box · ${formatPrice(object.priceFrom)} ~ ${formatPrice(object.priceTo)}`
+                    : `Text note · ${object.text}`;
+
+            return (
+              <div key={object.id} className="drawing-object-item">
+                <div>
+                  <strong>{label}</strong>
+                  <p className="muted">{object.role}</p>
+                </div>
+                <button className="secondary" onClick={() => onRemoveDrawingObject(object.id)}>
+                  Remove
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {canCancelOrder ? (
         <section className="card-block">
           <p className="eyebrow">Order Controls</p>
           <div className="warning-box compact">
-            <strong>현재 대기 주문</strong>
-            <p>이 전략은 아직 체결되지 않았습니다. 필요하면 지금 바로 주문을 취소할 수 있습니다.</p>
+            <strong>Pending order</strong>
+            <p>This strategy has not filled yet. You can cancel the order immediately if needed.</p>
           </div>
           <div className="modal-actions">
             <button className="secondary" onClick={onCancelOrder}>
-              주문 취소
+              Cancel order
             </button>
           </div>
         </section>
@@ -259,7 +293,7 @@ export function RightPanel({
           <p className="eyebrow">Position Controls</p>
           <div className="form-grid compact">
             <label>
-              <span>청산 가격</span>
+              <span>Close price</span>
               <input
                 type="number"
                 value={closePriceInput}
@@ -267,20 +301,20 @@ export function RightPanel({
               />
             </label>
             <label>
-              <span>현재가 기준</span>
+              <span>Current price</span>
               <input type="text" value={formatPrice(currentPrice)} disabled />
             </label>
           </div>
-          <p className="muted">즉시 청산은 현재가 기준으로 정리하고, 지정가 청산은 입력한 가격으로 정리 기록을 남깁니다.</p>
+          <p className="muted">Market close exits at the live price, while limit close records an exit at the specified price.</p>
           <div className="modal-actions">
             <button className="secondary" onClick={() => onClosePosition({ mode: 'market' })}>
-              즉시 청산
+              Market close
             </button>
             <button
               onClick={() => onClosePosition({ mode: 'price', closePrice: Number(closePriceInput) })}
               disabled={!Number.isFinite(Number(closePriceInput)) || Number(closePriceInput) <= 0}
             >
-              지정가 청산
+              Limit close
             </button>
           </div>
         </section>
@@ -289,7 +323,7 @@ export function RightPanel({
       <section className="card-block">
         <p className="eyebrow">Audit Trail</p>
         <div className="audit-list">
-          {auditEvents.length === 0 ? <p className="muted">아직 기록이 없습니다.</p> : null}
+          {auditEvents.length === 0 ? <p className="muted">No audit events yet.</p> : null}
           {auditEvents.map((event) => (
             <div key={event.eventId} className="audit-item">
               <strong>{event.eventType}</strong>

@@ -37,7 +37,7 @@ export function generateAiAnnotation(params: {
     authorId: 'system',
     marketSymbol: symbol,
     timeframe,
-    text: `${entryPrice} 지지 재테스트 시 롱 관점 유지. ${stopLossPrice} 종가 이탈 시 무효, ${takeProfitOne} / ${takeProfitTwo} 구간 분할 청산.`,
+    text: `Maintain a bullish bias on a retest near ${entryPrice}. Invalidate the setup on a close below ${stopLossPrice}, then scale out around ${takeProfitOne} and ${takeProfitTwo}.`,
     chartAnchor: {
       time: pivot.openTime,
       price: entryPrice,

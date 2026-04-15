@@ -70,6 +70,41 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "dev api",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:api"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "dev web",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev:web",
+				"--",
+				"--host",
+				"127.0.0.1"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "dev api direct",
+			"type": "shell",
+			"command": "./node_modules/.bin/tsx",
+			"args": [
+				"server/index.ts"
+			],
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }

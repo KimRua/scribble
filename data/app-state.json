@@ -1,6 +1,1231 @@
 {
   "annotations": [
     {
+      "annotationId": "ann_ai_1776280711738_lhbu6d",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h is showing a steady intraday recovery with higher lows from the 610.45-611.00 area and price now pressing near local resistance around 623. Momentum is mildly bullish, but current price is close to short-term breakout resistance, so a breakout-continuation entry is preferable over chasing aggressively. Plan favors a controlled long only if price confirms above resistance.",
+      "chartAnchor": {
+        "time": "2026-04-15T18:00:00.000Z",
+        "price": 623.8,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 623.8
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 619.4
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 627.5
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 631
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 635
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776280711738_i3wbzn",
+        "annotationId": "ann_ai_1776280711738_lhbu6d",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 623.8,
+        "stopLossPrice": 619.4,
+        "takeProfitPrices": [
+          627.5,
+          631,
+          635
+        ],
+        "invalidationCondition": "Invalidate the setup if 1h price fails to hold above 623.0 after entry or if a 1h candle closes below 619.4.",
+        "confidence": 0.67,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T19:18:31.738Z",
+      "updatedAt": "2026-04-15T19:18:31.738Z"
+    },
+    {
+      "annotationId": "ann_ai_1776280455124_7wwn2d",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h is showing a steady intraday recovery with higher lows from 610.45 and price pressing local resistance near 623. Momentum is constructive but the move is already extended into resistance, so the cleaner setup is a breakout continuation only if price confirms above the recent high zone. Prefer a controlled long rather than chasing aggressively.",
+      "chartAnchor": {
+        "time": "2026-04-15T18:00:00.000Z",
+        "price": 624.2,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 624.2
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 619.4
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 628.5
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 632.8
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 637
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776280455124_j9kpe5",
+        "annotationId": "ann_ai_1776280455124_7wwn2d",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 624.2,
+        "stopLossPrice": 619.4,
+        "takeProfitPrices": [
+          628.5,
+          632.8,
+          637
+        ],
+        "invalidationCondition": "Cancel the setup if 1h price closes below 619.4 before entry, or if breakout above 624.2 fails and price quickly falls back below 622 with rising sell volume.",
+        "confidence": 0.67,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T19:14:15.124Z",
+      "updatedAt": "2026-04-15T19:14:15.124Z"
+    },
+    {
+      "annotationId": "ann_ai_1776280382610_uqn5yv",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h shows a steady intraday recovery with higher lows from 610.45 and a clean push into 623.14 near the session high. Momentum is mildly bullish, but price is also approaching short-term resistance after several consecutive green closes, so chasing aggressively is not ideal. Preferred plan is a buy-on-pullback into the 621.8-622.2 area, or a breakout continuation only if price reclaims and holds above 623.8 with volume. Risk should stay moderate given proximity to local resistance.",
+      "chartAnchor": {
+        "time": "2026-04-15T18:00:00.000Z",
+        "price": 622,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 622
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 618.4
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 625.8
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 628.5
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 632
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776280382610_8tws3u",
+        "annotationId": "ann_ai_1776280382610_uqn5yv",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 622,
+        "stopLossPrice": 618.4,
+        "takeProfitPrices": [
+          625.8,
+          628.5,
+          632
+        ],
+        "invalidationCondition": "Invalidate the long setup if a 1h candle closes below 618.4 or if price loses 621 and fails to reclaim it quickly, indicating the breakout attempt has failed.",
+        "confidence": 0.66,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T19:13:02.610Z",
+      "updatedAt": "2026-04-15T19:13:02.610Z"
+    },
+    {
+      "annotationId": "ann_ai_1776279603850_k6o4ia",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h shows a short-term bullish recovery with higher lows from 610.45 and a breakout toward 622.94 resistance. Momentum is positive but price is near local resistance, so a breakout-continuation long is preferred over chasing market. Plan: buy on confirmation above 623.20, with protection below the recent higher-low structure. If price loses 618.00 decisively before entry, the setup is weakened.",
+      "chartAnchor": {
+        "time": "2026-04-15T17:00:00.000Z",
+        "price": 623.2,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 623.2
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 618
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 626.8
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 630.5
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 634
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776279603850_7f6ani",
+        "annotationId": "ann_ai_1776279603850_k6o4ia",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 623.2,
+        "stopLossPrice": 618,
+        "takeProfitPrices": [
+          626.8,
+          630.5,
+          634
+        ],
+        "invalidationCondition": "Invalidate if 1h candle closes below 618.00 before entry, or after entry if price breaks and holds below 618.00 indicating failed breakout and loss of higher-low structure.",
+        "confidence": 0.66,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T19:00:03.850Z",
+      "updatedAt": "2026-04-15T19:00:03.850Z"
+    },
+    {
+      "annotationId": "ann_ai_1776279395164_oxbhif",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h shows a short-term bullish continuation structure with higher lows from 610.45 and steady reclaim into 622.33. Momentum is constructive but price is nearing local resistance around 622.9-624, so the cleaner setup is a breakout continuation rather than chasing market here. Plan: buy only on confirmation above recent high. If triggered, target 625.8 then 629.5 then 633.0, with protection below the latest higher-low structure. If price loses 618 on a closing basis before breakout, the setup is weakened.",
+      "chartAnchor": {
+        "time": "2026-04-15T17:00:00.000Z",
+        "price": 623.2,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 623.2
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 618.4
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 625.8
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 629.5
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 633
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776279395164_k3vtk7",
+        "annotationId": "ann_ai_1776279395164_oxbhif",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 623.2,
+        "stopLossPrice": 618.4,
+        "takeProfitPrices": [
+          625.8,
+          629.5,
+          633
+        ],
+        "invalidationCondition": "Cancel the setup if 1h price closes below 618.0 before entry, or exit if triggered and price closes below 618.4.",
+        "confidence": 0.67,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T18:56:35.164Z",
+      "updatedAt": "2026-04-15T18:56:35.164Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xcf8dbc8d9dab912999b4a520004e2e681b34c4c5",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "619.7 지지 재테스트 시 단기 롱 진입 가능. 615.98 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T11:00:00.000Z",
+        "price": 619.7,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 619.7
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 615.98
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 624.66
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 615.98,
+          "priceTo": 619.7
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5",
+        "annotationId": "ann_seed_ai_BNBUSDT_1h_99b4a520004e2e681b34c4c5",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 619.7,
+        "stopLossPrice": 615.98,
+        "takeProfitPrices": [
+          624.66,
+          629
+        ],
+        "invalidationCondition": "price closes below 615.98",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T15:06:35.699Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "guest:web-5372f3a3-80f3-4a45-837c-006fa1cdbea3",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "619.7 지지 재테스트 시 단기 롱 진입 가능. 615.98 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T11:00:00.000Z",
+        "price": 619.7,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 619.7
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 615.98
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 624.66
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 615.98,
+          "priceTo": 619.7
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3",
+        "annotationId": "ann_seed_ai_BNBUSDT_1h_3_4a45_837c_006fa1cdbea3",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 619.7,
+        "stopLossPrice": 615.98,
+        "takeProfitPrices": [
+          624.66,
+          629
+        ],
+        "invalidationCondition": "price closes below 615.98",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T15:06:35.699Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "4h",
+      "text": "623.45 지지 재테스트 시 단기 롱 진입 가능. 619.71 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-14T12:00:00.000Z",
+        "price": 623.45,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 623.45
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 619.71
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 628.44
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 619.71,
+          "priceTo": 623.45
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d",
+        "annotationId": "ann_seed_ai_BNBUSDT_4h_77db10a1709199f33a21c74d",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 623.45,
+        "stopLossPrice": 619.71,
+        "takeProfitPrices": [
+          628.44,
+          632.8
+        ],
+        "invalidationCondition": "price closes below 619.71",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T15:06:35.699Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "15m",
+      "text": "618.49 지지 재테스트 시 단기 롱 진입 가능. 614.78 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T14:45:00.000Z",
+        "price": 618.49,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 618.49
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 614.78
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 623.44
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 614.78,
+          "priceTo": 618.49
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d",
+        "annotationId": "ann_seed_ai_BNBUSDT_15m_77db10a1709199f33a21c74d",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 618.49,
+        "stopLossPrice": 614.78,
+        "takeProfitPrices": [
+          623.44,
+          627.77
+        ],
+        "invalidationCondition": "price closes below 614.78",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T15:06:35.699Z"
+    },
+    {
+      "annotationId": "ann_ai_1776267437294_wrshry",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h is range-bound with resistance around 620-621 and support around 616 then 613-614. Price is currently near mid-to-upper range after repeated rejection below 620, so the cleaner setup is a cautious long only on a pullback into support rather than chasing here. Balanced risk suggests small size and low leverage.",
+      "chartAnchor": {
+        "time": "2026-04-15T14:00:00.000Z",
+        "price": 616.2,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1776267437294_wrshry_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 616.2
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 612.8
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 619.8
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 622.5
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 612.8,
+          "priceTo": 616.2
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_note",
+          "type": "text",
+          "role": "note",
+          "text": "BNBUSDT 1h is range-bound with resistance around 620-621 and support around 616 then 613-614. Price is currently near mid-to-upper range after repeated rejection below 620, so the cleaner setup is a cautious long only on a pullback into support rather than chasing here. Balanced risk suggests small size and low leverage."
+        },
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 616.2
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 612.8
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 619.8
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 622.5
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_box_1776268326145",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 606.57,
+          "priceTo": 613.94
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_segment_1776277122731",
+          "type": "segment",
+          "role": "trendline",
+          "startAnchor": {
+            "time": "2026-04-12T16:00:00.000Z",
+            "price": 598.78,
+            "index": 45
+          },
+          "endAnchor": {
+            "time": "2026-04-13T22:00:00.000Z",
+            "price": 616.72,
+            "index": 75
+          }
+        },
+        {
+          "id": "ann_ai_1776267437294_wrshry_segment_1776277376565",
+          "type": "segment",
+          "role": "trendline",
+          "startAnchor": {
+            "time": "2026-04-15T01:00:00.000Z",
+            "price": 598.22,
+            "index": 102
+          },
+          "endAnchor": {
+            "time": "2026-04-15T18:00:00.000Z",
+            "price": 581.56,
+            "index": 119
+          }
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_ai_1776267437294_wrshry",
+        "annotationId": "ann_ai_1776267437294_wrshry",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 616.2,
+        "stopLossPrice": 612.8,
+        "takeProfitPrices": [
+          619.8,
+          622.5
+        ],
+        "invalidationCondition": "Cancel the setup if a 1h candle closes below 612.8 before entry, or if price breaks and holds above 620.8 before retracing to the entry zone.",
+        "confidence": 0.61,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T15:37:17.294Z",
+      "updatedAt": "2026-04-15T18:23:02.495Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "wallet:0xa62cafbd11523fb677db10a1709199f33a21c74d",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "614.41 지지 재테스트 시 단기 롱 진입 가능. 610.72 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T08:00:00.000Z",
+        "price": 614.41,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 614.41
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 610.72
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 619.33
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 623.63
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 610.72,
+          "priceTo": 614.41
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_note",
+          "type": "text",
+          "role": "note",
+          "text": "614.41 지지 재테스트 시 단기 롱 진입 가능. 610.72 이탈 시 시나리오 무효."
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_line_1776269269712",
+          "type": "line",
+          "role": "trendline",
+          "price": 612.8
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_segment_1776277381198",
+          "type": "segment",
+          "role": "trendline",
+          "startAnchor": {
+            "time": "2026-04-15T18:00:00.000Z",
+            "price": 581.24,
+            "index": 119
+          },
+          "endAnchor": {
+            "time": "2026-04-15T08:00:00.000Z",
+            "price": 599.18,
+            "index": 109
+          }
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d",
+        "annotationId": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 614.41,
+        "stopLossPrice": 610.72,
+        "takeProfitPrices": [
+          619.33,
+          623.63
+        ],
+        "invalidationCondition": "price closes below 610.72",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T18:23:06.895Z"
+    },
+    {
+      "annotationId": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa",
+      "authorType": "ai",
+      "authorId": "system",
+      "ownerKey": "guest:web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "614.41 지지 재테스트 시 단기 롱 진입 가능. 610.72 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T08:00:00.000Z",
+        "price": 614.41,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 614.41
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 610.72
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 619.33
+        },
+        {
+          "id": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 610.72,
+          "priceTo": 614.41
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa",
+        "annotationId": "ann_seed_ai_BNBUSDT_1h_2_4ffc_afc1_f914f28b55fa",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 614.41,
+        "stopLossPrice": 610.72,
+        "takeProfitPrices": [
+          619.33,
+          623.63
+        ],
+        "invalidationCondition": "price closes below 610.72",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:56:35.699Z",
+      "updatedAt": "2026-04-15T15:06:35.699Z"
+    },
+    {
+      "annotationId": "ann_ai_1776264749712_5r4h2b",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BNBUSDT",
+      "timeframe": "1h",
+      "text": "BNBUSDT 1h is range-bound with a mild bullish bias after reclaiming from the 610.5-611.5 area and holding above 617. Momentum is constructive but price is still below the recent intraday resistance zone near 620.4-620.7, so a breakout-continuation setup is cleaner than chasing at market. Prefer a stop-entry long above resistance with defined risk.",
+      "chartAnchor": {
+        "time": "2026-04-15T13:00:00.000Z",
+        "price": 620.8,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 620.8
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 616.4
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 624.5
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 628
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 632
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776264749712_6seq0d",
+        "annotationId": "ann_ai_1776264749712_5r4h2b",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 620.8,
+        "stopLossPrice": 616.4,
+        "takeProfitPrices": [
+          624.5,
+          628,
+          632
+        ],
+        "invalidationCondition": "Invalidate the setup if a 1h candle closes below 616.4 before entry, or after entry if price loses 616.4 with acceptance below that level.",
+        "confidence": 0.63,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:52:29.712Z",
+      "updatedAt": "2026-04-15T14:52:29.712Z"
+    },
+    {
+      "annotationId": "ann_seed_ai",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "ETHUSDT",
+      "timeframe": "1h",
+      "text": "2316.62 지지 재테스트 시 단기 롱 진입 가능. 2302.72 이탈 시 시나리오 무효.",
+      "chartAnchor": {
+        "time": "2026-04-15T07:00:00.000Z",
+        "price": 2316.62,
+        "index": 112
+      },
+      "drawingObjects": [
+        {
+          "id": "draw_entry_seed",
+          "type": "line",
+          "role": "entry",
+          "price": 2316.62
+        },
+        {
+          "id": "draw_sl_seed",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 2302.72
+        },
+        {
+          "id": "draw_tp_seed_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 2335.15
+        },
+        {
+          "id": "draw_zone_seed",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 2302.72,
+          "priceTo": 2316.62
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_seed_ai",
+        "annotationId": "ann_seed_ai",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 2316.62,
+        "stopLossPrice": 2302.72,
+        "takeProfitPrices": [
+          2335.15,
+          2351.37
+        ],
+        "invalidationCondition": "price closes below 2302.72",
+        "confidence": 0.72,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Active",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:04:29.995Z",
+      "updatedAt": "2026-04-15T14:14:29.995Z"
+    },
+    {
+      "annotationId": "ann_ai_1776263566947_66wcao",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h looks range-bound with a mild bullish recovery after defending the 73.5k-73.8k area. Price is back above 74k, but still below the recent local high zone near 74.7k-74.8k, so the cleaner setup is a breakout-confirmation long rather than chasing at market. Plan: buy only if price reclaims 74620 with confirmation, targeting a move back toward the recent highs and extension above them. If price loses 73820, the bullish setup is invalidated.",
+      "chartAnchor": {
+        "time": "2026-04-15T13:00:00.000Z",
+        "price": 74620,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 74620
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 73820
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 75150
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 75680
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776263566947_83cx8b",
+        "annotationId": "ann_ai_1776263566947_66wcao",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 74620,
+        "stopLossPrice": 73820,
+        "takeProfitPrices": [
+          75150,
+          75680
+        ],
+        "invalidationCondition": "Invalidate if 1h candle closes below 73820 before entry, or after entry if price breaks and holds below 73820.",
+        "confidence": 0.62,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:32:46.947Z",
+      "updatedAt": "2026-04-15T14:32:46.947Z"
+    },
+    {
+      "annotationId": "ann_ai_1776263562267_38hqmb",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "BTCUSDT 1h is range-bound with a mild bullish recovery from the 73.5k area, but price is still trading inside a choppy intraday structure. Best setup is a cautious long on pullback near local support rather than chasing current price. Resistance sits around 74450-74680; support is around 74050 then 73800. Use reduced size until a clean breakout confirms.",
+      "chartAnchor": {
+        "time": "2026-04-15T13:00:00.000Z",
+        "price": 74120,
+        "index": 118
+      },
+      "drawingObjects": [
+        {
+          "id": "llm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 74120
+        },
+        {
+          "id": "llm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 73740
+        },
+        {
+          "id": "llm_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 74480
+        },
+        {
+          "id": "llm_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 74720
+        },
+        {
+          "id": "llm_tp_2",
+          "type": "line",
+          "role": "take_profit",
+          "price": 75050
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_1776263562267_0k6drm",
+        "annotationId": "ann_ai_1776263562267_38hqmb",
+        "bias": "bullish",
+        "entryType": "limit",
+        "entryPrice": 74120,
+        "stopLossPrice": 73740,
+        "takeProfitPrices": [
+          74480,
+          74720,
+          75050
+        ],
+        "invalidationCondition": "Invalidate the long setup if a 1h candle closes below 73740 or if price loses 73800 with expanding sell volume, indicating the range support failed.",
+        "confidence": 0.61,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T14:32:42.267Z",
+      "updatedAt": "2026-04-15T14:32:42.267Z"
+    },
+    {
+      "annotationId": "ann_1776260825364_lj2wxm",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "테스트 댓글입니다.",
+      "chartAnchor": {
+        "time": "2026-04-12T09:00:00.000Z",
+        "price": 74299.56,
+        "index": 43
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1776260825364_lj2wxm_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 0
+        },
+        {
+          "id": "ann_1776260825364_lj2wxm_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 0
+        },
+        {
+          "id": "ann_1776260825364_lj2wxm_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 0,
+          "priceTo": 0
+        },
+        {
+          "id": "ann_1776260825364_lj2wxm_note",
+          "type": "text",
+          "role": "note",
+          "text": "테스트 댓글입니다."
+        },
+        {
+          "id": "ann_1776260825364_lj2wxm_segment_1776263681793",
+          "type": "segment",
+          "role": "trendline",
+          "startAnchor": {
+            "time": "2026-04-12T01:00:00.000Z",
+            "price": 71914.74,
+            "index": 34
+          },
+          "endAnchor": {
+            "time": "2026-04-12T05:00:00.000Z",
+            "price": 71592.28,
+            "index": 38
+          }
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1776260825364_lj2wxm",
+        "annotationId": "ann_1776260825364_lj2wxm",
+        "bias": "neutral",
+        "entryType": "conditional",
+        "entryPrice": 0,
+        "stopLossPrice": 0,
+        "takeProfitPrices": [],
+        "invalidationCondition": "매매 의도가 확인되지 않음",
+        "confidence": 0.02,
+        "riskLevel": "conservative",
+        "positionSizeRatio": 0.01,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-15T13:47:09.383Z",
+      "updatedAt": "2026-04-15T14:34:45.721Z"
+    },
+    {
       "annotationId": "ann_ai_1775983212181_o5dvd0",
       "authorType": "ai",
       "authorId": "system",
@@ -385,6 +1610,21 @@
           "type": "text",
           "role": "note",
           "text": "여기 지지 받고 올라갈시 롱 포지션만"
+        },
+        {
+          "id": "ann_1775885047765_kqz5zs_segment_1776263684709",
+          "type": "segment",
+          "role": "trendline",
+          "startAnchor": {
+            "time": "2026-04-13T16:00:00.000Z",
+            "price": 73189.2,
+            "index": 73
+          },
+          "endAnchor": {
+            "time": "2026-04-12T03:00:00.000Z",
+            "price": 72099,
+            "index": 36
+          }
         }
       ],
       "strategy": {
@@ -407,7 +1647,7 @@
       "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-11T05:24:07.766Z",
-      "updatedAt": "2026-04-15T09:51:19.661Z"
+      "updatedAt": "2026-04-15T14:34:49.236Z"
     },
     {
       "annotationId": "ann_1775838742853_9uygve",
@@ -777,7 +2017,7 @@
       "status": "Executed",
       "visibility": "private",
       "createdAt": "2026-04-09T17:00:03.145Z",
-      "updatedAt": "2026-04-15T09:00:21.073Z"
+      "updatedAt": "2026-04-15T14:31:58.843Z"
     },
     {
       "annotationId": "ann_ai_1775753999511_q1u7i6",
@@ -851,7 +2091,7 @@
       "status": "Executed",
       "visibility": "private",
       "createdAt": "2026-04-09T16:59:59.511Z",
-      "updatedAt": "2026-04-14T17:03:25.925Z"
+      "updatedAt": "2026-04-15T14:17:34.742Z"
     },
     {
       "annotationId": "ann_1775752286992_97rr3g",
@@ -1923,6 +3163,486 @@
   ],
   "auditEvents": [
     {
+      "eventId": "evt_ann_ai_1776280711738_lhbu6d_1776280711740",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776280711738_lhbu6d",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T19:18:31.740Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776280455124_7wwn2d_1776280455128",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776280455124_7wwn2d",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T19:14:15.128Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776280382610_uqn5yv_1776280382616",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776280382610_uqn5yv",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T19:13:02.616Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776279603850_k6o4ia_1776279603855",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776279603850_k6o4ia",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T19:00:03.855Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776279395164_oxbhif_1776279395169",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776279395164_oxbhif",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T18:56:35.169Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_1776277386898",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T18:23:06.898Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776267437294_wrshry_1776277382501",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776267437294_wrshry",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T18:23:02.501Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776267437294_wrshry_1776277131204",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776267437294_wrshry",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T18:18:51.204Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776267437294_wrshry_1776277128529",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776267437294_wrshry",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T18:18:48.529Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d_1776269274162",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai_BNBUSDT_1h_77db10a1709199f33a21c74d",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T16:07:54.162Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776267437294_wrshry_1776268332987",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776267437294_wrshry",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T15:52:12.987Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776267437294_wrshry_1776267437298",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776267437294_wrshry",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T15:37:17.298Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776264749712_5r4h2b_1776264749717",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776264749712_5r4h2b",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:52:29.717Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BNBUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885047765_kqz5zs_1776263689239",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885047765_kqz5zs",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:34:49.239Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776263685725",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:34:45.725Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776263665517",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:34:25.517Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776263664768",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:34:24.768Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776263566947_66wcao_1776263566951",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776263566947_66wcao",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:32:46.951Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1776263562267_38hqmb_1776263562270",
+      "eventType": "ai_analysis_requested",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1776263562267_38hqmb",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:32:42.270Z",
+      "metadata": {
+        "provider": "openai",
+        "symbol": "BTCUSDT",
+        "timeframe": "1h"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776263518848",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:31:58.848Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776263516125",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:31:56.125Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776263444886",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "sessionId": "web-39c61b2e-bab2-4ffc-afc1-f914f28b55fa",
+      "timestamp": "2026-04-15T14:30:44.886Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262696819",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:18:16.819Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262694918",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:18:14.919Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262680591",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:18:00.591Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885047765_kqz5zs_1776262668879",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885047765_kqz5zs",
+      "timestamp": "2026-04-15T14:17:48.879Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885047765_kqz5zs_1776262667243",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885047765_kqz5zs",
+      "timestamp": "2026-04-15T14:17:47.243Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262661558",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:17:41.558Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1776262654747",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-15T14:17:34.747Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1776262645784",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-15T14:17:25.784Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1776262644354",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-15T14:17:24.354Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262584128",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:16:24.128Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262582378",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:16:22.378Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262569371",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:16:09.371Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262543598",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:43.598Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262538978",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:38.978Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262532381",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:32.381Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262526188",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:26.188Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262516279",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:16.279Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262504351",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:15:04.351Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262483337",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:14:43.337Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262482946",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:14:42.946Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776262482203",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T14:14:42.203Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
+      "eventId": "evt_ann_1776260825364_lj2wxm_1776260829393",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1776260825364_lj2wxm",
+      "timestamp": "2026-04-15T13:47:09.393Z",
+      "metadata": {
+        "provider": "openai"
+      }
+    },
+    {
       "eventId": "evt_ann_ai_1775747216617_45cz0a_1776246683254",
       "eventType": "status_changed",
       "entityType": "annotation",
@@ -2742,510 +4462,6 @@
       "entityType": "annotation",
       "entityId": "ann_1775838742853_9uygve",
       "timestamp": "2026-04-12T08:40:49.529Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775838564328_pecq9k_1775983246960",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775838564328_pecq9k",
-      "timestamp": "2026-04-12T08:40:46.960Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775983110954_iqfz43_1775983240159",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775983110954_iqfz43",
-      "timestamp": "2026-04-12T08:40:40.159Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775983234468",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-12T08:40:34.468Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775983162709_x595jr_1775983228933",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775983162709_x595jr",
-      "timestamp": "2026-04-12T08:40:28.933Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775983226324",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-12T08:40:26.324Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775983225274",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-12T08:40:25.274Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775983224235",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-12T08:40:24.235Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983218266",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775983212181_o5dvd0",
-      "timestamp": "2026-04-12T08:40:18.266Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983217121",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775983212181_o5dvd0",
-      "timestamp": "2026-04-12T08:40:17.121Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983212185",
-      "eventType": "ai_analysis_requested",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775983212181_o5dvd0",
-      "timestamp": "2026-04-12T08:40:12.185Z",
-      "metadata": {
-        "provider": "fallback",
-        "symbol": "BTCUSDT",
-        "timeframe": "15m"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775983162709_x595jr_1775983191778",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775983162709_x595jr",
-      "timestamp": "2026-04-12T08:39:51.778Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775983191026_h58boh_1775983191029",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775983191026_h58boh",
-      "timestamp": "2026-04-12T08:39:51.029Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775983191010_32daao_1775983191019",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775983191010_32daao",
-      "timestamp": "2026-04-12T08:39:51.019Z",
-      "metadata": {
-        "strategyId": "str_ann_1775983162709_x595jr",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_1775983162709_x595jr_1775983184155_1775983184161",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_1775983162709_x595jr_1775983184155",
-      "timestamp": "2026-04-12T08:39:44.161Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false,
-        "invalidTxHashFiltered": false
-      }
-    },
-    {
-      "eventId": "evt_ann_1775983162709_x595jr_1775983162713",
-      "eventType": "annotation_created",
-      "entityType": "annotation",
-      "entityId": "ann_1775983162709_x595jr",
-      "timestamp": "2026-04-12T08:39:22.713Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_1775983110954_iqfz43_1775983122741_1775983122748",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_1775983110954_iqfz43_1775983122741",
-      "timestamp": "2026-04-12T08:38:42.748Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false,
-        "invalidTxHashFiltered": false
-      }
-    },
-    {
-      "eventId": "evt_ann_1775983110954_iqfz43_1775983110958",
-      "eventType": "annotation_created",
-      "entityType": "annotation",
-      "entityId": "ann_1775983110954_iqfz43",
-      "timestamp": "2026-04-12T08:38:30.958Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775982792781_1775982792787",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775982792781",
-      "timestamp": "2026-04-12T08:33:12.787Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false,
-        "invalidTxHashFiltered": false
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775982776086",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-12T08:32:56.086Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775982775325_irtovs_1775982775329",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775982775325_irtovs",
-      "timestamp": "2026-04-12T08:32:55.329Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775982775314_ug1meb_1775982775317",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775982775314_ug1meb",
-      "timestamp": "2026-04-12T08:32:55.317Z",
-      "metadata": {
-        "strategyId": "str_ann_1775886704175_88yu18",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775982757237_1775982757244",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_1775886704175_88yu18_1775982757237",
-      "timestamp": "2026-04-12T08:32:37.244Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false,
-        "invalidTxHashFiltered": false
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775888572287",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-11T06:22:52.287Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775888571526_ku5w2k_1775888571529",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775888571526_ku5w2k",
-      "timestamp": "2026-04-11T06:22:51.529Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775886773751_doq94e_1775888571519",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775886773751_doq94e",
-      "timestamp": "2026-04-11T06:22:51.519Z",
-      "metadata": {
-        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775888554471_1775888554478",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775888554471",
-      "timestamp": "2026-04-11T06:22:34.478Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775886779824",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-11T05:52:59.824Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775886779079_jikqtr_1775886779082",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775886779079_jikqtr",
-      "timestamp": "2026-04-11T05:52:59.082Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775886773751_doq94e_1775886779072",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775886773751_doq94e",
-      "timestamp": "2026-04-11T05:52:59.072Z",
-      "metadata": {
-        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775886774514",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-11T05:52:54.514Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775886773761_o0mog0_1775886773764",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775886773761_o0mog0",
-      "timestamp": "2026-04-11T05:52:53.764Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775886773751_doq94e_1775886773754",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775886773751_doq94e",
-      "timestamp": "2026-04-11T05:52:53.754Z",
-      "metadata": {
-        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775886757242_1775886757248",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775886757242",
-      "timestamp": "2026-04-11T05:52:37.248Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775886739107_1775886739112",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_1775886704175_88yu18_1775886739107",
-      "timestamp": "2026-04-11T05:52:19.112Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775886735781",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-11T05:52:15.781Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775886733165",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-11T05:52:13.165Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775886731843",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-11T05:52:11.843Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775886727942",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-11T05:52:07.942Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775886704175_88yu18_1775886704179",
-      "eventType": "annotation_created",
-      "entityType": "annotation",
-      "entityId": "ann_1775886704175_88yu18",
-      "timestamp": "2026-04-11T05:51:44.179Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775885295227",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775754003145_t8qr7m",
-      "timestamp": "2026-04-11T05:28:15.227Z",
-      "metadata": {
-        "provider": "fallback"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775885294476_57v59v_1775885294479",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775885294476_57v59v",
-      "timestamp": "2026-04-11T05:28:14.479Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_dlg_1775885294466_knyl4u_1775885294470",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "dlg_1775885294466_knyl4u",
-      "timestamp": "2026-04-11T05:28:14.470Z",
-      "metadata": {
-        "strategyId": "str_1775754003145_6qcljm",
-        "delegated": true,
-        "maxOrderSizeUsd": 500,
-        "maxSlippageBps": 100
-      }
-    },
-    {
-      "eventId": "evt_exe_str_1775754003145_6qcljm_1775885219532_1775885219538",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_1775754003145_6qcljm_1775885219532",
-      "timestamp": "2026-04-11T05:26:59.538Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": false,
-        "onchainReady": false,
-        "dexExecuted": false,
-        "dexReady": false
-      }
-    },
-    {
-      "eventId": "evt_ann_1775885141493_d3maal_1775885141497",
-      "eventType": "annotation_created",
-      "entityType": "annotation",
-      "entityId": "ann_1775885141493_d3maal",
-      "timestamp": "2026-04-11T05:25:41.497Z",
       "metadata": {
         "provider": "fallback"
       }

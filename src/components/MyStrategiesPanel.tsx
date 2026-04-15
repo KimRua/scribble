@@ -14,10 +14,10 @@ export function MyStrategiesPanel({ open, annotations, onClose, onSelect }: MySt
       <div className="drawer-header">
         <div>
           <p className="eyebrow">Portfolio</p>
-          <h3>내 전략 목록</h3>
+          <h3>My strategies</h3>
         </div>
         <button className="ghost-button" onClick={onClose}>
-          닫기
+          Close
         </button>
       </div>
       <div className="drawer-list">

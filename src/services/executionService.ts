@@ -62,8 +62,8 @@ export function simulatePriceTick(annotation: Annotation, nextPrice: number, aut
       notifications.push({
         notificationId: `noti_${Date.now()}_invalidated`,
         type: 'strategy_invalidated',
-        title: '전략 무효화',
-        body: `${annotation.marketSymbol} 전략이 손절 기준 이탈로 무효화되었습니다.`,
+        title: 'Strategy invalidated',
+        body: `${annotation.marketSymbol} was invalidated after price broke through the stop-loss threshold.`,
         annotationId: annotation.annotationId,
         createdAt: new Date().toISOString(),
         read: false
@@ -73,8 +73,8 @@ export function simulatePriceTick(annotation: Annotation, nextPrice: number, aut
       notifications.push({
         notificationId: `noti_${Date.now()}_triggered`,
         type: annotation.strategy.autoExecuteEnabled ? 'execution_filled' : 'strategy_triggered',
-        title: annotation.strategy.autoExecuteEnabled ? '자동 실행 완료' : '전략 트리거 발생',
-        body: `${annotation.marketSymbol} ${annotation.strategy.entryPrice} 진입 조건이 충족되었습니다.`,
+        title: annotation.strategy.autoExecuteEnabled ? 'Auto-execution completed' : 'Strategy triggered',
+        body: `${annotation.marketSymbol} met its entry condition at ${annotation.strategy.entryPrice}.`,
         annotationId: annotation.annotationId,
         createdAt: new Date().toISOString(),
         read: false

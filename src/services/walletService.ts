@@ -23,6 +23,43 @@ declare global {
   }
 }
 
+interface ProviderRequestError {
+  code?: number;
+  message?: string;
+}
+
+function isUserRejectedRequest(error: unknown) {
+  return typeof error === 'object' && error !== null && (error as ProviderRequestError).code === 4001;
+}
+
+async function requestAccountSelection() {
+  if (!window.ethereum) {
+    throw new Error('No browser wallet detected. Please install or enable MetaMask.');
+  }
+
+  try {
+    await window.ethereum.request({
+      method: 'wallet_requestPermissions',
+      params: [{ eth_accounts: {} }]
+    });
+    return;
+  } catch (error) {
+    if (isUserRejectedRequest(error)) {
+      throw new Error('Wallet connection was cancelled.');
+    }
+  }
+
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+  } catch (error) {
+    if (isUserRejectedRequest(error)) {
+      throw new Error('Wallet connection was cancelled.');
+    }
+
+    throw error;
+  }
+}
+
 async function buildSession(): Promise<WalletSession | null> {
   if (!window.ethereum) {
     return null;
@@ -42,11 +79,12 @@ async function buildSession(): Promise<WalletSession | null> {
 }
 
 export async function connectInjectedWallet() {
-  if (!window.ethereum) {
-    throw new Error('브라우저 지갑이 감지되지 않았습니다. MetaMask를 설치하거나 활성화해 주세요.');
-  }
+  await requestAccountSelection();
+  return buildSession();
+}
 
-  await window.ethereum.request({ method: 'eth_requestAccounts' });
+export async function switchInjectedWallet() {
+  await requestAccountSelection();
   return buildSession();
 }
 

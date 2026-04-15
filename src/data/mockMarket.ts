@@ -3,9 +3,9 @@ import type { Annotation, Candle, MarketOption, Strategy, UserSettings } from '.
 const now = Date.now();
 
 export const marketOptions: MarketOption[] = [
+  { symbol: 'BNBUSDT', baseAsset: 'BNB', quoteAsset: 'USDT', status: 'active' },
   { symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT', status: 'active' },
-  { symbol: 'ETHUSDT', baseAsset: 'ETH', quoteAsset: 'USDT', status: 'active' },
-  { symbol: 'BNBUSDT', baseAsset: 'BNB', quoteAsset: 'USDT', status: 'active' }
+  { symbol: 'ETHUSDT', baseAsset: 'ETH', quoteAsset: 'USDT', status: 'active' }
 ];
 
 export const defaultUserSettings: UserSettings = {
@@ -57,10 +57,11 @@ export function buildSeedStrategy(annotationId: string, entryPrice: number): Str
   };
 }
 
-export function buildSeedAnnotations(symbol: string, timeframe: string, candles: Candle[]): Annotation[] {
+export function buildSeedAnnotations(symbol: string, timeframe: string, candles: Candle[], ownerKey?: string | null): Annotation[] {
   const anchorIndex = candles.length - 8;
   const anchorCandle = candles[anchorIndex];
-  const annotationId = 'ann_seed_ai';
+  const scopeSuffix = (ownerKey ?? 'guest').replace(/[^a-zA-Z0-9]+/g, '_').slice(-24);
+  const annotationId = `ann_seed_ai_${symbol}_${timeframe.replace(/[^a-zA-Z0-9]+/g, '_')}_${scopeSuffix}`;
   const strategy = buildSeedStrategy(annotationId, Number(anchorCandle.close.toFixed(2)));
 
   return [
@@ -68,19 +69,20 @@ export function buildSeedAnnotations(symbol: string, timeframe: string, candles:
       annotationId,
       authorType: 'ai',
       authorId: 'system',
+      ownerKey: ownerKey ?? null,
       marketSymbol: symbol,
       timeframe,
-      text: `${strategy.entryPrice} 지지 재테스트 시 단기 롱 진입 가능. ${strategy.stopLossPrice} 이탈 시 시나리오 무효.`,
+      text: `A short-term long setup looks valid on a support retest near ${strategy.entryPrice}. The idea is invalidated below ${strategy.stopLossPrice}.`,
       chartAnchor: {
         time: anchorCandle.openTime,
         price: strategy.entryPrice,
         index: anchorIndex
       },
       drawingObjects: [
-        { id: 'draw_entry_seed', type: 'line', role: 'entry', price: strategy.entryPrice },
-        { id: 'draw_sl_seed', type: 'line', role: 'stop_loss', price: strategy.stopLossPrice },
-        { id: 'draw_tp_seed_1', type: 'line', role: 'take_profit', price: strategy.takeProfitPrices[0] },
-        { id: 'draw_zone_seed', type: 'box', role: 'zone', priceFrom: strategy.stopLossPrice, priceTo: strategy.entryPrice }
+        { id: `${annotationId}_entry`, type: 'line', role: 'entry', price: strategy.entryPrice },
+        { id: `${annotationId}_sl`, type: 'line', role: 'stop_loss', price: strategy.stopLossPrice },
+        { id: `${annotationId}_tp_1`, type: 'line', role: 'take_profit', price: strategy.takeProfitPrices[0] },
+        { id: `${annotationId}_zone`, type: 'box', role: 'zone', priceFrom: strategy.stopLossPrice, priceTo: strategy.entryPrice }
       ],
       strategy,
       status: 'Active',

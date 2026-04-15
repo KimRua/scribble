@@ -21,7 +21,7 @@ export type EntryType = 'market' | 'limit' | 'conditional';
 export type Bias = 'bullish' | 'bearish' | 'neutral';
 export type RiskLevel = 'conservative' | 'balanced' | 'aggressive';
 export type Visibility = 'private' | 'public' | 'unlisted';
-export type DrawingMode = 'none' | 'text' | 'line' | 'box';
+export type DrawingMode = 'none' | 'text' | 'line' | 'box' | 'segment';
 
 export interface Candle {
   openTime: string;
@@ -54,12 +54,18 @@ export interface BoxDrawingObject extends DrawingObjectBase {
   priceTo: number;
 }
 
+export interface SegmentDrawingObject extends DrawingObjectBase {
+  type: 'segment';
+  startAnchor: ChartAnchor;
+  endAnchor: ChartAnchor;
+}
+
 export interface TextDrawingObject extends DrawingObjectBase {
   type: 'text';
   text: string;
 }
 
-export type DrawingObject = LineDrawingObject | BoxDrawingObject | TextDrawingObject;
+export type DrawingObject = LineDrawingObject | BoxDrawingObject | SegmentDrawingObject | TextDrawingObject;
 
 export interface Strategy {
   strategyId: string;
@@ -81,6 +87,7 @@ export interface Annotation {
   annotationId: string;
   authorType: AuthorType;
   authorId: string;
+  ownerKey?: string | null;
   marketSymbol: string;
   timeframe: string;
   text: string;

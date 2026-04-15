@@ -21,10 +21,11 @@ import {
   getMarkets,
   getNotifications,
   previewExecution,
+  setClientWalletAddress,
   subscribeMarketStream,
   updateAnnotation
 } from '../services/apiClient';
-import { connectInjectedWallet, getInjectedWalletSession, subscribeInjectedWalletSession } from '../services/walletService';
+import { connectInjectedWallet, getInjectedWalletSession, subscribeInjectedWalletSession, switchInjectedWallet } from '../services/walletService';
 import type {
   Annotation,
   AuditEvent,
@@ -53,14 +54,39 @@ import { MyStrategiesPanel } from './MyStrategiesPanel';
 import { NotificationDrawer } from './NotificationDrawer';
 import { RightPanel } from './RightPanel';
 
-function formatUsd(value: number) {
-  return new Intl.NumberFormat('ko-KR', {
-    maximumFractionDigits: 0
-  }).format(value);
+const WALLET_LOGIN_STORAGE_KEY = 'scribble.walletLoginEnabled';
+
+function readWalletLoginEnabled() {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  return window.localStorage.getItem(WALLET_LOGIN_STORAGE_KEY) !== 'false';
+}
+
+function writeWalletLoginEnabled(enabled: boolean) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(WALLET_LOGIN_STORAGE_KEY, enabled ? 'true' : 'false');
+}
+
+function normalizeNativeAssetSymbol(symbol?: string | null) {
+  if (!symbol) {
+    return null;
+  }
+
+  const upper = symbol.toUpperCase();
+  if (upper === 'TBNB' || upper === 'WBNB') {
+    return 'BNB';
+  }
+
+  return upper;
 }
 
 export function TradingPage() {
-  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+  const [selectedSymbol, setSelectedSymbol] = useState('BNBUSDT');
   const [timeframe, setTimeframe] = useState('1h');
   const [markets, setMarkets] = useState<MarketOption[]>(fallbackMarkets);
   const [candles, setCandles] = useState([] as Awaited<ReturnType<typeof getCandles>>);
@@ -81,7 +107,7 @@ export function TradingPage() {
   const [parsingNotesByAnnotationId, setParsingNotesByAnnotationId] = useState<Record<string, string[]>>({});
   const [lastExecution, setLastExecution] = useState<Execution | null>(null);
   const [executions, setExecutions] = useState<Execution[]>([]);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
+  const [, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [llmConfigured, setLlmConfigured] = useState(false);
   const [onchainConfigured, setOnchainConfigured] = useState(false);
   const [delegationConfig, setDelegationConfig] = useState<DelegatedAutomationConfig>({
@@ -90,8 +116,10 @@ export function TradingPage() {
     vaultAddress: null,
     missing: []
   });
+  const [walletLoginEnabled, setWalletLoginEnabled] = useState(readWalletLoginEnabled);
   const [walletSession, setWalletSession] = useState<WalletSession | null>(null);
-  const [nativeAssetPrice, setNativeAssetPrice] = useState<number | null>(null);
+  const [nativeUsdtPrice, setNativeUsdtPrice] = useState<number | null>(null);
+  const [aiRequestPending, setAiRequestPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -103,198 +131,160 @@ export function TradingPage() {
     [annotations, selectedAnnotationId]
   );
 
+  const portfolioSummary = useMemo(() => {
+    const liveStatuses: Annotation['status'][] = ['Draft', 'Active', 'Triggered', 'Executed'];
+    const liveStrategies = annotations.filter((annotation) => liveStatuses.includes(annotation.status));
+    const openPositions = annotations.filter((annotation) => annotation.status === 'Executed');
+    const pendingOrders = annotations.filter(
+      (annotation) =>
+        annotation.status !== 'Executed' &&
+        annotation.status !== 'Closed' &&
+        annotation.status !== 'Invalidated' &&
+        annotation.status !== 'Archived' &&
+        (annotation.strategy.entryType === 'limit' || annotation.strategy.entryType === 'conditional')
+    );
+    const autoEnabled = annotations.filter((annotation) => annotation.strategy.autoExecuteEnabled);
+
+    const exposureUsd = openPositions.reduce((sum, annotation) => {
+      return sum + annotation.strategy.entryPrice * annotation.strategy.positionSizeRatio * annotation.strategy.leverage;
+    }, 0);
+
+    const biasCounts = liveStrategies.reduce(
+      (acc, annotation) => {
+        acc[annotation.strategy.bias] += 1;
+        return acc;
+      },
+      {
+        bullish: 0,
+        bearish: 0,
+        neutral: 0
+      } as Record<'bullish' | 'bearish' | 'neutral', number>
+    );
+
+    const totalBias = Math.max(1, biasCounts.bullish + biasCounts.bearish + biasCounts.neutral);
+    const bullishRatio = biasCounts.bullish / totalBias;
+    const bearishRatio = biasCounts.bearish / totalBias;
+    const neutralRatio = biasCounts.neutral / totalBias;
+
+    return {
+      totalStrategies: annotations.length,
+      liveStrategies: liveStrategies.length,
+      openPositions: openPositions.length,
+      pendingOrders: pendingOrders.length,
+      autoEnabled: autoEnabled.length,
+      exposureUsd,
+      biasCounts,
+      biasRatios: {
+        bullish: bullishRatio,
+        bearish: bearishRatio,
+        neutral: neutralRatio
+      }
+    };
+  }, [annotations]);
+
+  const formattedExposureUsd = useMemo(() => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(portfolioSummary.exposureUsd);
+  }, [portfolioSummary.exposureUsd]);
+
+  const formattedWalletBalance = useMemo(() => {
+    if (typeof walletSession?.nativeBalance !== 'number') {
+      return '—';
+    }
+
+    const symbol = walletSession.nativeSymbol ?? 'NATIVE';
+    return `${walletSession.nativeBalance.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 4
+    })} ${symbol}`;
+  }, [walletSession?.nativeBalance, walletSession?.nativeSymbol]);
+
+  const formattedTotalAssetsUsd = useMemo(() => {
+    if (typeof walletSession?.nativeBalance === 'number' && typeof nativeUsdtPrice === 'number') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(walletSession.nativeBalance * nativeUsdtPrice);
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(defaultUserSettings.accountBalance);
+  }, [walletSession?.nativeBalance, nativeUsdtPrice]);
+
+  const formattedWalletUsd = useMemo(() => {
+    if (typeof walletSession?.nativeBalance !== 'number') {
+      return null;
+    }
+
+    if (typeof nativeUsdtPrice !== 'number') {
+      return null;
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(walletSession.nativeBalance * nativeUsdtPrice);
+  }, [walletSession?.nativeBalance, nativeUsdtPrice]);
+
   const validation: StrategyValidation | null = useMemo(() => {
     return selectedAnnotation ? validateStrategy(selectedAnnotation.strategy, currentPrice, defaultUserSettings) : null;
   }, [selectedAnnotation, currentPrice]);
 
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
+  const annotationCreationLocked = !walletSession?.address;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    if (walletSession?.nativeBalance == null || !walletSession.nativeSymbol) {
-      setNativeAssetPrice(null);
-      return () => {
-        cancelled = true;
-      };
+  const ensureWalletForAnnotations = () => {
+    if (walletSession?.address) {
+      return true;
     }
 
-    const isBnbFamily = walletSession.nativeSymbol === 'tBNB' || walletSession.nativeSymbol === 'BNB';
-    if (!isBnbFamily) {
-      setNativeAssetPrice(null);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (selectedSymbol === 'BNBUSDT' && currentPrice > 0) {
-      setNativeAssetPrice(currentPrice);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    void getCandles('BNBUSDT', '1h')
-      .then((nextCandles) => {
-        if (cancelled) {
-          return;
-        }
-        setNativeAssetPrice(nextCandles.at(-1)?.close ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setNativeAssetPrice(null);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [walletSession?.nativeBalance, walletSession?.nativeSymbol, selectedSymbol, currentPrice]);
-
-  const portfolioSnapshot = useMemo(() => {
-    const walletUsesBnbPricing =
-      walletSession?.nativeBalance != null &&
-      (walletSession.nativeSymbol === 'tBNB' || walletSession.nativeSymbol === 'BNB');
-    const actualWalletBalance =
-      walletUsesBnbPricing && nativeAssetPrice
-        ? Number((((walletSession?.nativeBalance ?? 0) * nativeAssetPrice)).toFixed(2))
-        : null;
-    const portfolioBaseUsd = walletUsesBnbPricing ? actualWalletBalance ?? 0 : defaultUserSettings.accountBalance;
-    const latestExecutionByStrategyId = new Map<string, Execution>();
-    executions.forEach((execution) => {
-      const current = latestExecutionByStrategyId.get(execution.strategyId);
-      const currentTime = current?.filledAt ? Date.parse(current.filledAt) : 0;
-      const nextTime = execution.filledAt ? Date.parse(execution.filledAt) : 0;
-      if (!current || nextTime >= currentTime) {
-        latestExecutionByStrategyId.set(execution.strategyId, execution);
-      }
-    });
-
-    const positionAnnotations = annotations.filter((annotation) => {
-      const latestExecution = latestExecutionByStrategyId.get(annotation.strategy.strategyId);
-      return (
-        annotation.status === 'Executed' &&
-        (latestExecution?.status === 'Filled' || latestExecution?.status === 'PartiallyFilled')
-      );
-    });
-    const pendingOrderAnnotations = annotations.filter(
-      (annotation) =>
-        annotation.status !== 'Executed' &&
-        annotation.status !== 'Closed' &&
-        annotation.status !== 'Invalidated' &&
-        (annotation.strategy.entryType === 'limit' || annotation.strategy.entryType === 'conditional')
-    );
-
-    const requestedAllocationFor = (annotation: Annotation) =>
-      Number((portfolioBaseUsd * annotation.strategy.positionSizeRatio).toFixed(2));
-
-    const positionsWithAllocation = positionAnnotations.map((annotation) => ({
-      annotation,
-      latestExecution: latestExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null,
-      allocatedValue: requestedAllocationFor(annotation)
-    }));
-
-    const positionsValue = positionsWithAllocation.reduce((total, item) => total + item.allocatedValue, 0);
-
-    let remainingCashForOrders = Math.max(portfolioBaseUsd - positionsValue, 0);
-    const pendingOrdersWithAllocation = [...pendingOrderAnnotations]
-      .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
-      .map((annotation) => {
-        const requestedValue = requestedAllocationFor(annotation);
-        const allocatedValue = Math.min(requestedValue, remainingCashForOrders);
-        remainingCashForOrders = Math.max(remainingCashForOrders - allocatedValue, 0);
-
-        return {
-          annotation,
-          latestExecution: latestExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null,
-          allocatedValue
-        };
-      })
-      .filter((item) => item.allocatedValue > 0);
-
-    const pendingOrdersValue = pendingOrdersWithAllocation.reduce((total, item) => total + item.allocatedValue, 0);
-    const cashValue = Math.max(portfolioBaseUsd - positionsValue - pendingOrdersValue, 0);
-    const totalTrackedValue = positionsValue + pendingOrdersValue + cashValue;
-    const donutTotal = totalTrackedValue > 0 ? totalTrackedValue : 1;
-
-    return {
-      totalBalance: portfolioBaseUsd,
-      nativeBalance: walletSession?.nativeBalance ?? null,
-      nativeSymbol: walletSession?.nativeSymbol ?? null,
-      nativeAssetPrice,
-      usingWalletBalance: walletUsesBnbPricing,
-      walletValueResolved: actualWalletBalance != null,
-      positionsValue,
-      pendingOrdersValue,
-      cashValue,
-      donutTotal,
-      positionCount: positionsWithAllocation.length,
-      pendingOrderCount: pendingOrdersWithAllocation.length,
-      positions: positionsWithAllocation
-        .map((item) => ({
-          latestExecution: item.latestExecution,
-          annotationId: item.annotation.annotationId,
-          label: item.annotation.marketSymbol,
-          detail: item.annotation.strategy.bias.toUpperCase(),
-          value: item.allocatedValue
-        }))
-        .sort((left, right) => right.value - left.value)
-        .slice(0, 4),
-      pendingOrders: pendingOrdersWithAllocation
-        .map((item) => ({
-          latestExecution: item.latestExecution,
-          annotationId: item.annotation.annotationId,
-          label: item.annotation.marketSymbol,
-          detail: `${item.annotation.strategy.entryType.toUpperCase()} · ${item.annotation.status}`,
-          value: item.allocatedValue
-        }))
-        .sort((left, right) => right.value - left.value)
-        .slice(0, 4)
-    };
-  }, [annotations, executions, nativeAssetPrice, walletSession?.nativeBalance, walletSession?.nativeSymbol]);
-
-  const allocationSegments = useMemo(() => {
-    const circumference = 2 * Math.PI * 54;
-    const segments = [
-      {
-        key: 'cash',
-        label: '현금 대기',
-        value: portfolioSnapshot.cashValue,
-        color: '#d0d9e7'
-      },
-      {
-        key: 'pending',
-        label: '미체결 주문',
-        value: portfolioSnapshot.pendingOrdersValue,
-        color: '#ffb020'
-      },
-      {
-        key: 'positions',
-        label: '보유 포지션',
-        value: portfolioSnapshot.positionsValue,
-        color: '#3182f6'
-      }
-    ];
-
-    let offset = 0;
-    return segments.map((segment) => {
-      const length = (segment.value / portfolioSnapshot.donutTotal) * circumference;
-      const next = {
-        ...segment,
-        dashArray: `${length} ${circumference - length}`,
-        dashOffset: -offset
-      };
-      offset += length;
-      return next;
-    });
-  }, [portfolioSnapshot]);
+    setDrawingMode('none');
+    setErrorMessage('Connect a wallet to create annotations.');
+    return false;
+  };
 
   const loadWorkspace = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
     setLoading(true);
     setErrorMessage(null);
 
     try {
+      if (!walletLoginEnabled) {
+        const [health, nextMarkets, nextCandles] = await Promise.all([
+          getHealth(),
+          getMarkets(),
+          getCandles(symbol, nextTimeframe)
+        ]);
+
+        setConnectionStatus(health.ok ? 'connected' : 'disconnected');
+        setLlmConfigured(health.llmConfigured);
+        setOnchainConfigured(health.onchainConfigured ?? false);
+        setDelegationConfig({
+          ready: health.delegatedAutomationConfigured ?? false,
+          executorAddress: health.delegatedExecutorAddress ?? null,
+          vaultAddress: health.delegationVaultAddress ?? null,
+          missing: []
+        });
+        setMarkets(nextMarkets);
+        setCandles(nextCandles);
+        setCurrentPrice(nextCandles.at(-1)?.close ?? 0);
+        setAnnotations([]);
+        setSelectedAnnotationId(null);
+        setParsingNotesByAnnotationId({});
+        setAuditEvents([]);
+        setNotifications([]);
+        setExecutions([]);
+        setLastExecution(null);
+        return;
+      }
+
       const [health, nextMarkets, nextCandles, nextAnnotations, nextNotifications, nextExecutions] = await Promise.all([
         getHealth(),
         getMarkets(),
@@ -327,24 +317,31 @@ export function TradingPage() {
       setLastExecution(nextExecutions[0] ?? null);
     } catch (error) {
       setConnectionStatus('disconnected');
-      setErrorMessage(error instanceof Error ? error.message : '데이터를 불러오지 못했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to load workspace data.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    setClientWalletAddress(walletSession?.address ?? null);
     void loadWorkspace();
-  }, [selectedSymbol, timeframe]);
+  }, [selectedSymbol, timeframe, walletLoginEnabled, walletSession?.address]);
 
   useEffect(() => {
+    if (!walletLoginEnabled) {
+      setWalletSession(null);
+      setClientWalletAddress(null);
+      return () => undefined;
+    }
+
     void getInjectedWalletSession().then(setWalletSession).catch(() => undefined);
     void getDelegationConfig().then(setDelegationConfig).catch(() => undefined);
 
     return subscribeInjectedWalletSession((session) => {
       setWalletSession(session);
     });
-  }, []);
+  }, [walletLoginEnabled]);
 
   useEffect(() => {
     if (!walletSession?.address) {
@@ -387,6 +384,39 @@ export function TradingPage() {
   }, [selectedSymbol, timeframe]);
 
   useEffect(() => {
+    const nativeAsset = normalizeNativeAssetSymbol(walletSession?.nativeSymbol);
+    if (!nativeAsset) {
+      setNativeUsdtPrice(null);
+      return;
+    }
+
+    const pair = `${nativeAsset}USDT`;
+    if (selectedSymbol === pair && currentPrice > 0) {
+      setNativeUsdtPrice(currentPrice);
+      return;
+    }
+
+    let mounted = true;
+    void getCandles(pair, timeframe)
+      .then((nextCandles) => {
+        if (!mounted) {
+          return;
+        }
+        const close = nextCandles.at(-1)?.close;
+        setNativeUsdtPrice(typeof close === 'number' && Number.isFinite(close) ? close : null);
+      })
+      .catch(() => {
+        if (mounted) {
+          setNativeUsdtPrice(null);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [walletSession?.nativeSymbol, selectedSymbol, currentPrice, timeframe]);
+
+  useEffect(() => {
     const interval = window.setInterval(() => {
       void getNotifications().then(setNotifications).catch(() => undefined);
     }, 8000);
@@ -422,7 +452,8 @@ export function TradingPage() {
         riskLevel: selectedAnnotation.strategy.riskLevel,
         positionSizeRatio: selectedAnnotation.strategy.positionSizeRatio,
         leverage: selectedAnnotation.strategy.leverage,
-        autoExecuteEnabled: selectedAnnotation.strategy.autoExecuteEnabled
+        autoExecuteEnabled: selectedAnnotation.strategy.autoExecuteEnabled,
+        drawingObjects: selectedAnnotation.drawingObjects
       })
         .then((result) => {
           setAnnotations((prev) =>
@@ -432,7 +463,7 @@ export function TradingPage() {
           setPendingSyncAnnotationId(null);
         })
         .catch((error) => {
-          setErrorMessage(error instanceof Error ? error.message : '편집 저장에 실패했습니다.');
+          setErrorMessage(error instanceof Error ? error.message : 'Unable to save your edits.');
         })
         .finally(() => {
           setSaving(false);
@@ -464,7 +495,12 @@ export function TradingPage() {
   };
 
   const handleRequestAi = async () => {
+    if (!ensureWalletForAnnotations()) {
+      return;
+    }
+
     try {
+      setAiRequestPending(true);
       const result = await analyzeChart({
         marketSymbol: selectedSymbol,
         timeframe,
@@ -476,15 +512,21 @@ export function TradingPage() {
       setSelectedAnnotationId(result.annotation.annotationId);
       setParsingNotesByAnnotationId((prev) => ({
         ...prev,
-        [result.annotation.annotationId]: [result.provider === 'openai' ? 'LLM 분석으로 생성됨' : 'fallback 분석으로 생성됨']
+        [result.annotation.annotationId]: [result.provider === 'openai' ? 'Generated by LLM analysis' : 'Generated by fallback analysis']
       }));
       setAuditEvents(await getAuditLogs({ annotationId: result.annotation.annotationId }));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'AI 분석 생성에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to generate AI analysis.');
+    } finally {
+      setAiRequestPending(false);
     }
   };
 
   const handleCreateAnnotation = async (text: string, anchor: Annotation['chartAnchor']) => {
+    if (!ensureWalletForAnnotations()) {
+      return;
+    }
+
     try {
       const result = await createAnnotation({
         marketSymbol: selectedSymbol,
@@ -497,7 +539,7 @@ export function TradingPage() {
       setDrawingMode('none');
       setParsingNotesByAnnotationId((prev) => ({ ...prev, [result.annotation.annotationId]: result.parsing_notes }));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '주석 생성에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create the annotation.');
     }
   };
 
@@ -528,7 +570,7 @@ export function TradingPage() {
   };
 
   const handleAddLineToSelected = (price: number) => {
-    if (!selectedAnnotation) {
+    if (!selectedAnnotation || !ensureWalletForAnnotations()) {
       return;
     }
     const object: DrawingObject = {
@@ -542,10 +584,30 @@ export function TradingPage() {
       drawingObjects: [...annotation.drawingObjects, object],
       updatedAt: new Date().toISOString()
     }));
+    markDirty(selectedAnnotation.annotationId);
+  };
+
+  const handleAddSegmentToSelected = (startAnchor: Annotation['chartAnchor'], endAnchor: Annotation['chartAnchor']) => {
+    if (!selectedAnnotation || !ensureWalletForAnnotations()) {
+      return;
+    }
+    const object: DrawingObject = {
+      id: `${selectedAnnotation.annotationId}_segment_${Date.now()}`,
+      type: 'segment',
+      role: 'trendline',
+      startAnchor,
+      endAnchor
+    };
+    upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
+      ...annotation,
+      drawingObjects: [...annotation.drawingObjects, object],
+      updatedAt: new Date().toISOString()
+    }));
+    markDirty(selectedAnnotation.annotationId);
   };
 
   const handleAddBoxToSelected = (priceFrom: number, priceTo: number) => {
-    if (!selectedAnnotation) {
+    if (!selectedAnnotation || !ensureWalletForAnnotations()) {
       return;
     }
     const object: DrawingObject = {
@@ -560,6 +622,19 @@ export function TradingPage() {
       drawingObjects: [...annotation.drawingObjects, object],
       updatedAt: new Date().toISOString()
     }));
+    markDirty(selectedAnnotation.annotationId);
+  };
+
+  const handleRemoveDrawingObject = (drawingObjectId: string) => {
+    if (!selectedAnnotation) {
+      return;
+    }
+    upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
+      ...annotation,
+      drawingObjects: annotation.drawingObjects.filter((object) => object.id !== drawingObjectId),
+      updatedAt: new Date().toISOString()
+    }));
+    markDirty(selectedAnnotation.annotationId);
   };
 
   const openExecutionFlow = async (mode: 'execute' | 'conditional') => {
@@ -572,7 +647,7 @@ export function TradingPage() {
       setExecutionMode(mode);
       setExecutionModalOpen(true);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '실행 프리뷰 생성에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create the execution preview.');
     }
   };
 
@@ -604,7 +679,7 @@ export function TradingPage() {
       setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
       setExecutionModalOpen(false);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '실행 처리에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to complete the execution.');
     }
   };
 
@@ -616,7 +691,7 @@ export function TradingPage() {
       await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
       setNotifications(await getNotifications());
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '알림 등록에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to register the alert.');
     }
   };
 
@@ -656,7 +731,7 @@ export function TradingPage() {
       if (wasSelected) {
         setSelectedAnnotationId(targetAnnotationId);
       }
-      setErrorMessage(error instanceof Error ? error.message : '주문 취소에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to cancel the order.');
     }
   };
 
@@ -675,7 +750,7 @@ export function TradingPage() {
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '포지션 정리에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to close the position.');
     }
   };
 
@@ -695,7 +770,7 @@ export function TradingPage() {
     }
 
     if (!walletSession?.address) {
-      setErrorMessage('자동거래 권한 위임을 위해 먼저 지갑을 연결해 주세요.');
+      setErrorMessage('Connect your wallet first to delegate automation permissions.');
       return;
     }
 
@@ -740,7 +815,7 @@ export function TradingPage() {
       setNotifications(await getNotifications());
       setAutomationModalOpen(false);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '자동 실행 설정에 실패했습니다.');
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save the automation settings.');
     }
   };
 
@@ -757,15 +832,46 @@ export function TradingPage() {
 
   const handleConnectWallet = async () => {
     try {
+      setErrorMessage(null);
       const session = await connectInjectedWallet();
+      writeWalletLoginEnabled(true);
+      setWalletLoginEnabled(true);
       setWalletSession(session);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '지갑 연결에 실패했습니다.');
+      writeWalletLoginEnabled(false);
+      setWalletLoginEnabled(false);
+      setWalletSession(null);
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to connect the wallet.');
+    }
+  };
+
+  const handleSwitchWallet = async () => {
+    try {
+      setErrorMessage(null);
+      const session = await switchInjectedWallet();
+      writeWalletLoginEnabled(true);
+      setWalletLoginEnabled(true);
+      setWalletSession(session);
+    } catch (error) {
+      if (!walletSession?.address) {
+        writeWalletLoginEnabled(false);
+        setWalletLoginEnabled(false);
+        setWalletSession(null);
+      }
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to switch wallets.');
     }
   };
 
   const handleDisconnectWallet = () => {
+    writeWalletLoginEnabled(false);
+    setWalletLoginEnabled(false);
+    setClientWalletAddress(null);
     setWalletSession(null);
+    setAnnotations([]);
+    setSelectedAnnotationId(null);
+    setAuditEvents([]);
+    setDelegatedPolicyByStrategyId({});
+    setDrawingMode('none');
   };
 
   return (
@@ -773,7 +879,6 @@ export function TradingPage() {
       <HeaderBar
         selectedSymbol={selectedSymbol}
         timeframe={timeframe}
-        connectionStatus={connectionStatus}
         markets={markets}
         walletAddress={walletSession?.address ?? null}
         onChangeSymbol={setSelectedSymbol}
@@ -781,135 +886,131 @@ export function TradingPage() {
         onToggleNotifications={() => setNotificationsOpen((prev) => !prev)}
         onToggleStrategies={() => setStrategiesOpen((prev) => !prev)}
         onConnectWallet={() => void handleConnectWallet()}
+        onSwitchWallet={() => void handleSwitchWallet()}
         onDisconnectWallet={handleDisconnectWallet}
       />
 
       {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
-      {loading ? <div className="loading-banner panel">데이터를 불러오는 중입니다...</div> : null}
-
-      <section className="dashboard-hero">
-        <div className="overview-grid">
-          <article className="overview-card panel">
-            <p className="eyebrow">Market</p>
-            <strong>{selectedSymbol}</strong>
-            <span>{currentPrice ? `${currentPrice.toLocaleString('ko-KR')} USDT` : '시세 로딩 중'}</span>
-          </article>
-          <article className="overview-card panel">
-            <p className="eyebrow">AI Engine</p>
-            <strong>{llmConfigured ? 'LLM Ready' : 'Fallback Active'}</strong>
-            <span>{llmConfigured ? '실시간 분석 가능' : '규칙 기반 분석 사용 중'}</span>
-          </article>
-          <article className="overview-card panel">
-            <p className="eyebrow">Onchain</p>
-            <strong>{onchainConfigured ? 'Proof Ready' : 'Local Only'}</strong>
-            <span>{onchainConfigured ? 'opBNB proof 기록 사용' : '감사 로그만 기록'}</span>
-          </article>
-          <article className="overview-card panel">
-            <p className="eyebrow">Selection</p>
-            <strong>{selectedAnnotation ? selectedAnnotation.strategy.bias.toUpperCase() : 'No Strategy'}</strong>
-            <span>{selectedAnnotation ? `${selectedAnnotation.strategy.entryType} · ${selectedAnnotation.status}` : '전략을 선택하세요'}</span>
-          </article>
+      {loading ? <div className="loading-banner panel">Loading workspace data...</div> : null}
+      {annotationCreationLocked ? (
+        <div className="info-banner annotation-auth-banner panel">
+          <div>
+            <strong>Wallet required for annotation tools</strong>
+            <p>Annotations, AI drafts, and chart objects are stored against the connected wallet.</p>
+          </div>
+          <button className="secondary" onClick={() => void handleConnectWallet()}>
+            Connect wallet
+          </button>
         </div>
+      ) : null}
 
-        <article className="asset-allocation panel">
-          <div className="asset-allocation-summary">
-            <div>
-              <p className="eyebrow">Asset Allocation</p>
-              <h3>{formatUsd(portfolioSnapshot.totalBalance)} USDT</h3>
-              <p className="muted">
-                {portfolioSnapshot.usingWalletBalance && portfolioSnapshot.nativeBalance != null && portfolioSnapshot.nativeSymbol
-                  ? portfolioSnapshot.walletValueResolved
-                    ? `${portfolioSnapshot.nativeBalance.toFixed(4)} ${portfolioSnapshot.nativeSymbol} 반영`
-                    : `${portfolioSnapshot.nativeBalance.toFixed(4)} ${portfolioSnapshot.nativeSymbol} 감지 · USDT 환산 대기 중`
-                  : '지갑 미연결 시 기본 자산값 사용'}
-              </p>
-              <p className="muted">
-                보유 포지션 {portfolioSnapshot.positionCount}건 · 미체결 주문 {portfolioSnapshot.pendingOrderCount}건
-              </p>
-            </div>
-
-            <div className="allocation-donut-wrap">
-              <svg viewBox="0 0 140 140" className="allocation-donut" aria-label="현재 자산 비중">
-                <circle cx="70" cy="70" r="54" className="allocation-donut-track" />
-                {allocationSegments.map((segment) => (
-                  <circle
-                    key={segment.key}
-                    cx="70"
-                    cy="70"
-                    r="54"
-                    className="allocation-donut-segment"
-                    style={{
-                      stroke: segment.color,
-                      strokeDasharray: segment.dashArray,
-                      strokeDashoffset: segment.dashOffset
-                    }}
-                  />
-                ))}
-              </svg>
-              <div className="allocation-donut-center">
-                <strong>{formatUsd(portfolioSnapshot.positionsValue + portfolioSnapshot.pendingOrdersValue)} USDT</strong>
-                <span>배분 중</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="allocation-legend">
-            {allocationSegments.map((segment) => (
-              <div key={segment.key} className="allocation-legend-row">
-                <div className="allocation-legend-copy">
-                  <span className="allocation-legend-dot" style={{ backgroundColor: segment.color }} />
-                  <strong>{segment.label}</strong>
-                </div>
-                <span>{formatUsd(segment.value)} USDT</span>
-              </div>
-            ))}
-          </div>
-
-        </article>
-
-        <article className="selection-hero panel">
-          <div className="selection-hero-copy">
-            <p className="eyebrow">Selected Strategy</p>
-            <h2>
-              {selectedAnnotation
-                ? `${selectedAnnotation.marketSymbol} ${timeframe} · ${selectedAnnotation.strategy.bias.toUpperCase()}`
-                : '선택된 전략이 없습니다'}
-            </h2>
-            <p className="selection-hero-note">
-              {selectedAnnotation
-                ? selectedAnnotation.text
-                : '차트에서 주석을 선택하면 엔트리, 리스크, 액션이 이 영역에 요약됩니다.'}
+      <section className="asset-allocation panel">
+        <div className="asset-allocation-main">
+          <div className="asset-allocation-copy">
+            <p className="eyebrow">Portfolio</p>
+            <h3>Strategy Portfolio</h3>
+            <p className="muted">
+              {portfolioSummary.liveStrategies} live strategies · {portfolioSummary.openPositions} open positions · {portfolioSummary.pendingOrders} pending orders
             </p>
           </div>
-          <div className="selection-hero-metrics">
-            <div>
-              <span>Entry</span>
-              <strong>
-                {selectedAnnotation ? selectedAnnotation.strategy.entryPrice.toLocaleString('ko-KR') : '-'}
-              </strong>
-            </div>
-            <div>
-              <span>SL</span>
-              <strong>
-                {selectedAnnotation ? selectedAnnotation.strategy.stopLossPrice.toLocaleString('ko-KR') : '-'}
-              </strong>
-            </div>
-            <div>
-              <span>TP1</span>
-              <strong>
-                {selectedAnnotation
-                  ? (selectedAnnotation.strategy.takeProfitPrices[0] ?? 0).toLocaleString('ko-KR')
-                  : '-'}
-              </strong>
-            </div>
-            <div>
-              <span>Status</span>
-              <strong>
-                {selectedAnnotation ? determineAnnotationStatus(selectedAnnotation, currentPrice) : '-'}
-              </strong>
+          <div className="allocation-donut-wrap" aria-hidden>
+            <svg viewBox="0 0 120 120" className="allocation-donut">
+              <circle className="allocation-donut-track" cx="60" cy="60" r="44" />
+              <circle
+                className="allocation-donut-segment"
+                cx="60"
+                cy="60"
+                r="44"
+                stroke="#0ecb81"
+                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.bullish} ${2 * Math.PI * 44}`}
+                strokeDashoffset="0"
+              />
+              <circle
+                className="allocation-donut-segment"
+                cx="60"
+                cy="60"
+                r="44"
+                stroke="#f6465d"
+                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.bearish} ${2 * Math.PI * 44}`}
+                strokeDashoffset={`${-2 * Math.PI * 44 * portfolioSummary.biasRatios.bullish}`}
+              />
+              <circle
+                className="allocation-donut-segment"
+                cx="60"
+                cy="60"
+                r="44"
+                stroke="#fcd535"
+                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.neutral} ${2 * Math.PI * 44}`}
+                strokeDashoffset={`${-2 * Math.PI * 44 * (portfolioSummary.biasRatios.bullish + portfolioSummary.biasRatios.bearish)}`}
+              />
+            </svg>
+            <div className="allocation-donut-center">
+              <strong>{portfolioSummary.totalStrategies}</strong>
+              <span>strategies</span>
             </div>
           </div>
-        </article>
+        </div>
+
+        <div className="allocation-breakdown allocation-breakdown-compact">
+          <div className="allocation-item">
+            <div>
+              <span>Total assets</span>
+              <strong>{formattedTotalAssetsUsd}</strong>
+            </div>
+          </div>
+          <div className="allocation-item">
+            <div>
+              <span>Wallet</span>
+              <strong>{formattedWalletBalance}</strong>
+              {formattedWalletUsd ? <span>{formattedWalletUsd}</span> : null}
+            </div>
+          </div>
+          <div className="allocation-item">
+            <div>
+              <span>Open exposure</span>
+              <strong>{formattedExposureUsd}</strong>
+              <span>{portfolioSummary.openPositions} open positions</span>
+            </div>
+          </div>
+          <div className="allocation-item allocation-item-pending">
+            <div>
+              <span>Pending</span>
+              <strong>{portfolioSummary.pendingOrders} orders</strong>
+              <span>Ready for trigger</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="allocation-legend allocation-legend-inline">
+          <div className="allocation-legend-row">
+            <div className="allocation-legend-copy">
+              <span className="allocation-legend-dot" style={{ background: '#0ecb81' }} />
+              <span>Bullish</span>
+            </div>
+            <strong>{portfolioSummary.biasCounts.bullish}</strong>
+          </div>
+          <div className="allocation-legend-row">
+            <div className="allocation-legend-copy">
+              <span className="allocation-legend-dot" style={{ background: '#f6465d' }} />
+              <span>Bearish</span>
+            </div>
+            <strong>{portfolioSummary.biasCounts.bearish}</strong>
+          </div>
+          <div className="allocation-legend-row">
+            <div className="allocation-legend-copy">
+              <span className="allocation-legend-dot" style={{ background: '#fcd535' }} />
+              <span>Neutral</span>
+            </div>
+            <strong>{portfolioSummary.biasCounts.neutral}</strong>
+          </div>
+          <div className="allocation-legend-row">
+            <div className="allocation-legend-copy">
+              <span className="allocation-legend-dot" style={{ background: '#7c8797' }} />
+              <span>Auto</span>
+            </div>
+            <strong>{portfolioSummary.autoEnabled}</strong>
+          </div>
+        </div>
       </section>
 
       <main className="workspace-grid">
@@ -917,13 +1018,17 @@ export function TradingPage() {
           marketData={candles}
           annotations={annotations}
           selectedAnnotationId={selectedAnnotationId}
+          timeframe={timeframe}
           drawingMode={drawingMode}
           currentPrice={currentPrice}
+          annotationCreationLocked={annotationCreationLocked}
           onChangeMode={setDrawingMode}
           onSelectAnnotation={setSelectedAnnotationId}
           onCreateAnnotation={handleCreateAnnotation}
           onAddLineToSelected={handleAddLineToSelected}
           onAddBoxToSelected={handleAddBoxToSelected}
+          onAddSegmentToSelected={handleAddSegmentToSelected}
+          aiRequestPending={aiRequestPending}
           onRequestAi={handleRequestAi}
           onNudgePrice={(deltaRatio) => advancePrice(Number((currentPrice * (1 + deltaRatio)).toFixed(2)))}
           onTriggerSelected={handleTriggerSelected}
@@ -935,14 +1040,15 @@ export function TradingPage() {
           currentPrice={currentPrice}
           parsingNotes={[
             ...parsingNotes,
-            llmConfigured ? 'LLM 연동 준비됨' : 'LLM 키 미설정: fallback 분석 사용 중',
-            onchainConfigured ? 'opBNB proof 기록 준비됨' : 'opBNB proof 미설정: 로컬 실행 로그만 기록',
-            saving ? '변경사항 저장 중' : '변경사항 자동 저장'
+            llmConfigured ? 'LLM connection ready' : 'No LLM key found: using fallback analysis',
+            onchainConfigured ? 'opBNB proof recording ready' : 'opBNB proof not configured: recording local audit logs only',
+            saving ? 'Saving changes' : 'Auto-save enabled'
           ]}
           auditEvents={auditEvents}
           onChangeText={handleTextChange}
           onChangeStrategy={handleStrategyChange}
           onActivate={activateSelectedAnnotation}
+          onRemoveDrawingObject={handleRemoveDrawingObject}
           onCancelOrder={() => void handleCancelOrder()}
           onClosePosition={(input) => void handleClosePosition(input)}
         />
@@ -952,7 +1058,7 @@ export function TradingPage() {
         <div className="status-card">
           <p className="eyebrow">Lifecycle</p>
           <strong>
-            {selectedAnnotation ? `${selectedAnnotation.status} → ${determineAnnotationStatus(selectedAnnotation, currentPrice)}` : '전략 없음'}
+            {selectedAnnotation ? `${selectedAnnotation.status} → ${determineAnnotationStatus(selectedAnnotation, currentPrice)}` : 'No strategy'}
           </strong>
         </div>
         <div className="status-card">
@@ -960,7 +1066,7 @@ export function TradingPage() {
           <strong>
             {lastExecution
               ? `${lastExecution.actionType === 'close' ? 'Close' : 'Open'} · ${lastExecution.status} · ${lastExecution.executionChain}`
-              : '아직 실행 없음'}
+              : 'No executions yet'}
           </strong>
           {lastExecution ? (
             <div className="status-meta">
@@ -969,7 +1075,7 @@ export function TradingPage() {
               </span>
               <div className="status-links">
                 <a href={getOpbnbTxUrl(lastExecution.executionChainTxHash)} target="_blank" rel="noreferrer">
-                  실행 Tx
+                  Execution tx
                 </a>
                 {lastExecution.proofContractAddress ? (
                   <a href={getOpbnbAddressUrl(lastExecution.proofContractAddress)} target="_blank" rel="noreferrer">
