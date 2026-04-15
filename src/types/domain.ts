@@ -114,6 +114,7 @@ export interface NotificationItem {
   title: string;
   body: string;
   annotationId: string;
+  sessionId?: string | null;
   createdAt: string;
   read: boolean;
 }
@@ -133,6 +134,7 @@ export interface AuditEvent {
     | 'status_changed';
   entityType: 'annotation' | 'strategy' | 'execution' | 'automation';
   entityId: string;
+  sessionId?: string | null;
   timestamp: string;
   metadata: Record<string, string | number | boolean>;
 }
@@ -153,15 +155,51 @@ export interface ExecutionPlan {
 export interface Execution {
   executionId: string;
   strategyId: string;
+  sessionId?: string | null;
+  actionType?: 'open' | 'close';
+  closeMode?: 'market' | 'price' | null;
   status: OrderStatus;
   executionChain: 'opbnb';
   liquidityChain: 'bsc';
-  executionChainTxHash: string;
-  liquidityChainTxHash: string;
+  executionChainTxHash: string | null;
+  liquidityChainTxHash: string | null;
+  executionChainTxStatus?: 'pending' | 'success' | 'reverted' | 'unavailable';
+  liquidityChainTxStatus?: 'pending' | 'success' | 'reverted' | 'unavailable';
+  executionChainBlockNumber?: number | null;
+  liquidityChainBlockNumber?: number | null;
+  executionChainLogCount?: number | null;
+  liquidityChainLogCount?: number | null;
+  liquidityTransferCount?: number | null;
+  liquiditySwapEventCount?: number | null;
+  liquidityTouchedContractCount?: number | null;
+  liquiditySettlementState?:
+    | 'mock_fallback'
+    | 'pending_receipt'
+    | 'settled_with_swap_event'
+    | 'settled_with_transfer_events'
+    | 'settled_without_decoded_events'
+    | 'reverted'
+    | 'receipt_unavailable';
+  executionChainCheckedAt?: string | null;
+  liquidityChainCheckedAt?: string | null;
+  executionChainTxHashValid?: boolean;
+  liquidityChainTxHashValid?: boolean;
+  txHashWarning?: string | null;
   settlementMode?: 'mock' | 'dex';
   dexExecuted?: boolean;
+  executionTxState?: 'not_submitted' | 'receipt_observed' | 'submitted_receipt_unavailable';
+  liquidityReceiptEvidence?: 'mock_fallback' | 'receipt_observed' | 'receipt_observed_hash_hidden' | 'receipt_not_observed';
   dexRouterAddress?: string | null;
+  dexInputTokenAddress?: string | null;
+  dexOutputTokenAddress?: string | null;
+  dexAmountIn?: string | null;
+  dexExpectedAmountOut?: string | null;
+  dexMinimumAmountOut?: string | null;
+  proofAttempted?: boolean;
+  proofRetryCount?: number;
+  proofErrorMessage?: string | null;
   proofRecorded?: boolean;
+  proofState?: 'recorded' | 'attempted_not_recorded' | 'not_attempted';
   proofRegistryId?: string | null;
   proofContractAddress?: string | null;
   filledPrice?: number;
@@ -207,6 +245,8 @@ export interface DelegatedAutomationConfig {
 export interface WalletSession {
   address: string;
   chainId: number;
+  nativeBalance?: number;
+  nativeSymbol?: string;
 }
 
 export interface UserSettings {

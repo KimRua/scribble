@@ -32,9 +32,8 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number, isFullView: boolean) {
-  if (!isFullView) {
-    // 호버 시 작은 미리보기 - 2줄 제한
+function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number, mode: 'preview' | 'hover' | 'selected') {
+  if (mode === 'preview') {
     const width = 180;
     const height = 52;
     return {
@@ -45,7 +44,20 @@ function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number, 
     };
   }
 
-  // 선택 시 전체 보기
+  if (mode === 'hover') {
+    const charsPerLine = 32;
+    const estimatedLines = Math.max(2, Math.ceil(text.length / charsPerLine));
+    const width = text.length > 72 ? 240 : 210;
+    const height = clamp(74 + estimatedLines * 15, 92, 148);
+
+    return {
+      width,
+      height,
+      x: clamp(anchorX + 8, 8, WIDTH - width - 8),
+      y: clamp(anchorY - height - 32, 8, HEIGHT - height - 8)
+    };
+  }
+
   const charsPerLine = 26;
   const estimatedLines = Math.max(2, Math.ceil(text.length / charsPerLine));
   const width = text.length > 100 ? 260 : 220;
@@ -235,8 +247,8 @@ export function ChartCanvas({
             const hovered = annotation.annotationId === hoveredAnnotationId && !selected;
             const anchorX = PADDING + annotation.chartAnchor.index * xStep;
             const anchorY = yForPrice(annotation.chartAnchor.price);
-            const previewBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, false);
-            const fullBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, true);
+            const hoverBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, 'hover');
+            const fullBox = getAnnotationBubbleBox(annotation.text, anchorX, anchorY, 'selected');
             const previewText = annotation.text.length > 36 ? annotation.text.slice(0, 36) + '…' : annotation.text;
             return (
               <g
@@ -284,10 +296,17 @@ export function ChartCanvas({
                 <circle cx={anchorX} cy={anchorY - 16} r={selected ? 7 : 5} className="annotation-pin" />
                 <circle cx={anchorX} cy={anchorY - 16} r="2" className="annotation-pin-core" />
                 {hovered && (
-                  <foreignObject x={previewBox.x} y={previewBox.y} width={previewBox.width} height={previewBox.height}>
-                    <div className="annotation-preview">
-                      <span className={`pill-mini ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>
-                      <p>{previewText}</p>
+                  <foreignObject x={hoverBox.x} y={hoverBox.y} width={hoverBox.width} height={hoverBox.height}>
+                    <div className="annotation-bubble annotation-bubble-hover">
+                      <div className="list-row annotation-bubble-header">
+                        <span className={`pill ${annotationBadgeTone(annotation.status)}`}>{annotation.status}</span>
+                        <span className="badge-author">{annotation.authorType.toUpperCase()}</span>
+                      </div>
+                      <p>{annotation.text}</p>
+                      <div className="annotation-hover-meta">
+                        <span className={`pill-mini ${annotationBadgeTone(annotation.status)}`}>{previewText}</span>
+                        <span className="muted">{formatPrice(annotation.strategy.entryPrice)}</span>
+                      </div>
                     </div>
                   </foreignObject>
                 )}

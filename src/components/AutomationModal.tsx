@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Annotation, AutomationRule, DelegatedAutomationPolicy } from '../types/domain';
+import { normalizeTxHash } from '../utils/txHash';
 
 interface AutomationModalProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function AutomationModal({
   onConnectWallet,
   onSave
 }: AutomationModalProps) {
+  const [approvalTxHashError, setApprovalTxHashError] = useState<string | null>(null);
   const [form, setForm] = useState({
     maxPositionSizeRatio: 0.1,
     maxLeverage: 2,
@@ -49,6 +51,8 @@ export function AutomationModal({
   });
 
   useEffect(() => {
+    const nextApprovalTxHash = delegatedPolicy?.approvalTxHash ?? '';
+
     if (automation || delegatedPolicy) {
       setForm({
         maxPositionSizeRatio: automation?.maxPositionSizeRatio ?? 0.1,
@@ -58,11 +62,46 @@ export function AutomationModal({
         maxOrderSizeUsd: delegatedPolicy?.maxOrderSizeUsd ?? 500,
         maxSlippageBps: delegatedPolicy?.maxSlippageBps ?? 100,
         dailyLossLimitUsd: delegatedPolicy?.dailyLossLimitUsd ?? 150,
-        validUntil: delegatedPolicy?.validUntil?.slice(0, 16) ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().slice(0, 16),
-        approvalTxHash: delegatedPolicy?.approvalTxHash ?? ''
+        validUntil:
+          delegatedPolicy?.validUntil?.slice(0, 16) ??
+          new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().slice(0, 16),
+        approvalTxHash: nextApprovalTxHash
       });
     }
+
+    setApprovalTxHashError(
+      nextApprovalTxHash && !normalizeTxHash(nextApprovalTxHash)
+        ? '0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.'
+        : null
+    );
   }, [automation, delegatedPolicy]);
+
+  const handleApprovalTxHashChange = (value: string) => {
+    setForm((prev) => ({ ...prev, approvalTxHash: value }));
+
+    if (!value.trim()) {
+      setApprovalTxHashError(null);
+      return;
+    }
+
+    setApprovalTxHashError(
+      normalizeTxHash(value) ? null : '0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.'
+    );
+  };
+
+  const handleSave = () => {
+    const normalizedApprovalTxHash = form.approvalTxHash.trim();
+
+    if (normalizedApprovalTxHash && !normalizeTxHash(normalizedApprovalTxHash)) {
+      setApprovalTxHashError('0x로 시작하는 64자리 16진수 Tx hash만 저장할 수 있습니다.');
+      return;
+    }
+
+    onSave({
+      ...form,
+      approvalTxHash: normalizedApprovalTxHash || null
+    });
+  };
 
   if (!open || !selectedAnnotation) {
     return null;
@@ -82,7 +121,7 @@ export function AutomationModal({
         </div>
         <div className="form-grid">
           <label>
-            <span>최대 포지션 비중</span>
+            <span>최대 포지션 비율</span>
             <input
               type="number"
               min="0.01"
@@ -103,7 +142,7 @@ export function AutomationModal({
             />
           </label>
           <label>
-            <span>최대 허용 손실</span>
+            <span>최대 손실 비율</span>
             <input
               type="number"
               min="0.01"
@@ -128,12 +167,12 @@ export function AutomationModal({
           <strong>지갑 위임 상태</strong>
           <p>
             {connectedWalletAddress
-              ? `연결된 지갑 ${connectedWalletAddress.slice(0, 6)}…${connectedWalletAddress.slice(-4)} 에 대해 자동거래 권한을 설정합니다.`
+              ? `연결된 지갑 ${connectedWalletAddress.slice(0, 6)}...${connectedWalletAddress.slice(-4)} 에 자동거래 권한을 설정합니다.`
               : '자동거래를 사용하려면 먼저 지갑을 연결해야 합니다.'}
           </p>
           <div className="delegation-meta">
-            <span>Executor {executorAddress ? `${executorAddress.slice(0, 6)}…${executorAddress.slice(-4)}` : '미설정'}</span>
-            <span>Vault {vaultAddress ? `${vaultAddress.slice(0, 6)}…${vaultAddress.slice(-4)}` : '초안 단계'}</span>
+            <span>Executor {executorAddress ? `${executorAddress.slice(0, 6)}...${executorAddress.slice(-4)}` : '미설정'}</span>
+            <span>Vault {vaultAddress ? `${vaultAddress.slice(0, 6)}...${vaultAddress.slice(-4)}` : '초기화 전'}</span>
             <span>상태 {delegatedPolicy?.status ?? 'not_configured'}</span>
           </div>
           {!connectedWalletAddress ? (
@@ -188,19 +227,22 @@ export function AutomationModal({
               type="text"
               placeholder="온체인 승인 완료 후 tx hash를 저장"
               value={form.approvalTxHash}
-              onChange={(event) => setForm((prev) => ({ ...prev, approvalTxHash: event.target.value }))}
+              onChange={(event) => handleApprovalTxHashChange(event.target.value)}
             />
+            {approvalTxHashError ? <small className="muted">{approvalTxHashError}</small> : null}
           </label>
         </div>
         <div className="warning-box">
-          <strong>활성 조건</strong>
-          <p>{selectedAnnotation.strategy.entryPrice} 터치 시 트리거되며, 가드레일과 위임 한도를 모두 통과해야 실행됩니다.</p>
+          <strong>생성 조건</strong>
+          <p>{selectedAnnotation.strategy.entryPrice} 도달 시 가드레일과 위임 한도를 모두 통과해야 실행됩니다.</p>
         </div>
         <div className="modal-actions">
           <button className="secondary" onClick={onClose}>
             취소
           </button>
-          <button disabled={!connectedWalletAddress} onClick={() => onSave({ ...form, approvalTxHash: form.approvalTxHash || null })}>저장</button>
+          <button disabled={!connectedWalletAddress || Boolean(approvalTxHashError)} onClick={handleSave}>
+            저장
+          </button>
         </div>
       </div>
     </div>

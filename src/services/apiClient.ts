@@ -11,9 +11,11 @@ import type {
   NotificationItem,
   StrategyValidation
 } from '../types/domain';
+import { normalizeTxHash } from '../utils/txHash';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787';
 const OPBNB_EXPLORER_BASE_URL = import.meta.env.VITE_OPBNB_EXPLORER_BASE_URL ?? 'https://opbnb-testnet.bscscan.com';
+const CLIENT_SESSION_STORAGE_KEY = 'scribble.clientSessionId';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -26,9 +28,11 @@ interface ApiResponse<T> {
 }
 
 async function request<T>(path: string, init?: RequestInit) {
+  const sessionId = getClientSessionId();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(init?.headers ?? {})
     },
     ...init
@@ -39,6 +43,29 @@ async function request<T>(path: string, init?: RequestInit) {
     throw new Error(payload.error?.message ?? 'API request failed');
   }
   return payload.data;
+}
+
+function getClientSessionId() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const stored = window.localStorage.getItem(CLIENT_SESSION_STORAGE_KEY);
+  if (stored && /^[A-Za-z0-9._:-]{1,64}$/.test(stored)) {
+    return stored;
+  }
+
+  const nextSessionId =
+    typeof window.crypto?.randomUUID === 'function'
+      ? `web-${window.crypto.randomUUID()}`
+      : `web-${Math.random().toString(36).slice(2, 12)}`;
+
+  if (/^[A-Za-z0-9._:-]{1,64}$/.test(nextSessionId)) {
+    window.localStorage.setItem(CLIENT_SESSION_STORAGE_KEY, nextSessionId);
+    return nextSessionId;
+  }
+
+  return null;
 }
 
 function normalizeAnnotation(annotation: Annotation) {
@@ -60,7 +87,10 @@ export async function getHealth() {
 }
 
 function normalizeDelegatedPolicy(policy: DelegatedAutomationPolicy) {
-  return policy;
+  return {
+    ...policy,
+    approvalTxHash: normalizeTxHash(policy.approvalTxHash)
+  };
 }
 
 export async function getDelegationConfig() {
@@ -100,6 +130,10 @@ export async function createDelegationPolicy(input: {
   validUntil: string;
   approvalTxHash?: string | null;
 }) {
+  if (input.approvalTxHash && !normalizeTxHash(input.approvalTxHash)) {
+    throw new Error('승인 트랜잭션 해시는 0x로 시작하는 64자리 16진수여야 합니다.');
+  }
+
   const data = await request<{
     policy: DelegatedAutomationPolicy;
     executor_address: string | null;
@@ -155,15 +189,43 @@ export async function getAnnotations(symbol: string, timeframe: string) {
 function normalizeExecution(execution: {
   execution_id: string;
   strategy_id: string;
+  action_type?: Execution['actionType'];
+  close_mode?: Execution['closeMode'];
   status: Execution['status'];
   execution_chain: Execution['executionChain'];
   liquidity_chain: Execution['liquidityChain'];
-  execution_chain_tx_hash: string;
-  liquidity_chain_tx_hash: string;
+  execution_chain_tx_hash: string | null;
+  liquidity_chain_tx_hash: string | null;
+  execution_chain_tx_status?: Execution['executionChainTxStatus'];
+  liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+  execution_chain_block_number?: number | null;
+  liquidity_chain_block_number?: number | null;
+  execution_chain_log_count?: number | null;
+  liquidity_chain_log_count?: number | null;
+  liquidity_transfer_count?: number | null;
+  liquidity_swap_event_count?: number | null;
+  liquidity_touched_contract_count?: number | null;
+  liquidity_settlement_state?: Execution['liquiditySettlementState'];
+  execution_chain_checked_at?: string | null;
+  liquidity_chain_checked_at?: string | null;
+  execution_chain_tx_hash_valid?: boolean;
+  liquidity_chain_tx_hash_valid?: boolean;
+  tx_hash_warning?: string | null;
   settlement_mode?: 'mock' | 'dex';
   dex_executed?: boolean;
+  execution_tx_state?: Execution['executionTxState'];
+  liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
   dex_router_address?: string | null;
+  dex_input_token_address?: string | null;
+  dex_output_token_address?: string | null;
+  dex_amount_in?: string | null;
+  dex_expected_amount_out?: string | null;
+  dex_minimum_amount_out?: string | null;
+  proof_attempted?: boolean;
+  proof_retry_count?: number;
+  proof_error_message?: string | null;
   proof_recorded?: boolean;
+  proof_state?: Execution['proofState'];
   proof_registry_id?: string | null;
   proof_contract_address?: string | null;
   filled_price?: number | null;
@@ -172,15 +234,43 @@ function normalizeExecution(execution: {
   return {
     executionId: execution.execution_id,
     strategyId: execution.strategy_id,
+    actionType: execution.action_type ?? 'open',
+    closeMode: execution.close_mode ?? null,
     status: execution.status,
     executionChain: execution.execution_chain,
     liquidityChain: execution.liquidity_chain,
     executionChainTxHash: execution.execution_chain_tx_hash,
     liquidityChainTxHash: execution.liquidity_chain_tx_hash,
+    executionChainTxStatus: execution.execution_chain_tx_status,
+    liquidityChainTxStatus: execution.liquidity_chain_tx_status,
+    executionChainBlockNumber: execution.execution_chain_block_number ?? null,
+    liquidityChainBlockNumber: execution.liquidity_chain_block_number ?? null,
+    executionChainLogCount: execution.execution_chain_log_count ?? null,
+    liquidityChainLogCount: execution.liquidity_chain_log_count ?? null,
+    liquidityTransferCount: execution.liquidity_transfer_count ?? null,
+    liquiditySwapEventCount: execution.liquidity_swap_event_count ?? null,
+    liquidityTouchedContractCount: execution.liquidity_touched_contract_count ?? null,
+    liquiditySettlementState: execution.liquidity_settlement_state,
+    executionChainCheckedAt: execution.execution_chain_checked_at ?? null,
+    liquidityChainCheckedAt: execution.liquidity_chain_checked_at ?? null,
+    executionChainTxHashValid: execution.execution_chain_tx_hash_valid ?? true,
+    liquidityChainTxHashValid: execution.liquidity_chain_tx_hash_valid ?? true,
+    txHashWarning: execution.tx_hash_warning ?? null,
     settlementMode: execution.settlement_mode,
     dexExecuted: execution.dex_executed,
+    executionTxState: execution.execution_tx_state,
+    liquidityReceiptEvidence: execution.liquidity_receipt_evidence,
     dexRouterAddress: execution.dex_router_address ?? null,
+    dexInputTokenAddress: execution.dex_input_token_address ?? null,
+    dexOutputTokenAddress: execution.dex_output_token_address ?? null,
+    dexAmountIn: execution.dex_amount_in ?? null,
+    dexExpectedAmountOut: execution.dex_expected_amount_out ?? null,
+    dexMinimumAmountOut: execution.dex_minimum_amount_out ?? null,
+    proofAttempted: execution.proof_attempted,
+    proofRetryCount: execution.proof_retry_count,
+    proofErrorMessage: execution.proof_error_message ?? null,
     proofRecorded: execution.proof_recorded,
+    proofState: execution.proof_state,
     proofRegistryId: execution.proof_registry_id ?? null,
     proofContractAddress: execution.proof_contract_address ?? null,
     filledPrice: execution.filled_price ?? undefined,
@@ -196,15 +286,43 @@ export async function getExecutions(symbol?: string, timeframe?: string) {
     executions: Array<{
       execution_id: string;
       strategy_id: string;
+      action_type?: Execution['actionType'];
+      close_mode?: Execution['closeMode'];
       status: Execution['status'];
       execution_chain: Execution['executionChain'];
       liquidity_chain: Execution['liquidityChain'];
-      execution_chain_tx_hash: string;
-      liquidity_chain_tx_hash: string;
+      execution_chain_tx_hash: string | null;
+      liquidity_chain_tx_hash: string | null;
+      execution_chain_tx_status?: Execution['executionChainTxStatus'];
+      liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+      execution_chain_block_number?: number | null;
+      liquidity_chain_block_number?: number | null;
+      execution_chain_log_count?: number | null;
+      liquidity_chain_log_count?: number | null;
+      liquidity_transfer_count?: number | null;
+      liquidity_swap_event_count?: number | null;
+      liquidity_touched_contract_count?: number | null;
+      liquidity_settlement_state?: Execution['liquiditySettlementState'];
+      execution_chain_checked_at?: string | null;
+      liquidity_chain_checked_at?: string | null;
+      execution_chain_tx_hash_valid?: boolean;
+      liquidity_chain_tx_hash_valid?: boolean;
+      tx_hash_warning?: string | null;
       settlement_mode?: 'mock' | 'dex';
       dex_executed?: boolean;
+      execution_tx_state?: Execution['executionTxState'];
+      liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
       dex_router_address?: string | null;
+      dex_input_token_address?: string | null;
+      dex_output_token_address?: string | null;
+      dex_amount_in?: string | null;
+      dex_expected_amount_out?: string | null;
+      dex_minimum_amount_out?: string | null;
+      proof_attempted?: boolean;
+      proof_retry_count?: number;
+      proof_error_message?: string | null;
       proof_recorded?: boolean;
+      proof_state?: Execution['proofState'];
       proof_registry_id?: string | null;
       proof_contract_address?: string | null;
       filled_price?: number | null;
@@ -313,13 +431,41 @@ export async function previewExecution(strategyId: string) {
 export async function createExecution(strategyId: string) {
   const data = await request<{
     execution_id: string;
+    action_type?: Execution['actionType'];
+    close_mode?: Execution['closeMode'];
     status: Execution['status'];
-    execution_chain_tx_hash: string;
-    liquidity_chain_tx_hash: string;
+    execution_chain_tx_hash: string | null;
+    liquidity_chain_tx_hash: string | null;
+    execution_chain_tx_status?: Execution['executionChainTxStatus'];
+    liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+    execution_chain_block_number?: number | null;
+    liquidity_chain_block_number?: number | null;
+    execution_chain_log_count?: number | null;
+    liquidity_chain_log_count?: number | null;
+    liquidity_transfer_count?: number | null;
+    liquidity_swap_event_count?: number | null;
+    liquidity_touched_contract_count?: number | null;
+    liquidity_settlement_state?: Execution['liquiditySettlementState'];
+    execution_chain_checked_at?: string | null;
+    liquidity_chain_checked_at?: string | null;
+    execution_chain_tx_hash_valid?: boolean;
+    liquidity_chain_tx_hash_valid?: boolean;
+    tx_hash_warning?: string | null;
     settlement_mode?: 'mock' | 'dex';
     dex_executed?: boolean;
+    execution_tx_state?: Execution['executionTxState'];
+    liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
     dex_router_address: string | null;
+    dex_input_token_address?: string | null;
+    dex_output_token_address?: string | null;
+    dex_amount_in?: string | null;
+    dex_expected_amount_out?: string | null;
+    dex_minimum_amount_out?: string | null;
+    proof_attempted?: boolean;
+    proof_retry_count?: number;
+    proof_error_message?: string | null;
     proof_recorded: boolean;
+    proof_state?: Execution['proofState'];
     proof_registry_id: string | null;
     proof_contract_address: string | null;
   }>(`/api/v1/executions`, {
@@ -336,8 +482,77 @@ export async function createExecution(strategyId: string) {
   });
 }
 
-export function getOpbnbTxUrl(txHash: string) {
-  return `${OPBNB_EXPLORER_BASE_URL}/tx/${txHash}`;
+export async function cancelOrder(annotationId: string) {
+  const data = await request<{ annotation: Annotation }>(`/api/v1/annotations/${annotationId}/cancel-order`, {
+    method: 'POST'
+  });
+  return data.annotation;
+}
+
+export async function closePosition(annotationId: string, input: { mode: 'market' | 'price'; closePrice?: number }) {
+  const data = await request<{
+    annotation: Annotation;
+    execution: {
+      execution_id: string;
+      strategy_id: string;
+      action_type?: Execution['actionType'];
+      close_mode?: Execution['closeMode'];
+      status: Execution['status'];
+      execution_chain: Execution['executionChain'];
+      liquidity_chain: Execution['liquidityChain'];
+      execution_chain_tx_hash: string | null;
+      liquidity_chain_tx_hash: string | null;
+      execution_chain_tx_status?: Execution['executionChainTxStatus'];
+      liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+      execution_chain_block_number?: number | null;
+      liquidity_chain_block_number?: number | null;
+      execution_chain_log_count?: number | null;
+      liquidity_chain_log_count?: number | null;
+      liquidity_transfer_count?: number | null;
+      liquidity_swap_event_count?: number | null;
+      liquidity_touched_contract_count?: number | null;
+      liquidity_settlement_state?: Execution['liquiditySettlementState'];
+      execution_chain_checked_at?: string | null;
+      liquidity_chain_checked_at?: string | null;
+      execution_chain_tx_hash_valid?: boolean;
+      liquidity_chain_tx_hash_valid?: boolean;
+      tx_hash_warning?: string | null;
+      settlement_mode?: 'mock' | 'dex';
+      dex_executed?: boolean;
+      execution_tx_state?: Execution['executionTxState'];
+      liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
+      dex_router_address?: string | null;
+      dex_input_token_address?: string | null;
+      dex_output_token_address?: string | null;
+      dex_amount_in?: string | null;
+      dex_expected_amount_out?: string | null;
+      dex_minimum_amount_out?: string | null;
+      proof_attempted?: boolean;
+      proof_retry_count?: number;
+      proof_error_message?: string | null;
+      proof_recorded?: boolean;
+      proof_state?: Execution['proofState'];
+      proof_registry_id?: string | null;
+      proof_contract_address?: string | null;
+      filled_price?: number | null;
+      filled_at?: string | null;
+    };
+  }>(`/api/v1/annotations/${annotationId}/close-position`, {
+    method: 'POST',
+    body: JSON.stringify({
+      mode: input.mode,
+      close_price: input.mode === 'price' ? input.closePrice : undefined
+    })
+  });
+
+  return {
+    annotation: data.annotation,
+    execution: normalizeExecution(data.execution)
+  };
+}
+
+export function getOpbnbTxUrl(txHash: string | null | undefined) {
+  return txHash ? `${OPBNB_EXPLORER_BASE_URL}/tx/${txHash}` : '#';
 }
 
 export function getOpbnbAddressUrl(address: string) {

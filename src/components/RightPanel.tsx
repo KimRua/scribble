@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { Annotation, AuditEvent, Strategy, StrategyValidation } from '../types/domain';
 import { formatPercent, formatPrice } from '../utils/strategy';
 
@@ -10,6 +11,8 @@ interface RightPanelProps {
   onChangeText: (text: string) => void;
   onChangeStrategy: <K extends keyof Strategy>(key: K, value: Strategy[K]) => void;
   onActivate: () => void;
+  onCancelOrder: () => void;
+  onClosePosition: (input: { mode: 'market' | 'price'; closePrice?: number }) => void;
 }
 
 export function RightPanel({
@@ -20,7 +23,9 @@ export function RightPanel({
   auditEvents,
   onChangeText,
   onChangeStrategy,
-  onActivate
+  onActivate,
+  onCancelOrder,
+  onClosePosition
 }: RightPanelProps) {
   if (!selectedAnnotation || !validation) {
     return (
@@ -33,6 +38,19 @@ export function RightPanel({
   }
 
   const { strategy } = selectedAnnotation;
+  const [closePriceInput, setClosePriceInput] = useState(String(currentPrice || strategy.entryPrice));
+
+  useEffect(() => {
+    setClosePriceInput(String(currentPrice || strategy.entryPrice));
+  }, [selectedAnnotation.annotationId, currentPrice, strategy.entryPrice]);
+
+  const canCancelOrder =
+    selectedAnnotation.status !== 'Executed' &&
+    selectedAnnotation.status !== 'Closed' &&
+    selectedAnnotation.status !== 'Invalidated' &&
+    selectedAnnotation.status !== 'Archived' &&
+    (strategy.entryType === 'limit' || strategy.entryType === 'conditional');
+  const canClosePosition = selectedAnnotation.status === 'Executed';
 
   return (
     <aside className="right-panel panel">
@@ -70,6 +88,34 @@ export function RightPanel({
 
       <section className="card-block">
         <p className="eyebrow">Strategy Details</p>
+        <div className="quick-preset-group">
+          <span className="muted">Bias</span>
+          <div className="quick-preset-row">
+            {(['bullish', 'bearish', 'neutral'] as const).map((value) => (
+              <button
+                key={value}
+                className={strategy.bias === value ? 'secondary preset-button active' : 'secondary preset-button'}
+                onClick={() => onChangeStrategy('bias', value)}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="quick-preset-group">
+          <span className="muted">Entry Type</span>
+          <div className="quick-preset-row">
+            {(['market', 'limit', 'conditional'] as const).map((value) => (
+              <button
+                key={value}
+                className={strategy.entryType === value ? 'secondary preset-button active' : 'secondary preset-button'}
+                onClick={() => onChangeStrategy('entryType', value)}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="form-grid compact">
           <label>
             <span>Entry</span>
@@ -125,6 +171,36 @@ export function RightPanel({
             />
           </label>
         </div>
+        <div className="quick-preset-grid">
+          <div className="quick-preset-group">
+            <span className="muted">비중 프리셋</span>
+            <div className="quick-preset-row">
+              {[0.05, 0.1, 0.25, 0.5].map((value) => (
+                <button
+                  key={value}
+                  className={strategy.positionSizeRatio === value ? 'secondary preset-button active' : 'secondary preset-button'}
+                  onClick={() => onChangeStrategy('positionSizeRatio', value)}
+                >
+                  {Math.round(value * 100)}%
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="quick-preset-group">
+            <span className="muted">레버리지 프리셋</span>
+            <div className="quick-preset-row">
+              {[1, 2, 3, 5].map((value) => (
+                <button
+                  key={value}
+                  className={strategy.leverage === value ? 'secondary preset-button active' : 'secondary preset-button'}
+                  onClick={() => onChangeStrategy('leverage', value)}
+                >
+                  {value}x
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="card-block">
@@ -162,6 +238,53 @@ export function RightPanel({
           onChange={(event) => onChangeStrategy('invalidationCondition', event.target.value)}
         />
       </section>
+
+      {canCancelOrder ? (
+        <section className="card-block">
+          <p className="eyebrow">Order Controls</p>
+          <div className="warning-box compact">
+            <strong>현재 대기 주문</strong>
+            <p>이 전략은 아직 체결되지 않았습니다. 필요하면 지금 바로 주문을 취소할 수 있습니다.</p>
+          </div>
+          <div className="modal-actions">
+            <button className="secondary" onClick={onCancelOrder}>
+              주문 취소
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {canClosePosition ? (
+        <section className="card-block">
+          <p className="eyebrow">Position Controls</p>
+          <div className="form-grid compact">
+            <label>
+              <span>청산 가격</span>
+              <input
+                type="number"
+                value={closePriceInput}
+                onChange={(event) => setClosePriceInput(event.target.value)}
+              />
+            </label>
+            <label>
+              <span>현재가 기준</span>
+              <input type="text" value={formatPrice(currentPrice)} disabled />
+            </label>
+          </div>
+          <p className="muted">즉시 청산은 현재가 기준으로 정리하고, 지정가 청산은 입력한 가격으로 정리 기록을 남깁니다.</p>
+          <div className="modal-actions">
+            <button className="secondary" onClick={() => onClosePosition({ mode: 'market' })}>
+              즉시 청산
+            </button>
+            <button
+              onClick={() => onClosePosition({ mode: 'price', closePrice: Number(closePriceInput) })}
+              disabled={!Number.isFinite(Number(closePriceInput)) || Number(closePriceInput) <= 0}
+            >
+              지정가 청산
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="card-block">
         <p className="eyebrow">Audit Trail</p>

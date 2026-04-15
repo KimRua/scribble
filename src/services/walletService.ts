@@ -1,5 +1,17 @@
-import { BrowserProvider } from 'ethers';
+import { BrowserProvider, formatEther } from 'ethers';
 import type { WalletSession } from '../types/domain';
+
+function resolveNativeSymbol(chainId: number) {
+  if (chainId === 97 || chainId === 5611) {
+    return 'tBNB';
+  }
+
+  if (chainId === 56 || chainId === 204) {
+    return 'BNB';
+  }
+
+  return 'Native';
+}
 
 declare global {
   interface Window {
@@ -19,9 +31,13 @@ async function buildSession(): Promise<WalletSession | null> {
   const provider = new BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
   const network = await provider.getNetwork();
+  const address = await signer.getAddress();
+  const nativeBalance = await provider.getBalance(address);
   return {
-    address: await signer.getAddress(),
-    chainId: Number(network.chainId)
+    address,
+    chainId: Number(network.chainId),
+    nativeBalance: Number(formatEther(nativeBalance)),
+    nativeSymbol: resolveNativeSymbol(Number(network.chainId))
   };
 }
 
@@ -45,4 +61,24 @@ export async function getInjectedWalletSession() {
   }
 
   return buildSession();
+}
+
+export function subscribeInjectedWalletSession(onChange: (session: WalletSession | null) => void) {
+  if (!window.ethereum?.on) {
+    return () => undefined;
+  }
+
+  const handleChange = () => {
+    void getInjectedWalletSession()
+      .then(onChange)
+      .catch(() => onChange(null));
+  };
+
+  window.ethereum.on('accountsChanged', handleChange);
+  window.ethereum.on('chainChanged', handleChange);
+
+  return () => {
+    window.ethereum?.removeListener?.('accountsChanged', handleChange);
+    window.ethereum?.removeListener?.('chainChanged', handleChange);
+  };
 }

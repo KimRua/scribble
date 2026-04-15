@@ -1,6 +1,549 @@
 {
   "annotations": [
     {
+      "annotationId": "ann_ai_1775983212181_o5dvd0",
+      "authorType": "ai",
+      "authorId": "system",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "71630 지지 재테스트 시 롱 관점 유지. 71164.4 종가 이탈 시 무효, 72203.04 / 72561.19 구간 분할 청산.",
+      "chartAnchor": {
+        "time": "2026-04-12T07:15:00.000Z",
+        "price": 71630,
+        "index": 114
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 71630
+        },
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 71164.4
+        },
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72203.04
+        },
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 72561.19
+        },
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71164.4,
+          "priceTo": 71630
+        },
+        {
+          "id": "ann_ai_1775983212181_o5dvd0_note",
+          "type": "text",
+          "role": "note",
+          "text": "71630 지지 재테스트 시 롱 관점 유지. 71164.4 종가 이탈 시 무효, 72203.04 / 72561.19 구간 분할 청산."
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_ai_1775983212181_o5dvd0",
+        "annotationId": "ann_ai_1775983212181_o5dvd0",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 71630,
+        "stopLossPrice": 71164.4,
+        "takeProfitPrices": [
+          72203.04,
+          72561.19
+        ],
+        "invalidationCondition": "price closes below 71164.4",
+        "confidence": 0.74,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 2,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-12T08:40:12.181Z",
+      "updatedAt": "2026-04-12T08:40:18.262Z"
+    },
+    {
+      "annotationId": "ann_1775983162709_x595jr",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "여기 라인 지지 받을시 매수",
+      "chartAnchor": {
+        "time": "2026-04-12T00:15:00.000Z",
+        "price": 71273.27,
+        "index": 86
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775983162709_x595jr_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 71734.06
+        },
+        {
+          "id": "ann_1775983162709_x595jr_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 71303.66
+        },
+        {
+          "id": "ann_1775983162709_x595jr_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 71747.31
+        },
+        {
+          "id": "ann_1775983162709_x595jr_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71303.66,
+          "priceTo": 71734.06
+        },
+        {
+          "id": "ann_1775983162709_x595jr_note",
+          "type": "text",
+          "role": "note",
+          "text": "여기 라인 지지 받을시 매수"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775983162709_x595jr",
+        "annotationId": "ann_1775983162709_x595jr",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 71734.06,
+        "stopLossPrice": 71303.66,
+        "takeProfitPrices": [
+          71747.31
+        ],
+        "invalidationCondition": "price closes below 71303.66",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 1,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-12T08:39:22.710Z",
+      "updatedAt": "2026-04-12T08:40:28.928Z"
+    },
+    {
+      "annotationId": "ann_1775983110954_iqfz43",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "저항라인 오면 숏",
+      "chartAnchor": {
+        "time": "2026-04-12T06:15:00.000Z",
+        "price": 72844.59,
+        "index": 110
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775983110954_iqfz43_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 71720.87
+        },
+        {
+          "id": "ann_1775983110954_iqfz43_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72151.2
+        },
+        {
+          "id": "ann_1775983110954_iqfz43_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 71588.57
+        },
+        {
+          "id": "ann_1775983110954_iqfz43_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71720.87,
+          "priceTo": 72151.2
+        },
+        {
+          "id": "ann_1775983110954_iqfz43_note",
+          "type": "text",
+          "role": "note",
+          "text": "저항라인 오면 숏"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775983110954_iqfz43",
+        "annotationId": "ann_1775983110954_iqfz43",
+        "bias": "bearish",
+        "entryType": "conditional",
+        "entryPrice": 71720.87,
+        "stopLossPrice": 72151.2,
+        "takeProfitPrices": [
+          71588.57
+        ],
+        "invalidationCondition": "price closes above 72151.2",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-12T08:38:30.954Z",
+      "updatedAt": "2026-04-12T08:40:40.156Z"
+    },
+    {
+      "annotationId": "ann_1775886704175_88yu18",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "지지 받으면 분할 진입",
+      "chartAnchor": {
+        "time": "2026-04-11T05:00:00.000Z",
+        "price": 69866.71,
+        "index": 119
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775886704175_88yu18_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 72759.3
+        },
+        {
+          "id": "ann_1775886704175_88yu18_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72327.71
+        },
+        {
+          "id": "ann_1775886704175_88yu18_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73434
+        },
+        {
+          "id": "ann_1775886704175_88yu18_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 72327.71,
+          "priceTo": 72759.3
+        },
+        {
+          "id": "ann_1775886704175_88yu18_note",
+          "type": "text",
+          "role": "note",
+          "text": "지지 받으면 분할 진입"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775886704175_88yu18",
+        "annotationId": "ann_1775886704175_88yu18",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 72759.3,
+        "stopLossPrice": 72327.71,
+        "takeProfitPrices": [
+          73434
+        ],
+        "invalidationCondition": "price closes below 72327.71",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.05,
+        "leverage": 2,
+        "autoExecuteEnabled": true
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-11T05:51:44.175Z",
+      "updatedAt": "2026-04-14T17:05:23.422Z"
+    },
+    {
+      "annotationId": "ann_1775885141493_d3maal",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "여기 지지 재 진입",
+      "chartAnchor": {
+        "time": "2026-04-11T05:00:00.000Z",
+        "price": 70966.09,
+        "index": 119
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775885141493_d3maal_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 72784.19
+        },
+        {
+          "id": "ann_1775885141493_d3maal_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72347.48
+        },
+        {
+          "id": "ann_1775885141493_d3maal_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73434
+        },
+        {
+          "id": "ann_1775885141493_d3maal_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 72347.48,
+          "priceTo": 72784.19
+        },
+        {
+          "id": "ann_1775885141493_d3maal_note",
+          "type": "text",
+          "role": "note",
+          "text": "여기 지지 재 진입"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775885141493_d3maal",
+        "annotationId": "ann_1775885141493_d3maal",
+        "bias": "neutral",
+        "entryType": "conditional",
+        "entryPrice": 72784.19,
+        "stopLossPrice": 72347.48,
+        "takeProfitPrices": [
+          73434
+        ],
+        "invalidationCondition": "price closes below 72347.48",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.05,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-11T05:25:41.493Z",
+      "updatedAt": "2026-04-14T17:10:28.791Z"
+    },
+    {
+      "annotationId": "ann_1775885047765_kqz5zs",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "1h",
+      "text": "여기 지지 받고 올라갈시 롱 포지션만",
+      "chartAnchor": {
+        "time": "2026-04-09T13:00:00.000Z",
+        "price": 72220.07,
+        "index": 79
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775885047765_kqz5zs_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 72771.24
+        },
+        {
+          "id": "ann_1775885047765_kqz5zs_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72334.61
+        },
+        {
+          "id": "ann_1775885047765_kqz5zs_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73434
+        },
+        {
+          "id": "ann_1775885047765_kqz5zs_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 72334.61,
+          "priceTo": 72771.24
+        },
+        {
+          "id": "ann_1775885047765_kqz5zs_note",
+          "type": "text",
+          "role": "note",
+          "text": "여기 지지 받고 올라갈시 롱 포지션만"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775885047765_kqz5zs",
+        "annotationId": "ann_1775885047765_kqz5zs",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 72771.24,
+        "stopLossPrice": 72334.61,
+        "takeProfitPrices": [
+          73434
+        ],
+        "invalidationCondition": "price closes below 72334.61",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Invalidated",
+      "visibility": "private",
+      "createdAt": "2026-04-11T05:24:07.766Z",
+      "updatedAt": "2026-04-15T09:51:19.661Z"
+    },
+    {
+      "annotationId": "ann_1775838742853_9uygve",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "여긱 지지 확인 후 재 진입",
+      "chartAnchor": {
+        "time": "2026-04-10T13:15:00.000Z",
+        "price": 72953.04,
+        "index": 106
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775838742853_9uygve_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 72730.87
+        },
+        {
+          "id": "ann_1775838742853_9uygve_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72294.48
+        },
+        {
+          "id": "ann_1775838742853_9uygve_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73289.96
+        },
+        {
+          "id": "ann_1775838742853_9uygve_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 72294.48,
+          "priceTo": 72730.87
+        },
+        {
+          "id": "ann_1775838742853_9uygve_note",
+          "type": "text",
+          "role": "note",
+          "text": "여긱 지지 확인 후 재 진입"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775838742853_9uygve",
+        "annotationId": "ann_1775838742853_9uygve",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 72730.87,
+        "stopLossPrice": 72294.48,
+        "takeProfitPrices": [
+          73289.96
+        ],
+        "invalidationCondition": "price closes below 72294.48",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.1,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Draft",
+      "visibility": "private",
+      "createdAt": "2026-04-10T16:32:22.853Z",
+      "updatedAt": "2026-04-12T08:40:54.777Z"
+    },
+    {
+      "annotationId": "ann_1775838564328_pecq9k",
+      "authorType": "user",
+      "authorId": "me",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "숏 포지션 배재 롱포지션만선택",
+      "chartAnchor": {
+        "time": "2026-04-10T09:45:00.000Z",
+        "price": 73260.65,
+        "index": 93
+      },
+      "drawingObjects": [
+        {
+          "id": "ann_1775838564328_pecq9k_entry",
+          "type": "line",
+          "role": "entry",
+          "price": 72750
+        },
+        {
+          "id": "ann_1775838564328_pecq9k_sl",
+          "type": "line",
+          "role": "stop_loss",
+          "price": 72313.5
+        },
+        {
+          "id": "ann_1775838564328_pecq9k_tp_0",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73289.96
+        },
+        {
+          "id": "ann_1775838564328_pecq9k_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 72313.5,
+          "priceTo": 72750
+        },
+        {
+          "id": "ann_1775838564328_pecq9k_note",
+          "type": "text",
+          "role": "note",
+          "text": "숏 포지션 배재 롱포지션만선택"
+        }
+      ],
+      "strategy": {
+        "strategyId": "str_ann_1775838564328_pecq9k",
+        "annotationId": "ann_1775838564328_pecq9k",
+        "bias": "bullish",
+        "entryType": "conditional",
+        "entryPrice": 72750,
+        "stopLossPrice": 72313.5,
+        "takeProfitPrices": [
+          73289.96
+        ],
+        "invalidationCondition": "price closes below 72313.5",
+        "confidence": 0.54,
+        "riskLevel": "balanced",
+        "positionSizeRatio": 0.12,
+        "leverage": 1,
+        "autoExecuteEnabled": false
+      },
+      "status": "Executed",
+      "visibility": "private",
+      "createdAt": "2026-04-10T16:29:24.328Z",
+      "updatedAt": "2026-04-12T08:40:46.955Z"
+    },
+    {
       "annotationId": "ann_seed_ai",
       "authorType": "ai",
       "authorId": "system",
@@ -14,29 +557,41 @@
       },
       "drawingObjects": [
         {
-          "id": "draw_entry_seed",
+          "id": "ann_seed_ai_entry",
           "type": "line",
           "role": "entry",
           "price": 72062.61
         },
         {
-          "id": "draw_sl_seed",
+          "id": "ann_seed_ai_sl",
           "type": "line",
           "role": "stop_loss",
           "price": 71630.23
         },
         {
-          "id": "draw_tp_seed_1",
+          "id": "ann_seed_ai_tp_0",
           "type": "line",
           "role": "take_profit",
           "price": 72639.11
         },
         {
-          "id": "draw_zone_seed",
+          "id": "ann_seed_ai_tp_1",
+          "type": "line",
+          "role": "take_profit",
+          "price": 73143.55
+        },
+        {
+          "id": "ann_seed_ai_zone",
           "type": "box",
           "role": "zone",
           "priceFrom": 71630.23,
           "priceTo": 72062.61
+        },
+        {
+          "id": "ann_seed_ai_note",
+          "type": "text",
+          "role": "note",
+          "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효."
         }
       ],
       "strategy": {
@@ -60,7 +615,7 @@
       "status": "Active",
       "visibility": "private",
       "createdAt": "2026-04-09T16:35:41.193Z",
-      "updatedAt": "2026-04-09T16:45:41.193Z"
+      "updatedAt": "2026-04-12T08:41:01.997Z"
     },
     {
       "annotationId": "ann_ai_1775756281170_cdocqs",
@@ -157,42 +712,55 @@
       },
       "drawingObjects": [
         {
-          "id": "llm_entry",
+          "id": "ann_ai_1775754003145_t8qr7m_entry",
           "type": "line",
           "role": "entry",
-          "price": 71820
+          "price": 71798
         },
         {
-          "id": "llm_sl",
+          "id": "ann_ai_1775754003145_t8qr7m_sl",
           "type": "line",
           "role": "stop_loss",
           "price": 71180
         },
         {
-          "id": "llm_tp_0",
+          "id": "ann_ai_1775754003145_t8qr7m_tp_0",
           "type": "line",
           "role": "take_profit",
           "price": 72480
         },
         {
-          "id": "llm_tp_1",
+          "id": "ann_ai_1775754003145_t8qr7m_tp_1",
           "type": "line",
           "role": "take_profit",
           "price": 72950
         },
         {
-          "id": "llm_tp_2",
+          "id": "ann_ai_1775754003145_t8qr7m_tp_2",
           "type": "line",
           "role": "take_profit",
           "price": 73600
+        },
+        {
+          "id": "ann_ai_1775754003145_t8qr7m_zone",
+          "type": "box",
+          "role": "zone",
+          "priceFrom": 71180,
+          "priceTo": 71798
+        },
+        {
+          "id": "ann_ai_1775754003145_t8qr7m_note",
+          "type": "text",
+          "role": "note",
+          "text": "BTCUSDT 1h shows a strong impulsive breakout from the 70.5k–71.5k range into 72.3k resistance, with elevated volume confirming momentum. Price is extended after the breakout, so chasing at market is less favorable than buying a pullback into reclaimed support."
         }
       ],
       "strategy": {
-        "strategyId": "str_1775754003145_6qcljm",
+        "strategyId": "str_ann_ai_1775754003145_t8qr7m",
         "annotationId": "ann_ai_1775754003145_t8qr7m",
         "bias": "bullish",
         "entryType": "limit",
-        "entryPrice": 71820,
+        "entryPrice": 71798,
         "stopLossPrice": 71180,
         "takeProfitPrices": [
           72480,
@@ -202,14 +770,14 @@
         "invalidationCondition": "Invalidate the long setup if 1h closes below 71180 or if price loses 71500 support with accelerating sell volume before entry.",
         "confidence": 0.72,
         "riskLevel": "balanced",
-        "positionSizeRatio": 0.1,
+        "positionSizeRatio": 1,
         "leverage": 2,
-        "autoExecuteEnabled": false
+        "autoExecuteEnabled": true
       },
-      "status": "Draft",
+      "status": "Executed",
       "visibility": "private",
       "createdAt": "2026-04-09T17:00:03.145Z",
-      "updatedAt": "2026-04-09T17:00:03.145Z"
+      "updatedAt": "2026-04-15T09:00:21.073Z"
     },
     {
       "annotationId": "ann_ai_1775753999511_q1u7i6",
@@ -228,7 +796,7 @@
           "id": "ann_ai_1775753999511_q1u7i6_entry",
           "type": "line",
           "role": "entry",
-          "price": 71920
+          "price": 71917
         },
         {
           "id": "ann_ai_1775753999511_q1u7i6_sl",
@@ -240,7 +808,7 @@
           "id": "ann_ai_1775753999511_q1u7i6_tp_0",
           "type": "line",
           "role": "take_profit",
-          "price": 72480
+          "price": 72477
         },
         {
           "id": "ann_ai_1775753999511_q1u7i6_tp_1",
@@ -249,17 +817,11 @@
           "price": 72950
         },
         {
-          "id": "ann_ai_1775753999511_q1u7i6_tp_2",
-          "type": "line",
-          "role": "take_profit",
-          "price": 73600
-        },
-        {
           "id": "ann_ai_1775753999511_q1u7i6_zone",
           "type": "box",
           "role": "zone",
           "priceFrom": 71240,
-          "priceTo": 71920
+          "priceTo": 71917
         },
         {
           "id": "ann_ai_1775753999511_q1u7i6_note",
@@ -273,12 +835,11 @@
         "annotationId": "ann_ai_1775753999511_q1u7i6",
         "bias": "bullish",
         "entryType": "limit",
-        "entryPrice": 71920,
+        "entryPrice": 71917,
         "stopLossPrice": 71240,
         "takeProfitPrices": [
-          72480,
-          72950,
-          73600
+          72477,
+          72950
         ],
         "invalidationCondition": "Invalidate the long setup if BTCUSDT closes below 71240 on the 1h timeframe, indicating failed breakout retest and loss of bullish structure.",
         "confidence": 0.74,
@@ -290,7 +851,7 @@
       "status": "Executed",
       "visibility": "private",
       "createdAt": "2026-04-09T16:59:59.511Z",
-      "updatedAt": "2026-04-09T17:04:11.070Z"
+      "updatedAt": "2026-04-14T17:03:25.925Z"
     },
     {
       "annotationId": "ann_1775752286992_97rr3g",
@@ -398,12 +959,12 @@
       "annotationId": "ann_seed_ai",
       "authorType": "ai",
       "authorId": "system",
-      "marketSymbol": "ETHUSDT",
-      "timeframe": "1h",
-      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효.",
       "chartAnchor": {
-        "time": "2026-04-09T09:00:00.000Z",
-        "price": 2194.14,
+        "time": "2026-04-09T16:15:00.000Z",
+        "price": 72062.61,
         "index": 112
       },
       "drawingObjects": [
@@ -411,38 +972,38 @@
           "id": "ann_seed_ai_entry",
           "type": "line",
           "role": "entry",
-          "price": 602.76
+          "price": 72062.61
         },
         {
           "id": "ann_seed_ai_sl",
           "type": "line",
           "role": "stop_loss",
-          "price": 599.14
+          "price": 71630.23
         },
         {
           "id": "ann_seed_ai_tp_0",
           "type": "line",
           "role": "take_profit",
-          "price": 607.58
+          "price": 72639.11
         },
         {
           "id": "ann_seed_ai_tp_1",
           "type": "line",
           "role": "take_profit",
-          "price": 611.8
+          "price": 73143.55
         },
         {
           "id": "ann_seed_ai_zone",
           "type": "box",
           "role": "zone",
-          "priceFrom": 599.14,
-          "priceTo": 602.76
+          "priceFrom": 71630.23,
+          "priceTo": 72062.61
         },
         {
           "id": "ann_seed_ai_note",
           "type": "text",
           "role": "note",
-          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
+          "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효."
         }
       ],
       "strategy": {
@@ -450,34 +1011,34 @@
         "annotationId": "ann_seed_ai",
         "bias": "bullish",
         "entryType": "conditional",
-        "entryPrice": 602.76,
-        "stopLossPrice": 599.14,
+        "entryPrice": 72062.61,
+        "stopLossPrice": 71630.23,
         "takeProfitPrices": [
-          607.58,
-          611.8
+          72639.11,
+          73143.55
         ],
-        "invalidationCondition": "price closes below 599.14",
+        "invalidationCondition": "price closes below 71630.23",
         "confidence": 0.72,
         "riskLevel": "balanced",
         "positionSizeRatio": 0.1,
         "leverage": 2,
-        "autoExecuteEnabled": true
+        "autoExecuteEnabled": false
       },
-      "status": "Executed",
+      "status": "Active",
       "visibility": "private",
-      "createdAt": "2026-04-09T16:08:29.171Z",
-      "updatedAt": "2026-04-09T16:34:01.094Z"
+      "createdAt": "2026-04-09T16:35:41.193Z",
+      "updatedAt": "2026-04-12T08:41:01.997Z"
     },
     {
       "annotationId": "ann_seed_ai",
       "authorType": "ai",
       "authorId": "system",
-      "marketSymbol": "ETHUSDT",
-      "timeframe": "1h",
-      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효.",
       "chartAnchor": {
-        "time": "2026-04-09T09:00:00.000Z",
-        "price": 2194.14,
+        "time": "2026-04-09T16:15:00.000Z",
+        "price": 72062.61,
         "index": 112
       },
       "drawingObjects": [
@@ -485,38 +1046,38 @@
           "id": "ann_seed_ai_entry",
           "type": "line",
           "role": "entry",
-          "price": 602.76
+          "price": 72062.61
         },
         {
           "id": "ann_seed_ai_sl",
           "type": "line",
           "role": "stop_loss",
-          "price": 599.14
+          "price": 71630.23
         },
         {
           "id": "ann_seed_ai_tp_0",
           "type": "line",
           "role": "take_profit",
-          "price": 607.58
+          "price": 72639.11
         },
         {
           "id": "ann_seed_ai_tp_1",
           "type": "line",
           "role": "take_profit",
-          "price": 611.8
+          "price": 73143.55
         },
         {
           "id": "ann_seed_ai_zone",
           "type": "box",
           "role": "zone",
-          "priceFrom": 599.14,
-          "priceTo": 602.76
+          "priceFrom": 71630.23,
+          "priceTo": 72062.61
         },
         {
           "id": "ann_seed_ai_note",
           "type": "text",
           "role": "note",
-          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
+          "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효."
         }
       ],
       "strategy": {
@@ -524,23 +1085,23 @@
         "annotationId": "ann_seed_ai",
         "bias": "bullish",
         "entryType": "conditional",
-        "entryPrice": 602.76,
-        "stopLossPrice": 599.14,
+        "entryPrice": 72062.61,
+        "stopLossPrice": 71630.23,
         "takeProfitPrices": [
-          607.58,
-          611.8
+          72639.11,
+          73143.55
         ],
-        "invalidationCondition": "price closes below 599.14",
+        "invalidationCondition": "price closes below 71630.23",
         "confidence": 0.72,
         "riskLevel": "balanced",
         "positionSizeRatio": 0.1,
         "leverage": 2,
-        "autoExecuteEnabled": true
+        "autoExecuteEnabled": false
       },
-      "status": "Executed",
+      "status": "Active",
       "visibility": "private",
-      "createdAt": "2026-04-09T16:08:29.171Z",
-      "updatedAt": "2026-04-09T16:34:01.094Z"
+      "createdAt": "2026-04-09T16:35:41.193Z",
+      "updatedAt": "2026-04-12T08:41:01.997Z"
     },
     {
       "annotationId": "ann_ai_1775748198889_8v5ncm",
@@ -605,10 +1166,10 @@
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Draft",
+      "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-09T15:23:18.890Z",
-      "updatedAt": "2026-04-09T15:23:18.890Z"
+      "updatedAt": "2026-04-15T09:51:20.916Z"
     },
     {
       "annotationId": "ann_ai_1775748080265_wsy1e9",
@@ -673,10 +1234,10 @@
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Draft",
+      "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-09T15:21:20.265Z",
-      "updatedAt": "2026-04-09T15:21:20.265Z"
+      "updatedAt": "2026-04-15T09:51:21.553Z"
     },
     {
       "annotationId": "ann_ai_1775747380816_o8nyfa",
@@ -741,10 +1302,10 @@
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Draft",
+      "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-09T15:09:40.816Z",
-      "updatedAt": "2026-04-09T15:09:40.816Z"
+      "updatedAt": "2026-04-15T09:51:21.959Z"
     },
     {
       "annotationId": "ann_ai_1775747320780_hu6yar",
@@ -809,10 +1370,10 @@
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Draft",
+      "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-09T15:08:40.780Z",
-      "updatedAt": "2026-04-09T15:08:40.780Z"
+      "updatedAt": "2026-04-15T09:51:22.447Z"
     },
     {
       "annotationId": "ann_ai_1775747216617_45cz0a",
@@ -877,21 +1438,21 @@
         "leverage": 2,
         "autoExecuteEnabled": false
       },
-      "status": "Draft",
+      "status": "Invalidated",
       "visibility": "private",
       "createdAt": "2026-04-09T15:06:56.617Z",
-      "updatedAt": "2026-04-09T15:06:56.617Z"
+      "updatedAt": "2026-04-15T09:51:23.248Z"
     },
     {
       "annotationId": "ann_seed_ai",
       "authorType": "ai",
       "authorId": "system",
-      "marketSymbol": "ETHUSDT",
-      "timeframe": "1h",
-      "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효.",
+      "marketSymbol": "BTCUSDT",
+      "timeframe": "15m",
+      "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효.",
       "chartAnchor": {
-        "time": "2026-04-09T09:00:00.000Z",
-        "price": 2194.14,
+        "time": "2026-04-09T16:15:00.000Z",
+        "price": 72062.61,
         "index": 112
       },
       "drawingObjects": [
@@ -899,38 +1460,38 @@
           "id": "ann_seed_ai_entry",
           "type": "line",
           "role": "entry",
-          "price": 602.76
+          "price": 72062.61
         },
         {
           "id": "ann_seed_ai_sl",
           "type": "line",
           "role": "stop_loss",
-          "price": 599.14
+          "price": 71630.23
         },
         {
           "id": "ann_seed_ai_tp_0",
           "type": "line",
           "role": "take_profit",
-          "price": 607.58
+          "price": 72639.11
         },
         {
           "id": "ann_seed_ai_tp_1",
           "type": "line",
           "role": "take_profit",
-          "price": 611.8
+          "price": 73143.55
         },
         {
           "id": "ann_seed_ai_zone",
           "type": "box",
           "role": "zone",
-          "priceFrom": 599.14,
-          "priceTo": 602.76
+          "priceFrom": 71630.23,
+          "priceTo": 72062.61
         },
         {
           "id": "ann_seed_ai_note",
           "type": "text",
           "role": "note",
-          "text": "602.76 지지 재테스트 시 단기 롱 진입 가능. 599.14 이탈 시 시나리오 무효."
+          "text": "72062.61 지지 재테스트 시 단기 롱 진입 가능. 71630.23 이탈 시 시나리오 무효."
         }
       ],
       "strategy": {
@@ -938,26 +1499,346 @@
         "annotationId": "ann_seed_ai",
         "bias": "bullish",
         "entryType": "conditional",
-        "entryPrice": 602.76,
-        "stopLossPrice": 599.14,
+        "entryPrice": 72062.61,
+        "stopLossPrice": 71630.23,
         "takeProfitPrices": [
-          607.58,
-          611.8
+          72639.11,
+          73143.55
         ],
-        "invalidationCondition": "price closes below 599.14",
+        "invalidationCondition": "price closes below 71630.23",
         "confidence": 0.72,
         "riskLevel": "balanced",
         "positionSizeRatio": 0.1,
         "leverage": 2,
-        "autoExecuteEnabled": true
+        "autoExecuteEnabled": false
       },
-      "status": "Executed",
+      "status": "Active",
       "visibility": "private",
-      "createdAt": "2026-04-09T16:08:29.171Z",
-      "updatedAt": "2026-04-09T16:34:01.094Z"
+      "createdAt": "2026-04-09T16:35:41.193Z",
+      "updatedAt": "2026-04-12T08:41:01.997Z"
     }
   ],
   "notifications": [
+    {
+      "notificationId": "noti_1776246683250_w1w3m5",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_ai_1775747216617_45cz0a",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:23.250Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776246682449_fj38i4",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_ai_1775747320780_hu6yar",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:22.449Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776246681962_e2j03i",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_ai_1775747380816_o8nyfa",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:21.962Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776246681556_lshcmx",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_ai_1775748080265_wsy1e9",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:21.556Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776246680920_mj8sj1",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_ai_1775748198889_8v5ncm",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:20.920Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776246679665_ck0pry",
+      "type": "strategy_invalidated",
+      "title": "주문 취소 완료",
+      "body": "BTCUSDT 대기 주문이 취소되었습니다.",
+      "annotationId": "ann_1775885047765_kqz5zs",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:51:19.665Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776243621079_446gn6",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:00:21.079Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776243620448_o1d8im",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-15T09:00:20.448Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186628798_d7secg",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:10:28.798Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186323429_qps71y",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775886704175_88yu18",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:05:23.429Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186252098_vdbx3k",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:04:12.098Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186205930_9ouchk",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:03:25.930Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186204049_68798y",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:03:24.049Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1776186200907_puqr4b",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "createdAt": "2026-04-14T17:03:20.907Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775984727145_nkjnjy",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "createdAt": "2026-04-12T09:05:27.145Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775984723647_z9p3sw",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "createdAt": "2026-04-12T09:05:23.647Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775984715203_ba0crg",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775886704175_88yu18",
+      "createdAt": "2026-04-12T09:05:15.203Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775984711480_wyxpj6",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775886704175_88yu18",
+      "createdAt": "2026-04-12T09:05:11.480Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775983553559_qct0vk",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "createdAt": "2026-04-12T08:45:53.559Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775983398735_9xteij",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "createdAt": "2026-04-12T08:43:18.735Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775983184158_61s8jl",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775983162709_x595jr",
+      "createdAt": "2026-04-12T08:39:44.158Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775983122744_rflk3e",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775983110954_iqfz43",
+      "createdAt": "2026-04-12T08:38:42.744Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775982792783_6zlw9m",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "createdAt": "2026-04-12T08:33:12.783Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775982757240_baqfdr",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775886704175_88yu18",
+      "createdAt": "2026-04-12T08:32:37.240Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775888554474_rpkcac",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "createdAt": "2026-04-11T06:22:34.474Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775886757244_8xyj1c",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775753999511_q1u7i6",
+      "createdAt": "2026-04-11T05:52:37.244Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775886739109_yn1wl3",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775886704175_88yu18",
+      "createdAt": "2026-04-11T05:52:19.109Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775885219535_vwk1vn",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_ai_1775754003145_t8qr7m",
+      "createdAt": "2026-04-11T05:26:59.535Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775839212819_h320wr",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:40:12.819Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775839208821_v57mrt",
+      "type": "execution_filled",
+      "title": "주문 실행 완료",
+      "body": "BTCUSDT 전략이 mock 모드로 실행되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:40:08.821Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775839206945_rtkfto",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BTCUSDT 72750 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:40:06.945Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775839203363_k0r2ur",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BTCUSDT 72750 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:40:03.363Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775838951001_awcird",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BTCUSDT 72750 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:35:51.001Z",
+      "read": false
+    },
+    {
+      "notificationId": "noti_1775838949899_az3thg",
+      "type": "alert_fired",
+      "title": "알림 등록 완료",
+      "body": "BTCUSDT 72750 조건 알림이 등록되었습니다.",
+      "annotationId": "ann_1775838564328_pecq9k",
+      "createdAt": "2026-04-10T16:35:49.899Z",
+      "read": false
+    },
     {
       "notificationId": "noti_1775758799320_ds73hn",
       "type": "alert_fired",
@@ -1042,321 +1923,1440 @@
   ],
   "auditEvents": [
     {
-      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775758799324",
+      "eventId": "evt_ann_ai_1775747216617_45cz0a_1776246683254",
       "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747216617_45cz0a",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:23.254Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775747320780_hu6yar_1776246682454",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747320780_hu6yar",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:22.454Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775747380816_o8nyfa_1776246681966",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775747380816_o8nyfa",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:21.966Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775748080265_wsy1e9_1776246681561",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775748080265_wsy1e9",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:21.561Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775748198889_8v5ncm_1776246680924",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775748198889_8v5ncm",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:20.924Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885047765_kqz5zs_1776246679669",
+      "eventType": "status_changed",
+      "entityType": "annotation",
+      "entityId": "ann_1775885047765_kqz5zs",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:51:19.669Z",
+      "metadata": {
+        "action": "cancel_order",
+        "previousStatus": "Draft",
+        "nextStatus": "Invalidated"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1776243612004_1776243621083",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1776243612004",
+      "sessionId": null,
+      "timestamp": "2026-04-15T09:00:21.083Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149737163,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1776243611182_1776243620454",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1776243611182",
+      "sessionId": null,
+      "timestamp": "2026-04-15T09:00:20.454Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149737163,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243604386",
+      "eventType": "annotation_edited",
       "entityType": "annotation",
       "entityId": "ann_ai_1775754003145_t8qr7m",
-      "timestamp": "2026-04-09T18:19:59.324Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:00:04.386Z",
       "metadata": {
-        "alertValue": "71820"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_exe_str_ann_ai_1775756281170_cdocqs_1775756570285_1775756584211",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_ai_1775756281170_cdocqs_1775756570285",
-      "timestamp": "2026-04-09T17:43:04.211Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": true,
-        "onchainReady": true
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775756281170_cdocqs_1775756552325",
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243603182",
       "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775756281170_cdocqs",
-      "timestamp": "2026-04-09T17:42:32.325Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775756281170_cdocqs_1775756281173",
-      "eventType": "ai_analysis_requested",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775756281170_cdocqs",
-      "timestamp": "2026-04-09T17:38:01.173Z",
-      "metadata": {
-        "provider": "openai",
-        "symbol": "BNBUSDT",
-        "timeframe": "1h"
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775754236977_1775754251073",
-      "eventType": "execute_confirmed",
-      "entityType": "execution",
-      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775754236977",
-      "timestamp": "2026-04-09T17:04:11.073Z",
-      "metadata": {
-        "executionChain": "opbnb",
-        "liquidityChain": "bsc",
-        "proofRecorded": true,
-        "onchainReady": true
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775754239932",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-09T17:03:59.932Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775754233015_irnkaw_1775754233018",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775754233015_irnkaw",
-      "timestamp": "2026-04-09T17:03:53.018Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775754226158",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-09T17:03:46.158Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775754003149",
-      "eventType": "ai_analysis_requested",
       "entityType": "annotation",
       "entityId": "ann_ai_1775754003145_t8qr7m",
-      "timestamp": "2026-04-09T17:00:03.149Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:00:03.182Z",
       "metadata": {
-        "provider": "openai",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775753999514",
-      "eventType": "ai_analysis_requested",
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243601087",
+      "eventType": "annotation_edited",
       "entityType": "annotation",
-      "entityId": "ann_ai_1775753999511_q1u7i6",
-      "timestamp": "2026-04-09T16:59:59.514Z",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T09:00:01.087Z",
       "metadata": {
-        "provider": "openai",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_exe_str_ann_seed_ai_1775752431960_1775752441096",
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243599165",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T08:59:59.165Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243594041",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T08:59:54.041Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243593022",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T08:59:53.022Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776243592061",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-15T08:59:52.061Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775885141493_d3maal_1776186615059_1776186628803",
       "eventType": "execute_confirmed",
       "entityType": "execution",
-      "entityId": "exe_str_ann_seed_ai_1775752431960",
-      "timestamp": "2026-04-09T16:34:01.096Z",
+      "entityId": "exe_str_ann_1775885141493_d3maal_1776186615059",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:10:28.803Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149510765,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186605408",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:10:05.408Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186597840",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:57.840Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186596220",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:56.220Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186595225",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:55.225Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186593978",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:53.978Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186588085",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:48.085Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186587235",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:47.235Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186586125",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:46.125Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186584814",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:44.814Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1776186583746",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:09:43.746Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1776186314037_1776186323433",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_1775886704175_88yu18_1776186314037",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:05:23.433Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149509541,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1776186307041",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:05:07.041Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1776186306193",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:05:06.193Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1776186305261",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:05:05.261Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1776186303503",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:05:03.503Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776186287194",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:04:47.194Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1776186286317",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "timestamp": "2026-04-14T17:04:46.317Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1776186242875_1776186252102",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1776186242875",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:04:12.102Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149509256,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1776186196827_1776186205934",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186196827",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:03:25.934Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149509073,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1776186190224_1776186204053",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186190224",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:03:24.053Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149509066,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1776186191805_1776186200912",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186191805",
+      "sessionId": null,
+      "timestamp": "2026-04-14T17:03:20.912Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "settlementMode": "mock",
+        "dexExecuted": false,
+        "dexReady": false,
+        "executionTxState": "not_submitted",
+        "liquidityReceiptEvidence": "mock_fallback",
+        "liquiditySettlementState": "mock_fallback",
+        "executionChainTxStatus": "success",
+        "liquidityChainTxStatus": "unavailable",
+        "executionChainBlockNumber": 149509051,
+        "liquidityChainBlockNumber": null,
+        "executionChainLogCount": 1,
+        "liquidityChainLogCount": null,
+        "liquidityChainTxHashVisible": false,
+        "liquidityChainTxHashValid": true,
+        "invalidTxHashFiltered": false,
+        "proofAttempted": true,
+        "proofRetryCount": 0,
+        "proofErrorPresent": false,
+        "proofRecorded": true,
+        "onchainReady": true,
+        "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1775984713369_1775984727150",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1775984713369",
+      "timestamp": "2026-04-12T09:05:27.150Z",
       "metadata": {
         "executionChain": "opbnb",
         "liquidityChain": "bsc",
         "proofRecorded": true,
-        "onchainReady": true
+        "onchainReady": true,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
       }
     },
     {
-      "eventId": "evt_exe_str_ann_seed_ai_1775752430493_1775752439875",
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1775984714448_1775984723651",
       "eventType": "execute_confirmed",
       "entityType": "execution",
-      "entityId": "exe_str_ann_seed_ai_1775752430493",
-      "timestamp": "2026-04-09T16:33:59.875Z",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1775984714448",
+      "timestamp": "2026-04-12T09:05:23.651Z",
       "metadata": {
         "executionChain": "opbnb",
         "liquidityChain": "bsc",
         "proofRecorded": true,
-        "onchainReady": true
+        "onchainReady": true,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
       }
     },
     {
-      "eventId": "evt_ann_seed_ai_1775752420196",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-09T16:33:40.196Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775752413992_e9pvgn_1775752413994",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775752413992_e9pvgn",
-      "timestamp": "2026-04-09T16:33:33.994Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775752413887",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-09T16:33:33.887Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775752405688_4dbyjm_1775752405690",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775752405688_4dbyjm",
-      "timestamp": "2026-04-09T16:33:25.690Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_ann_seed_ai_1775752405573",
-      "eventType": "annotation_edited",
-      "entityType": "annotation",
-      "entityId": "ann_seed_ai",
-      "timestamp": "2026-04-09T16:33:25.573Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_auto_1775752397762_r1bike_1775752397765",
-      "eventType": "automation_enabled",
-      "entityType": "automation",
-      "entityId": "auto_1775752397762_r1bike",
-      "timestamp": "2026-04-09T16:33:17.765Z",
-      "metadata": {
-        "maxLeverage": 2
-      }
-    },
-    {
-      "eventId": "evt_ann_1775752286992_97rr3g_1775752352346",
-      "eventType": "status_changed",
-      "entityType": "annotation",
-      "entityId": "ann_1775752286992_97rr3g",
-      "timestamp": "2026-04-09T16:32:32.346Z",
-      "metadata": {
-        "alertValue": "0"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775752286992_97rr3g_1775752351264",
-      "eventType": "status_changed",
-      "entityType": "annotation",
-      "entityId": "ann_1775752286992_97rr3g",
-      "timestamp": "2026-04-09T16:32:31.264Z",
-      "metadata": {
-        "alertValue": "0"
-      }
-    },
-    {
-      "eventId": "evt_ann_1775752286992_97rr3g_1775752293166",
-      "eventType": "annotation_created",
-      "entityType": "annotation",
-      "entityId": "ann_1775752286992_97rr3g",
-      "timestamp": "2026-04-09T16:31:33.166Z",
-      "metadata": {
-        "provider": "openai"
-      }
-    },
-    {
-      "eventId": "evt_exe_str_ann_seed_ai_1775750170263_1775750184155",
+      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775984701178_1775984715207",
       "eventType": "execute_confirmed",
       "entityType": "execution",
-      "entityId": "exe_str_ann_seed_ai_1775750170263",
-      "timestamp": "2026-04-09T15:56:24.155Z",
+      "entityId": "exe_str_ann_1775886704175_88yu18_1775984701178",
+      "timestamp": "2026-04-12T09:05:15.207Z",
       "metadata": {
         "executionChain": "opbnb",
         "liquidityChain": "bsc",
         "proofRecorded": true,
-        "onchainReady": true
+        "onchainReady": true,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
       }
     },
     {
-      "eventId": "evt_exe_str_ann_seed_ai_1775749885187_1775749885189",
+      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775984702272_1775984711484",
       "eventType": "execute_confirmed",
       "entityType": "execution",
-      "entityId": "exe_str_ann_seed_ai_1775749885187",
-      "timestamp": "2026-04-09T15:51:25.189Z",
+      "entityId": "exe_str_ann_1775886704175_88yu18_1775984702272",
+      "timestamp": "2026-04-12T09:05:11.484Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": true,
+        "onchainReady": true,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775983553556_1775983553562",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775983553556",
+      "timestamp": "2026-04-12T08:45:53.562Z",
       "metadata": {
         "executionChain": "opbnb",
         "liquidityChain": "bsc",
         "proofRecorded": false,
-        "onchainReady": false
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
       }
     },
     {
-      "eventId": "evt_ann_ai_1775748198889_8v5ncm_1775748198891",
-      "eventType": "ai_analysis_requested",
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775983552393",
+      "eventType": "annotation_edited",
       "entityType": "annotation",
-      "entityId": "ann_ai_1775748198889_8v5ncm",
-      "timestamp": "2026-04-09T15:23:18.891Z",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-12T08:45:52.393Z",
       "metadata": {
-        "provider": "openai",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_ann_ai_1775748080265_wsy1e9_1775748080266",
-      "eventType": "ai_analysis_requested",
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775983550275",
+      "eventType": "annotation_edited",
       "entityType": "annotation",
-      "entityId": "ann_ai_1775748080265_wsy1e9",
-      "timestamp": "2026-04-09T15:21:20.266Z",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-12T08:45:50.275Z",
       "metadata": {
-        "provider": "openai",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_ann_ai_1775747380816_o8nyfa_1775747380818",
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775983543747",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-12T08:45:43.747Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775983542992_3xkznp_1775983542996",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775983542992_3xkznp",
+      "timestamp": "2026-04-12T08:45:42.996Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775886773751_doq94e_1775983542985",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775886773751_doq94e",
+      "timestamp": "2026-04-12T08:45:42.985Z",
+      "metadata": {
+        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775754003145_t8qr7m_1775983398732_1775983398740",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775754003145_t8qr7m_1775983398732",
+      "timestamp": "2026-04-12T08:43:18.740Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775983394072",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "timestamp": "2026-04-12T08:43:14.072Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983262002",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:41:02.002Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983261059",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:41:01.059Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838742853_9uygve_1775983254780",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838742853_9uygve",
+      "timestamp": "2026-04-12T08:40:54.780Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838742853_9uygve_1775983253287",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838742853_9uygve",
+      "timestamp": "2026-04-12T08:40:53.287Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838742853_9uygve_1775983251552",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838742853_9uygve",
+      "timestamp": "2026-04-12T08:40:51.552Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838742853_9uygve_1775983250515",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838742853_9uygve",
+      "timestamp": "2026-04-12T08:40:50.515Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838742853_9uygve_1775983249529",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838742853_9uygve",
+      "timestamp": "2026-04-12T08:40:49.529Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775838564328_pecq9k_1775983246960",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775838564328_pecq9k",
+      "timestamp": "2026-04-12T08:40:46.960Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775983110954_iqfz43_1775983240159",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775983110954_iqfz43",
+      "timestamp": "2026-04-12T08:40:40.159Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983234468",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:40:34.468Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775983162709_x595jr_1775983228933",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775983162709_x595jr",
+      "timestamp": "2026-04-12T08:40:28.933Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983226324",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:40:26.324Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983225274",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:40:25.274Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_seed_ai_1775983224235",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_seed_ai",
+      "timestamp": "2026-04-12T08:40:24.235Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983218266",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775983212181_o5dvd0",
+      "timestamp": "2026-04-12T08:40:18.266Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983217121",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775983212181_o5dvd0",
+      "timestamp": "2026-04-12T08:40:17.121Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775983212181_o5dvd0_1775983212185",
       "eventType": "ai_analysis_requested",
       "entityType": "annotation",
-      "entityId": "ann_ai_1775747380816_o8nyfa",
-      "timestamp": "2026-04-09T15:09:40.818Z",
+      "entityId": "ann_ai_1775983212181_o5dvd0",
+      "timestamp": "2026-04-12T08:40:12.185Z",
       "metadata": {
         "provider": "fallback",
         "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "timeframe": "15m"
       }
     },
     {
-      "eventId": "evt_ann_ai_1775747320780_hu6yar_1775747320781",
-      "eventType": "ai_analysis_requested",
+      "eventId": "evt_ann_1775983162709_x595jr_1775983191778",
+      "eventType": "annotation_edited",
       "entityType": "annotation",
-      "entityId": "ann_ai_1775747320780_hu6yar",
-      "timestamp": "2026-04-09T15:08:40.781Z",
+      "entityId": "ann_1775983162709_x595jr",
+      "timestamp": "2026-04-12T08:39:51.778Z",
       "metadata": {
-        "provider": "fallback",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "provider": "fallback"
       }
     },
     {
-      "eventId": "evt_ann_ai_1775747216617_45cz0a_1775747216618",
-      "eventType": "ai_analysis_requested",
-      "entityType": "annotation",
-      "entityId": "ann_ai_1775747216617_45cz0a",
-      "timestamp": "2026-04-09T15:06:56.618Z",
+      "eventId": "evt_auto_1775983191026_h58boh_1775983191029",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775983191026_h58boh",
+      "timestamp": "2026-04-12T08:39:51.029Z",
       "metadata": {
-        "provider": "fallback",
-        "symbol": "BTCUSDT",
-        "timeframe": "1h"
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775983191010_32daao_1775983191019",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775983191010_32daao",
+      "timestamp": "2026-04-12T08:39:51.019Z",
+      "metadata": {
+        "strategyId": "str_ann_1775983162709_x595jr",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775983162709_x595jr_1775983184155_1775983184161",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_1775983162709_x595jr_1775983184155",
+      "timestamp": "2026-04-12T08:39:44.161Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_ann_1775983162709_x595jr_1775983162713",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1775983162709_x595jr",
+      "timestamp": "2026-04-12T08:39:22.713Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775983110954_iqfz43_1775983122741_1775983122748",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_1775983110954_iqfz43_1775983122741",
+      "timestamp": "2026-04-12T08:38:42.748Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_ann_1775983110954_iqfz43_1775983110958",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1775983110954_iqfz43",
+      "timestamp": "2026-04-12T08:38:30.958Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775982792781_1775982792787",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775982792781",
+      "timestamp": "2026-04-12T08:33:12.787Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775982776086",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-12T08:32:56.086Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775982775325_irtovs_1775982775329",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775982775325_irtovs",
+      "timestamp": "2026-04-12T08:32:55.329Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775982775314_ug1meb_1775982775317",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775982775314_ug1meb",
+      "timestamp": "2026-04-12T08:32:55.317Z",
+      "metadata": {
+        "strategyId": "str_ann_1775886704175_88yu18",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775982757237_1775982757244",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_1775886704175_88yu18_1775982757237",
+      "timestamp": "2026-04-12T08:32:37.244Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false,
+        "invalidTxHashFiltered": false
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775888572287",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-11T06:22:52.287Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775888571526_ku5w2k_1775888571529",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775888571526_ku5w2k",
+      "timestamp": "2026-04-11T06:22:51.529Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775886773751_doq94e_1775888571519",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775886773751_doq94e",
+      "timestamp": "2026-04-11T06:22:51.519Z",
+      "metadata": {
+        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775888554471_1775888554478",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775888554471",
+      "timestamp": "2026-04-11T06:22:34.478Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775886779824",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-11T05:52:59.824Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775886779079_jikqtr_1775886779082",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775886779079_jikqtr",
+      "timestamp": "2026-04-11T05:52:59.082Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775886773751_doq94e_1775886779072",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775886773751_doq94e",
+      "timestamp": "2026-04-11T05:52:59.072Z",
+      "metadata": {
+        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775753999511_q1u7i6_1775886774514",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775753999511_q1u7i6",
+      "timestamp": "2026-04-11T05:52:54.514Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775886773761_o0mog0_1775886773764",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775886773761_o0mog0",
+      "timestamp": "2026-04-11T05:52:53.764Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775886773751_doq94e_1775886773754",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775886773751_doq94e",
+      "timestamp": "2026-04-11T05:52:53.754Z",
+      "metadata": {
+        "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_ai_1775753999511_q1u7i6_1775886757242_1775886757248",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_ai_1775753999511_q1u7i6_1775886757242",
+      "timestamp": "2026-04-11T05:52:37.248Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false
+      }
+    },
+    {
+      "eventId": "evt_exe_str_ann_1775886704175_88yu18_1775886739107_1775886739112",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_ann_1775886704175_88yu18_1775886739107",
+      "timestamp": "2026-04-11T05:52:19.112Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775886735781",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-11T05:52:15.781Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775886733165",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-11T05:52:13.165Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775886731843",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-11T05:52:11.843Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775886727942",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-11T05:52:07.942Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_1775886704175_88yu18_1775886704179",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1775886704175_88yu18",
+      "timestamp": "2026-04-11T05:51:44.179Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_ann_ai_1775754003145_t8qr7m_1775885295227",
+      "eventType": "annotation_edited",
+      "entityType": "annotation",
+      "entityId": "ann_ai_1775754003145_t8qr7m",
+      "timestamp": "2026-04-11T05:28:15.227Z",
+      "metadata": {
+        "provider": "fallback"
+      }
+    },
+    {
+      "eventId": "evt_auto_1775885294476_57v59v_1775885294479",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "auto_1775885294476_57v59v",
+      "timestamp": "2026-04-11T05:28:14.479Z",
+      "metadata": {
+        "maxLeverage": 2
+      }
+    },
+    {
+      "eventId": "evt_dlg_1775885294466_knyl4u_1775885294470",
+      "eventType": "automation_enabled",
+      "entityType": "automation",
+      "entityId": "dlg_1775885294466_knyl4u",
+      "timestamp": "2026-04-11T05:28:14.470Z",
+      "metadata": {
+        "strategyId": "str_1775754003145_6qcljm",
+        "delegated": true,
+        "maxOrderSizeUsd": 500,
+        "maxSlippageBps": 100
+      }
+    },
+    {
+      "eventId": "evt_exe_str_1775754003145_6qcljm_1775885219532_1775885219538",
+      "eventType": "execute_confirmed",
+      "entityType": "execution",
+      "entityId": "exe_str_1775754003145_6qcljm_1775885219532",
+      "timestamp": "2026-04-11T05:26:59.538Z",
+      "metadata": {
+        "executionChain": "opbnb",
+        "liquidityChain": "bsc",
+        "proofRecorded": false,
+        "onchainReady": false,
+        "dexExecuted": false,
+        "dexReady": false
+      }
+    },
+    {
+      "eventId": "evt_ann_1775885141493_d3maal_1775885141497",
+      "eventType": "annotation_created",
+      "entityType": "annotation",
+      "entityId": "ann_1775885141493_d3maal",
+      "timestamp": "2026-04-11T05:25:41.497Z",
+      "metadata": {
+        "provider": "fallback"
       }
     }
   ],
   "automations": [
+    {
+      "automationId": "auto_1775983542992_3xkznp",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Armed",
+      "triggerPrice": 71920,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775983191026_h58boh",
+      "strategyId": "str_ann_1775983162709_x595jr",
+      "status": "Armed",
+      "triggerPrice": 71734.06,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775982775325_irtovs",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Armed",
+      "triggerPrice": 72759.3,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775888571526_ku5w2k",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Armed",
+      "triggerPrice": 71920,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775886779079_jikqtr",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Armed",
+      "triggerPrice": 71920,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775886773761_o0mog0",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Armed",
+      "triggerPrice": 71920,
+      "maxPositionSizeRatio": 0.1,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.05,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
+    {
+      "automationId": "auto_1775885294476_57v59v",
+      "strategyId": "str_1775754003145_6qcljm",
+      "status": "Armed",
+      "triggerPrice": 71820,
+      "maxPositionSizeRatio": 0.3,
+      "maxLeverage": 2,
+      "maxLossRatio": 0.02,
+      "maxDailyExecutions": 3,
+      "stopConditions": [
+        "max daily executions reached",
+        "guardrail violation",
+        "manual halt"
+      ]
+    },
     {
       "automationId": "auto_1775754233015_irnkaw",
       "strategyId": "str_ann_ai_1775753999511_q1u7i6",
@@ -1418,7 +3418,703 @@
       ]
     }
   ],
+  "delegatedPolicies": [
+    {
+      "policyId": "dlg_1775886773751_doq94e",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "ownerAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "delegateAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "marketSymbol": "BTCUSDT",
+      "status": "pending_approval",
+      "maxOrderSizeUsd": 500,
+      "maxSlippageBps": 100,
+      "dailyLossLimitUsd": 150,
+      "validUntil": "2026-05-09T17:51:00.000Z",
+      "approvalTxHash": null,
+      "vaultAddress": null,
+      "createdAt": "2026-04-11T05:52:53.751Z",
+      "updatedAt": "2026-04-12T08:45:42.981Z"
+    },
+    {
+      "policyId": "dlg_1775983191010_32daao",
+      "strategyId": "str_ann_1775983162709_x595jr",
+      "ownerAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "delegateAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "marketSymbol": "BTCUSDT",
+      "status": "pending_approval",
+      "maxOrderSizeUsd": 500,
+      "maxSlippageBps": 100,
+      "dailyLossLimitUsd": 150,
+      "validUntil": "2026-05-09T17:51:00.000Z",
+      "approvalTxHash": null,
+      "vaultAddress": null,
+      "createdAt": "2026-04-12T08:39:51.009Z",
+      "updatedAt": "2026-04-12T08:39:51.009Z"
+    },
+    {
+      "policyId": "dlg_1775982775314_ug1meb",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "ownerAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "delegateAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "marketSymbol": "BTCUSDT",
+      "status": "pending_approval",
+      "maxOrderSizeUsd": 500,
+      "maxSlippageBps": 100,
+      "dailyLossLimitUsd": 150,
+      "validUntil": "2026-05-11T23:32:00.000Z",
+      "approvalTxHash": null,
+      "vaultAddress": null,
+      "createdAt": "2026-04-12T08:32:55.314Z",
+      "updatedAt": "2026-04-12T08:32:55.314Z"
+    },
+    {
+      "policyId": "dlg_1775885294466_knyl4u",
+      "strategyId": "str_1775754003145_6qcljm",
+      "ownerAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "delegateAddress": "0x04896ACB11b29f27d22aC21b6F85Ff036874B319",
+      "marketSymbol": "BTCUSDT",
+      "status": "pending_approval",
+      "maxOrderSizeUsd": 500,
+      "maxSlippageBps": 100,
+      "dailyLossLimitUsd": 150,
+      "validUntil": "2026-05-10T20:22:00.000Z",
+      "approvalTxHash": null,
+      "vaultAddress": null,
+      "createdAt": "2026-04-11T05:28:14.466Z",
+      "updatedAt": "2026-04-11T05:28:14.466Z"
+    }
+  ],
   "executions": [
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1776243612004",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xcb989b3cca0980f3641645fcbb6cc69fa99f6b286b66a6d61dc3f77ac51bbc0b",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-15T09:00:12.004Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149737163,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-15T09:00:21.070Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0x50fe28984a32fe4b3aadf2593d24d65e06f06a76b816d1755a4058395f49045d",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1776243611182",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x74061a6e1e100ff7aa7a676f60660bbb8a3ca38a8c9c2ad4c58e216ebe722604",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-15T09:00:11.182Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149737163,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-15T09:00:20.434Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0x50fe28984a32fe4b3aadf2593d24d65e06f06a76b816d1755a4058395f49045d",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_1775885141493_d3maal_1776186615059",
+      "strategyId": "str_ann_1775885141493_d3maal",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xf9d22ff6b3d48ac8acbb8b1e6187842fa63f2774b2eb4afa1e8efdcff3caa67d",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 72784.19,
+      "filledAt": "2026-04-14T17:10:15.059Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149510765,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:10:28.788Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xd5fbd3574a6b60f233fa42420c44c2c4e96477a0076d306df86d45a23ef9b471",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_1775886704175_88yu18_1776186314037",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x37201a3e86306f6ecff9ff26b630c07aab253304453b7c4455178b0f4bf23331",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 72759.3,
+      "filledAt": "2026-04-14T17:05:14.037Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149509541,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:05:23.419Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xe9246a1c76c62056f0393f356aad425fd14079f2d7f777e22ae8a0960d9c5576",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1776186242875",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xc9192bb44fcfaeb2aa97e164301eac1016fa52eab90a26239e19e6232c3ed82b",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-14T17:04:02.875Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149509256,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:04:12.088Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0x50fe28984a32fe4b3aadf2593d24d65e06f06a76b816d1755a4058395f49045d",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186196827",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xf006147276843a0855ee3cf8567b0c83756887699462e1a0836f8762354de5e9",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71917,
+      "filledAt": "2026-04-14T17:03:16.827Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149509073,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:03:25.922Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xcd100a8bd18f1139205aace77853e38e6cbbd104ae265a30454b2a4c680a988f",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186190224",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xfb2412a0c4e46e72f7dd9e9e6976793b06f37da2bbe42c6f1a20ea684113b60a",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71917,
+      "filledAt": "2026-04-14T17:03:10.224Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149509066,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:03:24.041Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xcd100a8bd18f1139205aace77853e38e6cbbd104ae265a30454b2a4c680a988f",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1776186191805",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x779e74b97e813bae239ad4826aa81b06a2fd63f8a05b97f054a12a122ba30de6",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71917,
+      "filledAt": "2026-04-14T17:03:11.805Z",
+      "sessionId": "web-637318dc-48fc-4a9c-a3b2-3ca457f9e84e",
+      "txHashWarning": null,
+      "executionChainTxStatus": "success",
+      "liquidityChainTxStatus": "unavailable",
+      "executionChainBlockNumber": 149509051,
+      "liquidityChainBlockNumber": null,
+      "executionChainLogCount": 1,
+      "liquidityChainLogCount": null,
+      "liquidityTransferCount": null,
+      "liquiditySwapEventCount": null,
+      "liquidityTouchedContractCount": null,
+      "liquiditySettlementState": "mock_fallback",
+      "executionChainCheckedAt": "2026-04-14T17:03:20.893Z",
+      "liquidityChainCheckedAt": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "dexInputTokenAddress": null,
+      "dexOutputTokenAddress": null,
+      "dexAmountIn": null,
+      "dexExpectedAmountOut": null,
+      "dexMinimumAmountOut": null,
+      "proofAttempted": true,
+      "proofRetryCount": 0,
+      "proofErrorMessage": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xcd100a8bd18f1139205aace77853e38e6cbbd104ae265a30454b2a4c680a988f",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1775984713369",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x6261084dc48a88b265ab5d6a6718df208fe8521445ca268cc21f3097728ae977",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-12T09:05:13.369Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0x50fe28984a32fe4b3aadf2593d24d65e06f06a76b816d1755a4058395f49045d",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1775984714448",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x6020c04fa6c75e5928a63cf8b5c9db3df08ae65865e21f3865a90c761acec0db",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-12T09:05:14.448Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0x50fe28984a32fe4b3aadf2593d24d65e06f06a76b816d1755a4058395f49045d",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_1775886704175_88yu18_1775984701178",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xb6fc6d3daed57f2b0cc4580ef8b4a9acf94e4e37dee7fb0f5e3f9255867e4570",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 72759.3,
+      "filledAt": "2026-04-12T09:05:01.178Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xe9246a1c76c62056f0393f356aad425fd14079f2d7f777e22ae8a0960d9c5576",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_1775886704175_88yu18_1775984702272",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x0948437d30faa193df1dfb38981b83839789764b1add5b61a12103e880c2a425",
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 72759.3,
+      "filledAt": "2026-04-12T09:05:02.272Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": true,
+      "proofRegistryId": "0xe9246a1c76c62056f0393f356aad425fd14079f2d7f777e22ae8a0960d9c5576",
+      "proofContractAddress": "0x9259b5d118e791A3A1c28857A359f1E6bB5b9b56"
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775983553556",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71917,
+      "filledAt": "2026-04-12T08:45:53.556Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775754003145_t8qr7m_1775983398732",
+      "strategyId": "str_ann_ai_1775754003145_t8qr7m",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71798,
+      "filledAt": "2026-04-12T08:43:18.732Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775983162709_x595jr_1775983184155",
+      "strategyId": "str_ann_1775983162709_x595jr",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71734.06,
+      "filledAt": "2026-04-12T08:39:44.155Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775983110954_iqfz43_1775983122741",
+      "strategyId": "str_ann_1775983110954_iqfz43",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71720.87,
+      "filledAt": "2026-04-12T08:38:42.741Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775982792781",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 71920,
+      "filledAt": "2026-04-12T08:33:12.781Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775886704175_88yu18_1775982757237",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": null,
+      "liquidityChainTxHash": null,
+      "executionChainTxHashValid": true,
+      "liquidityChainTxHashValid": true,
+      "filledPrice": 72759.3,
+      "filledAt": "2026-04-12T08:32:37.237Z",
+      "txHashWarning": null,
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775888554471",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xada6791b5644a",
+      "liquidityChainTxHash": "0xff392fb0b1176",
+      "filledPrice": 71920,
+      "filledAt": "2026-04-11T06:22:34.472Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_ai_1775753999511_q1u7i6_1775886757242",
+      "strategyId": "str_ann_ai_1775753999511_q1u7i6",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x15011f5c6ae2c",
+      "liquidityChainTxHash": "0x30ba6fa7dfb0",
+      "filledPrice": 71920,
+      "filledAt": "2026-04-11T05:52:37.242Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775886704175_88yu18_1775886739107",
+      "strategyId": "str_ann_1775886704175_88yu18",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x102a7ed73ea67",
+      "liquidityChainTxHash": "0x4d60eacfc70c4",
+      "filledPrice": 72759.3,
+      "filledAt": "2026-04-11T05:52:19.107Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_1775754003145_6qcljm_1775885219532",
+      "strategyId": "str_1775754003145_6qcljm",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xc7a336120d2ab",
+      "liquidityChainTxHash": "0x2408917d06467",
+      "filledPrice": 71820,
+      "filledAt": "2026-04-11T05:26:59.533Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775838564328_pecq9k_1775839212817",
+      "strategyId": "str_ann_1775838564328_pecq9k",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0xbe401b8e20124",
+      "liquidityChainTxHash": "0x9425e3ee393ee",
+      "filledPrice": 72750,
+      "filledAt": "2026-04-10T16:40:12.817Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
+    {
+      "executionId": "exe_str_ann_1775838564328_pecq9k_1775839208819",
+      "strategyId": "str_ann_1775838564328_pecq9k",
+      "status": "Filled",
+      "executionChain": "opbnb",
+      "liquidityChain": "bsc",
+      "executionChainTxHash": "0x2a08dac302784",
+      "liquidityChainTxHash": "0xa4297897edf77",
+      "filledPrice": 72750,
+      "filledAt": "2026-04-10T16:40:08.819Z",
+      "settlementMode": "mock",
+      "dexExecuted": false,
+      "dexRouterAddress": null,
+      "proofRecorded": false,
+      "proofRegistryId": null,
+      "proofContractAddress": null
+    },
     {
       "executionId": "exe_str_ann_ai_1775756281170_cdocqs_1775756570285",
       "strategyId": "str_ann_ai_1775756281170_cdocqs",

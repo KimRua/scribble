@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { defaultUserSettings, marketOptions as fallbackMarkets } from '../data/mockMarket';
 import {
   analyzeChart,
+  cancelOrder,
+  closePosition,
   createAlert,
   createAnnotation,
   createAutomation,
@@ -22,7 +24,7 @@ import {
   subscribeMarketStream,
   updateAnnotation
 } from '../services/apiClient';
-import { connectInjectedWallet, getInjectedWalletSession } from '../services/walletService';
+import { connectInjectedWallet, getInjectedWalletSession, subscribeInjectedWalletSession } from '../services/walletService';
 import type {
   Annotation,
   AuditEvent,
@@ -50,6 +52,12 @@ import { HeaderBar } from './HeaderBar';
 import { MyStrategiesPanel } from './MyStrategiesPanel';
 import { NotificationDrawer } from './NotificationDrawer';
 import { RightPanel } from './RightPanel';
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat('ko-KR', {
+    maximumFractionDigits: 0
+  }).format(value);
+}
 
 export function TradingPage() {
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
@@ -83,6 +91,7 @@ export function TradingPage() {
     missing: []
   });
   const [walletSession, setWalletSession] = useState<WalletSession | null>(null);
+  const [nativeAssetPrice, setNativeAssetPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -99,6 +108,187 @@ export function TradingPage() {
   }, [selectedAnnotation, currentPrice]);
 
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (walletSession?.nativeBalance == null || !walletSession.nativeSymbol) {
+      setNativeAssetPrice(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const isBnbFamily = walletSession.nativeSymbol === 'tBNB' || walletSession.nativeSymbol === 'BNB';
+    if (!isBnbFamily) {
+      setNativeAssetPrice(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (selectedSymbol === 'BNBUSDT' && currentPrice > 0) {
+      setNativeAssetPrice(currentPrice);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void getCandles('BNBUSDT', '1h')
+      .then((nextCandles) => {
+        if (cancelled) {
+          return;
+        }
+        setNativeAssetPrice(nextCandles.at(-1)?.close ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setNativeAssetPrice(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [walletSession?.nativeBalance, walletSession?.nativeSymbol, selectedSymbol, currentPrice]);
+
+  const portfolioSnapshot = useMemo(() => {
+    const walletUsesBnbPricing =
+      walletSession?.nativeBalance != null &&
+      (walletSession.nativeSymbol === 'tBNB' || walletSession.nativeSymbol === 'BNB');
+    const actualWalletBalance =
+      walletUsesBnbPricing && nativeAssetPrice
+        ? Number((((walletSession?.nativeBalance ?? 0) * nativeAssetPrice)).toFixed(2))
+        : null;
+    const portfolioBaseUsd = walletUsesBnbPricing ? actualWalletBalance ?? 0 : defaultUserSettings.accountBalance;
+    const latestExecutionByStrategyId = new Map<string, Execution>();
+    executions.forEach((execution) => {
+      const current = latestExecutionByStrategyId.get(execution.strategyId);
+      const currentTime = current?.filledAt ? Date.parse(current.filledAt) : 0;
+      const nextTime = execution.filledAt ? Date.parse(execution.filledAt) : 0;
+      if (!current || nextTime >= currentTime) {
+        latestExecutionByStrategyId.set(execution.strategyId, execution);
+      }
+    });
+
+    const positionAnnotations = annotations.filter((annotation) => {
+      const latestExecution = latestExecutionByStrategyId.get(annotation.strategy.strategyId);
+      return (
+        annotation.status === 'Executed' &&
+        (latestExecution?.status === 'Filled' || latestExecution?.status === 'PartiallyFilled')
+      );
+    });
+    const pendingOrderAnnotations = annotations.filter(
+      (annotation) =>
+        annotation.status !== 'Executed' &&
+        annotation.status !== 'Closed' &&
+        annotation.status !== 'Invalidated' &&
+        (annotation.strategy.entryType === 'limit' || annotation.strategy.entryType === 'conditional')
+    );
+
+    const requestedAllocationFor = (annotation: Annotation) =>
+      Number((portfolioBaseUsd * annotation.strategy.positionSizeRatio).toFixed(2));
+
+    const positionsWithAllocation = positionAnnotations.map((annotation) => ({
+      annotation,
+      latestExecution: latestExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null,
+      allocatedValue: requestedAllocationFor(annotation)
+    }));
+
+    const positionsValue = positionsWithAllocation.reduce((total, item) => total + item.allocatedValue, 0);
+
+    let remainingCashForOrders = Math.max(portfolioBaseUsd - positionsValue, 0);
+    const pendingOrdersWithAllocation = [...pendingOrderAnnotations]
+      .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+      .map((annotation) => {
+        const requestedValue = requestedAllocationFor(annotation);
+        const allocatedValue = Math.min(requestedValue, remainingCashForOrders);
+        remainingCashForOrders = Math.max(remainingCashForOrders - allocatedValue, 0);
+
+        return {
+          annotation,
+          latestExecution: latestExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null,
+          allocatedValue
+        };
+      })
+      .filter((item) => item.allocatedValue > 0);
+
+    const pendingOrdersValue = pendingOrdersWithAllocation.reduce((total, item) => total + item.allocatedValue, 0);
+    const cashValue = Math.max(portfolioBaseUsd - positionsValue - pendingOrdersValue, 0);
+    const totalTrackedValue = positionsValue + pendingOrdersValue + cashValue;
+    const donutTotal = totalTrackedValue > 0 ? totalTrackedValue : 1;
+
+    return {
+      totalBalance: portfolioBaseUsd,
+      nativeBalance: walletSession?.nativeBalance ?? null,
+      nativeSymbol: walletSession?.nativeSymbol ?? null,
+      nativeAssetPrice,
+      usingWalletBalance: walletUsesBnbPricing,
+      walletValueResolved: actualWalletBalance != null,
+      positionsValue,
+      pendingOrdersValue,
+      cashValue,
+      donutTotal,
+      positionCount: positionsWithAllocation.length,
+      pendingOrderCount: pendingOrdersWithAllocation.length,
+      positions: positionsWithAllocation
+        .map((item) => ({
+          latestExecution: item.latestExecution,
+          annotationId: item.annotation.annotationId,
+          label: item.annotation.marketSymbol,
+          detail: item.annotation.strategy.bias.toUpperCase(),
+          value: item.allocatedValue
+        }))
+        .sort((left, right) => right.value - left.value)
+        .slice(0, 4),
+      pendingOrders: pendingOrdersWithAllocation
+        .map((item) => ({
+          latestExecution: item.latestExecution,
+          annotationId: item.annotation.annotationId,
+          label: item.annotation.marketSymbol,
+          detail: `${item.annotation.strategy.entryType.toUpperCase()} · ${item.annotation.status}`,
+          value: item.allocatedValue
+        }))
+        .sort((left, right) => right.value - left.value)
+        .slice(0, 4)
+    };
+  }, [annotations, executions, nativeAssetPrice, walletSession?.nativeBalance, walletSession?.nativeSymbol]);
+
+  const allocationSegments = useMemo(() => {
+    const circumference = 2 * Math.PI * 54;
+    const segments = [
+      {
+        key: 'cash',
+        label: '현금 대기',
+        value: portfolioSnapshot.cashValue,
+        color: '#d0d9e7'
+      },
+      {
+        key: 'pending',
+        label: '미체결 주문',
+        value: portfolioSnapshot.pendingOrdersValue,
+        color: '#ffb020'
+      },
+      {
+        key: 'positions',
+        label: '보유 포지션',
+        value: portfolioSnapshot.positionsValue,
+        color: '#3182f6'
+      }
+    ];
+
+    let offset = 0;
+    return segments.map((segment) => {
+      const length = (segment.value / portfolioSnapshot.donutTotal) * circumference;
+      const next = {
+        ...segment,
+        dashArray: `${length} ${circumference - length}`,
+        dashOffset: -offset
+      };
+      offset += length;
+      return next;
+    });
+  }, [portfolioSnapshot]);
 
   const loadWorkspace = async (symbol = selectedSymbol, nextTimeframe = timeframe) => {
     setLoading(true);
@@ -150,6 +340,10 @@ export function TradingPage() {
   useEffect(() => {
     void getInjectedWalletSession().then(setWalletSession).catch(() => undefined);
     void getDelegationConfig().then(setDelegationConfig).catch(() => undefined);
+
+    return subscribeInjectedWalletSession((session) => {
+      setWalletSession(session);
+    });
   }, []);
 
   useEffect(() => {
@@ -426,6 +620,65 @@ export function TradingPage() {
     }
   };
 
+  const handleCancelOrder = async (annotationId?: string) => {
+    const targetAnnotationId = annotationId ?? selectedAnnotation?.annotationId;
+    if (!targetAnnotationId) {
+      return;
+    }
+
+    const previousAnnotations = annotations;
+    const wasSelected = selectedAnnotation?.annotationId === targetAnnotationId;
+
+    try {
+      setAnnotations((prev) =>
+        prev.map((annotation) =>
+          annotation.annotationId === targetAnnotationId
+            ? {
+                ...annotation,
+                status: 'Invalidated',
+                updatedAt: new Date().toISOString()
+              }
+            : annotation
+        )
+      );
+      if (wasSelected) {
+        setSelectedAnnotationId(null);
+      }
+
+      const nextAnnotation = await cancelOrder(targetAnnotationId);
+      setAnnotations((prev) =>
+        prev.map((annotation) => (annotation.annotationId === targetAnnotationId ? nextAnnotation : annotation))
+      );
+      setNotifications(await getNotifications());
+      setAuditEvents(await getAuditLogs({ annotationId: targetAnnotationId }));
+    } catch (error) {
+      setAnnotations(previousAnnotations);
+      if (wasSelected) {
+        setSelectedAnnotationId(targetAnnotationId);
+      }
+      setErrorMessage(error instanceof Error ? error.message : '주문 취소에 실패했습니다.');
+    }
+  };
+
+  const handleClosePosition = async (input: { mode: 'market' | 'price'; closePrice?: number }) => {
+    if (!selectedAnnotation) {
+      return;
+    }
+
+    try {
+      const result = await closePosition(selectedAnnotation.annotationId, input);
+      upsertAnnotation(selectedAnnotation.annotationId, () => result.annotation);
+      setExecutions((prev) =>
+        [result.execution, ...prev.filter((execution) => execution.executionId !== result.execution.executionId)].slice(0, 12)
+      );
+      setLastExecution(result.execution);
+      setNotifications(await getNotifications());
+      setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '포지션 정리에 실패했습니다.');
+    }
+  };
+
   const handleSaveAutomation = async (config: {
     maxPositionSizeRatio: number;
     maxLeverage: number;
@@ -558,6 +811,62 @@ export function TradingPage() {
           </article>
         </div>
 
+        <article className="asset-allocation panel">
+          <div className="asset-allocation-summary">
+            <div>
+              <p className="eyebrow">Asset Allocation</p>
+              <h3>{formatUsd(portfolioSnapshot.totalBalance)} USDT</h3>
+              <p className="muted">
+                {portfolioSnapshot.usingWalletBalance && portfolioSnapshot.nativeBalance != null && portfolioSnapshot.nativeSymbol
+                  ? portfolioSnapshot.walletValueResolved
+                    ? `${portfolioSnapshot.nativeBalance.toFixed(4)} ${portfolioSnapshot.nativeSymbol} 반영`
+                    : `${portfolioSnapshot.nativeBalance.toFixed(4)} ${portfolioSnapshot.nativeSymbol} 감지 · USDT 환산 대기 중`
+                  : '지갑 미연결 시 기본 자산값 사용'}
+              </p>
+              <p className="muted">
+                보유 포지션 {portfolioSnapshot.positionCount}건 · 미체결 주문 {portfolioSnapshot.pendingOrderCount}건
+              </p>
+            </div>
+
+            <div className="allocation-donut-wrap">
+              <svg viewBox="0 0 140 140" className="allocation-donut" aria-label="현재 자산 비중">
+                <circle cx="70" cy="70" r="54" className="allocation-donut-track" />
+                {allocationSegments.map((segment) => (
+                  <circle
+                    key={segment.key}
+                    cx="70"
+                    cy="70"
+                    r="54"
+                    className="allocation-donut-segment"
+                    style={{
+                      stroke: segment.color,
+                      strokeDasharray: segment.dashArray,
+                      strokeDashoffset: segment.dashOffset
+                    }}
+                  />
+                ))}
+              </svg>
+              <div className="allocation-donut-center">
+                <strong>{formatUsd(portfolioSnapshot.positionsValue + portfolioSnapshot.pendingOrdersValue)} USDT</strong>
+                <span>배분 중</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="allocation-legend">
+            {allocationSegments.map((segment) => (
+              <div key={segment.key} className="allocation-legend-row">
+                <div className="allocation-legend-copy">
+                  <span className="allocation-legend-dot" style={{ backgroundColor: segment.color }} />
+                  <strong>{segment.label}</strong>
+                </div>
+                <span>{formatUsd(segment.value)} USDT</span>
+              </div>
+            ))}
+          </div>
+
+        </article>
+
         <article className="selection-hero panel">
           <div className="selection-hero-copy">
             <p className="eyebrow">Selected Strategy</p>
@@ -634,6 +943,8 @@ export function TradingPage() {
           onChangeText={handleTextChange}
           onChangeStrategy={handleStrategyChange}
           onActivate={activateSelectedAnnotation}
+          onCancelOrder={() => void handleCancelOrder()}
+          onClosePosition={(input) => void handleClosePosition(input)}
         />
       </main>
 
@@ -646,7 +957,11 @@ export function TradingPage() {
         </div>
         <div className="status-card">
           <p className="eyebrow">Execution</p>
-          <strong>{lastExecution ? `${lastExecution.status} · ${lastExecution.executionChain}` : '아직 실행 없음'}</strong>
+          <strong>
+            {lastExecution
+              ? `${lastExecution.actionType === 'close' ? 'Close' : 'Open'} · ${lastExecution.status} · ${lastExecution.executionChain}`
+              : '아직 실행 없음'}
+          </strong>
           {lastExecution ? (
             <div className="status-meta">
               <span className={`pill ${lastExecution.proofRecorded ? 'executed' : 'triggered'}`}>
@@ -674,7 +989,12 @@ export function TradingPage() {
         </div>
       </section>
 
-      <ExecutionHistoryPanel executions={executions} />
+      <ExecutionHistoryPanel
+        annotations={annotations}
+        executions={executions}
+        onCancelOrder={(annotationId) => void handleCancelOrder(annotationId)}
+        onSelectAnnotation={setSelectedAnnotationId}
+      />
 
       <BottomActionBar
         selectedAnnotation={selectedAnnotation}

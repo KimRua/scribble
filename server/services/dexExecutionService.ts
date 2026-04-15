@@ -49,6 +49,10 @@ export interface DexExecutionReceipt {
   executed: boolean;
   routerAddress?: string;
   txHash?: string | null;
+  txStatus?: 'pending' | 'success' | 'reverted' | 'unavailable';
+  txBlockNumber?: number | null;
+  txLogCount?: number | null;
+  txCheckedAt?: string | null;
   inputTokenAddress?: string | null;
   outputTokenAddress?: string | null;
   amountIn?: string | null;
@@ -185,7 +189,8 @@ export async function executeDexSwap(strategy: Strategy, marketSymbol: string): 
     walletAddress,
     Math.floor(Date.now() / 1000) + deadlineSeconds
   );
-  await swapTx.wait();
+  const swapReceipt = await swapTx.wait();
+  const txStatus = swapReceipt?.status === 1 ? 'success' : swapReceipt?.status === 0 ? 'reverted' : 'pending';
 
   return {
     enabled: true,
@@ -193,6 +198,10 @@ export async function executeDexSwap(strategy: Strategy, marketSymbol: string): 
     executed: true,
     routerAddress,
     txHash: swapTx.hash as string,
+    txStatus,
+    txBlockNumber: swapReceipt?.blockNumber ?? null,
+    txLogCount: swapReceipt?.logs.length ?? null,
+    txCheckedAt: new Date().toISOString(),
     inputTokenAddress: plan.inputTokenAddress,
     outputTokenAddress: plan.outputTokenAddress,
     amountIn: plan.amountInDisplay,

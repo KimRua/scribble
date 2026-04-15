@@ -1,8 +1,6 @@
 import type { Annotation, AutomationRule, Execution, ExecutionPlan, NotificationItem, Strategy, UserSettings } from '../types/domain';
 import { validateStrategy } from '../utils/strategy';
 
-const hash = () => `0x${Math.random().toString(16).slice(2).padEnd(12, '0')}`;
-
 export function createExecutionPreview(strategy: Strategy, currentPrice: number, settings: UserSettings): ExecutionPlan {
   const validation = validateStrategy(strategy, currentPrice, settings);
   return {
@@ -26,8 +24,10 @@ export function executeStrategy(strategy: Strategy): Execution {
     status: 'Filled',
     executionChain: 'opbnb',
     liquidityChain: 'bsc',
-    executionChainTxHash: hash(),
-    liquidityChainTxHash: hash(),
+    executionChainTxHash: null,
+    liquidityChainTxHash: null,
+    executionChainTxHashValid: true,
+    liquidityChainTxHashValid: true,
     filledPrice: strategy.entryPrice,
     filledAt: new Date().toISOString()
   };
