@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Annotation, Candle, ChartAnchor, DrawingMode } from '../types/domain';
+import type { Annotation, Candle, ChartAnchor, DrawingMode, NewsInsight } from '../types/domain';
 import { annotationBadgeTone, formatPrice } from '../utils/strategy';
 
 interface DraftComposer {
@@ -12,13 +12,16 @@ interface ChartCanvasProps {
   marketData: Candle[];
   annotations: Annotation[];
   selectedAnnotationId: string | null;
+  selectedNewsInsightId: string | null;
   timeframe: string;
   drawingMode: DrawingMode;
   currentPrice: number;
   annotationCreationLocked: boolean;
   aiRequestPending: boolean;
+  newsInsights: NewsInsight[];
   onChangeMode: (mode: DrawingMode) => void;
   onSelectAnnotation: (annotationId: string | null) => void;
+  onSelectNewsInsight: (insightId: string | null) => void;
   onCreateAnnotation: (text: string, anchor: ChartAnchor) => void;
   onAddLineToSelected: (price: number) => void;
   onAddBoxToSelected: (priceFrom: number, priceTo: number) => void;
@@ -97,6 +100,21 @@ function getAnnotationBubbleBox(text: string, anchorX: number, anchorY: number, 
     height,
     x: clamp(anchorX + 8, 8, maxX - width),
     y: clamp(anchorY - height - 32, 8, HEIGHT - height - 8)
+  };
+}
+
+function getNewsInsightBubbleBox(insight: NewsInsight, anchorX: number, anchorY: number) {
+  const maxX = WIDTH - PADDING - PRICE_AXIS_WIDTH - 8;
+  const textLength = insight.headline.length + insight.summary.length + insight.aiComment.length;
+  const estimatedLines = Math.max(6, Math.ceil(textLength / 34));
+  const width = textLength > 220 ? 340 : 310;
+  const height = clamp(136 + estimatedLines * 16, 176, 280);
+
+  return {
+    width,
+    height,
+    x: clamp(anchorX + 10, 8, maxX - width),
+    y: clamp(anchorY - height - 12, 8, HEIGHT - height - 8)
   };
 }
 
@@ -189,13 +207,16 @@ export function ChartCanvas({
   marketData,
   annotations,
   selectedAnnotationId,
+  selectedNewsInsightId,
   timeframe,
   drawingMode,
   currentPrice,
   annotationCreationLocked,
   aiRequestPending,
+  newsInsights,
   onChangeMode,
   onSelectAnnotation,
+  onSelectNewsInsight,
   onCreateAnnotation,
   onAddLineToSelected,
   onAddBoxToSelected,
@@ -210,6 +231,7 @@ export function ChartCanvas({
   const [boxStartPrice, setBoxStartPrice] = useState<number | null>(null);
   const [segmentStartAnchor, setSegmentStartAnchor] = useState<ChartAnchor | null>(null);
   const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
+  const [hoveredInsightId, setHoveredInsightId] = useState<string | null>(null);
 
   const rawExtent = useMemo(() => priceExtent(marketData, currentPrice), [marketData, currentPrice]);
   const priceScale = useMemo(
@@ -253,6 +275,11 @@ export function ChartCanvas({
     }));
   }, [marketData, timeframe, xStep]);
 
+  const candleIndexByTime = useMemo(
+    () => new Map(marketData.map((candle, index) => [candle.openTime, index])),
+    [marketData]
+  );
+
   useEffect(() => {
     if (drawingMode !== 'box' && boxStartPrice !== null) {
       setBoxStartPrice(null);
@@ -274,6 +301,40 @@ export function ChartCanvas({
   const currentPriceY = yForPrice(currentPrice);
 
   const xForIndex = (index: number) => PADDING + index * xStep;
+
+  const resolveTimeIndex = (time: string, fallbackIndex: number) => {
+    const exact = candleIndexByTime.get(time);
+    if (typeof exact === 'number') {
+      return exact;
+    }
+
+    const targetTime = new Date(time).getTime();
+    if (Number.isNaN(targetTime) || marketData.length === 0) {
+      return clamp(fallbackIndex, 0, Math.max(marketData.length - 1, 0));
+    }
+
+    let closestIndex = clamp(fallbackIndex, 0, Math.max(marketData.length - 1, 0));
+    let smallestGap = Number.POSITIVE_INFINITY;
+
+    marketData.forEach((candle, index) => {
+      const candleTime = new Date(candle.openTime).getTime();
+      if (Number.isNaN(candleTime)) {
+        return;
+      }
+
+      const gap = Math.abs(candleTime - targetTime);
+      if (gap < smallestGap) {
+        smallestGap = gap;
+        closestIndex = index;
+      }
+    });
+
+    return closestIndex;
+  };
+
+  const resolveAnchorIndex = (anchor: ChartAnchor) => resolveTimeIndex(anchor.time, anchor.index);
+
+  const resolveInsightIndex = (insight: NewsInsight) => resolveTimeIndex(insight.time, insight.candleIndex);
 
   const priceForClientY = (clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -355,7 +416,8 @@ export function ChartCanvas({
 
   const hoveredAnnotationBubble = hoveredAnnotation
     ? (() => {
-        const anchorX = xForIndex(hoveredAnnotation.chartAnchor.index);
+        const resolvedIndex = resolveAnchorIndex(hoveredAnnotation.chartAnchor);
+        const anchorX = xForIndex(resolvedIndex);
         const anchorY = yForPrice(hoveredAnnotation.chartAnchor.price);
         const hoverBox = getAnnotationBubbleBox(hoveredAnnotation.text, anchorX, anchorY, 'hover');
 
@@ -486,10 +548,43 @@ export function ChartCanvas({
               {formatPrice(currentPrice)}
             </text>
           </g>
+          {newsInsights.map((insight) => {
+            const ix = resolveInsightIndex(insight);
+            const candle = marketData[ix];
+            if (!candle) return null;
+            const markerX = xForIndex(ix);
+            const markerY = insight.direction === 'spike' ? yForPrice(candle.high) - 18 : yForPrice(candle.low) + 18;
+            const isHovered = hoveredInsightId === insight.insightId;
+            const isSelected = selectedNewsInsightId === insight.insightId;
+
+            return (
+              <g
+                key={insight.insightId}
+                className={`news-insight-marker ${insight.direction} ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectNewsInsight(insight.insightId);
+                }}
+                onMouseEnter={() => setHoveredInsightId(insight.insightId)}
+                onMouseLeave={() => setHoveredInsightId((current) => (current === insight.insightId ? null : current))}
+              >
+                <line
+                  x1={markerX}
+                  x2={markerX}
+                  y1={insight.direction === 'spike' ? markerY + 10 : markerY - 10}
+                  y2={insight.direction === 'spike' ? markerY + 2 : markerY - 2}
+                  className="news-insight-stem"
+                />
+                <circle cx={markerX} cy={markerY} r={isHovered || isSelected ? 8 : 6} className="news-insight-dot" />
+                <text x={markerX} y={markerY + 4} textAnchor="middle" className="news-insight-icon">📰</text>
+              </g>
+            );
+          })}
           {annotations.map((annotation) => {
             const selected = annotation.annotationId === selectedAnnotationId;
             const hovered = annotation.annotationId === hoveredAnnotationId && !selected;
-            const anchorX = xForIndex(annotation.chartAnchor.index);
+            const anchorIndex = resolveAnchorIndex(annotation.chartAnchor);
+            const anchorX = xForIndex(anchorIndex);
             const anchorY = yForPrice(annotation.chartAnchor.price);
             return (
               <g
@@ -535,12 +630,14 @@ export function ChartCanvas({
                   }
 
                   if (object.type === 'segment') {
+                    const startIndex = resolveAnchorIndex(object.startAnchor);
+                    const endIndex = resolveAnchorIndex(object.endAnchor);
                     return (
                       <line
                         key={object.id}
-                        x1={xForIndex(object.startAnchor.index)}
+                        x1={xForIndex(startIndex)}
                         y1={yForPrice(object.startAnchor.price)}
-                        x2={xForIndex(object.endAnchor.index)}
+                        x2={xForIndex(endIndex)}
                         y2={yForPrice(object.endAnchor.price)}
                         className={`annotation-line ${object.role} ${selected ? 'selected' : ''}`}
                       />
@@ -580,6 +677,37 @@ export function ChartCanvas({
               </div>
             </foreignObject>
           )}
+          {/* ─── News Insight hover bubble ─── */}
+          {newsInsights
+            .filter((insight) => insight.insightId === hoveredInsightId)
+            .map((insight) => {
+              const ix = resolveInsightIndex(insight);
+              const candle = marketData[ix];
+              if (!candle) return null;
+              const markerX = xForIndex(ix);
+              const markerY = insight.direction === 'spike' ? yForPrice(candle.high) - 18 : yForPrice(candle.low) + 18;
+              const bubbleBox = getNewsInsightBubbleBox(insight, markerX, markerY);
+              return (
+                <foreignObject
+                  key={`bubble-${insight.insightId}`}
+                  x={bubbleBox.x}
+                  y={bubbleBox.y}
+                  width={bubbleBox.width}
+                  height={bubbleBox.height}
+                  pointerEvents="none"
+                >
+                  <div className="news-insight-bubble">
+                    <div className="news-insight-bubble-header">
+                      <span className={`news-sentiment-pill ${insight.sentiment}`}>{insight.direction === 'spike' ? '▲' : '▼'} {Math.abs(insight.priceChangePercent).toFixed(1)}%</span>
+                      <span className="news-insight-time">{formatHoverTime(insight.time)}</span>
+                    </div>
+                    <p className="news-insight-headline">{insight.headline}</p>
+                    <p className="news-insight-summary">{insight.summary}</p>
+                    <p className="news-insight-comment">💡 {insight.aiComment}</p>
+                  </div>
+                </foreignObject>
+              );
+            })}
           {timeTicks.map((tick) => (
             <g key={`time-tick-${tick.index}`}>
               <line x1={tick.x} x2={tick.x} y1={plotBottom + 8} y2={plotBottom + 14} className="time-axis-tick" />

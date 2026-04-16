@@ -39,13 +39,17 @@ export function ExecutionHistoryPanel({
   onSelectAnnotation
 }: ExecutionHistoryPanelProps) {
   const [view, setView] = useState<'executions' | 'positions' | 'orders'>('executions');
-  const [filter, setFilter] = useState<'all' | 'dex' | 'mock' | 'proof'>('all');
+  const [filter, setFilter] = useState<'all' | 'testnet' | 'dex' | 'mock' | 'proof'>('all');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'proof_first'>('newest');
 
   const visibleExecutions = useMemo(() => {
     const filtered = executions.filter((execution) => {
       if (filter === 'dex') {
         return execution.settlementMode === 'dex';
+      }
+
+      if (filter === 'testnet') {
+        return execution.settlementMode === 'perp_dex';
       }
 
       if (filter === 'mock') {
@@ -89,20 +93,36 @@ export function ExecutionHistoryPanel({
     return latest;
   }, [executions]);
 
+  const latestFilledOpenExecutionByStrategyId = useMemo(() => {
+    const latest = new Map<string, Execution>();
+    executions
+      .filter(
+        (execution) =>
+          execution.actionType !== 'close' &&
+          (execution.status === 'Filled' || execution.status === 'PartiallyFilled')
+      )
+      .forEach((execution) => {
+        const current = latest.get(execution.strategyId);
+        const currentTime = current?.filledAt ? Date.parse(current.filledAt) : 0;
+        const nextTime = execution.filledAt ? Date.parse(execution.filledAt) : 0;
+        if (!current || nextTime >= currentTime) {
+          latest.set(execution.strategyId, execution);
+        }
+      });
+    return latest;
+  }, [executions]);
+
   const visiblePositions = useMemo(() => {
     return annotations
       .filter((annotation) => {
-        const latestExecution = latestExecutionByStrategyId.get(annotation.strategy.strategyId);
-        return (
-          annotation.status === 'Executed' &&
-          (latestExecution?.status === 'Filled' || latestExecution?.status === 'PartiallyFilled')
-        );
+        const latestExecution = latestFilledOpenExecutionByStrategyId.get(annotation.strategy.strategyId);
+        return annotation.status === 'Executed' && Boolean(latestExecution);
       })
       .map((annotation) => ({
         annotation,
-        latestExecution: latestExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null
+        latestExecution: latestFilledOpenExecutionByStrategyId.get(annotation.strategy.strategyId) ?? null
       }));
-  }, [annotations, latestExecutionByStrategyId]);
+  }, [annotations, latestFilledOpenExecutionByStrategyId]);
 
   const visiblePendingOrders = useMemo(() => {
     return annotations
@@ -155,6 +175,7 @@ export function ExecutionHistoryPanel({
           <div className="history-filter-group">
           {[
             { id: 'all', label: 'All' },
+            { id: 'testnet', label: 'Hyperliquid' },
             { id: 'dex', label: 'DEX' },
             { id: 'mock', label: 'Mock' },
             { id: 'proof', label: 'Proof' }
@@ -206,8 +227,12 @@ export function ExecutionHistoryPanel({
                 <strong>
                   {execution.actionType === 'close' ? 'Close' : 'Open'} · {execution.status} · {execution.executionChain}
                 </strong>
-                <span className={`pill ${execution.proofRecorded ? 'executed' : 'triggered'}`}>
-                  {execution.proofRecorded ? 'Proof recorded' : 'Proof pending'}
+                <span className={`pill ${execution.settlementMode === 'perp_dex' || execution.proofRecorded ? 'executed' : 'triggered'}`}>
+                  {execution.settlementMode === 'perp_dex'
+                    ? 'Hyperliquid live'
+                    : execution.proofRecorded
+                      ? 'Proof recorded'
+                      : 'Proof pending'}
                 </span>
               </div>
               <div className="history-col">
@@ -224,6 +249,9 @@ export function ExecutionHistoryPanel({
                 {execution.proofRegistryId ? (
                   <span className="history-proof-id">{execution.proofRegistryId.slice(0, 16)}...</span>
                 ) : null}
+                {execution.externalOrderId ? (
+                  <span className="history-proof-id">Order #{execution.externalOrderId}</span>
+                ) : null}
               </div>
               <div className="history-col history-col-links">
                 <span className="history-mobile-label">Links</span>
@@ -232,6 +260,8 @@ export function ExecutionHistoryPanel({
                     <a href={getOpbnbTxUrl(execution.executionChainTxHash)} target="_blank" rel="noreferrer">
                       Execution tx
                     </a>
+                  ) : execution.externalOrderId ? (
+                    <span className="muted">Venue order #{execution.externalOrderId}</span>
                   ) : (
                     <span className="muted">{execution.txHashWarning ? 'Invalid Tx hidden' : 'Tx unavailable'}</span>
                   )}

@@ -7,6 +7,8 @@ interface ExecutionModalProps {
   preview: ExecutionPlan | null;
   validation: StrategyValidation | null;
   mode: 'execute' | 'conditional';
+  executionConfigured: boolean;
+  executionVenueLabel: string;
   onchainConfigured: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -18,6 +20,8 @@ export function ExecutionModal({
   preview,
   validation,
   mode,
+  executionConfigured,
+  executionVenueLabel,
   onchainConfigured,
   onClose,
   onConfirm
@@ -25,6 +29,8 @@ export function ExecutionModal({
   if (!open || !selectedAnnotation || !preview || !validation) {
     return null;
   }
+
+  const approvalDisabled = !preview.guardrailCheck.passed || !executionConfigured;
 
   return (
     <div className="modal-backdrop">
@@ -72,21 +78,32 @@ export function ExecutionModal({
               : preview.guardrailCheck.violations.join(' / ')}
           </p>
         </div>
+        {!executionConfigured ? (
+          <div className="warning-box unsupported-feature-box">
+            <strong>Execution unavailable</strong>
+            <p>
+              실행 가능한 거래 경로가 없습니다. 지갑 연결 또는 DEX 서버 설정이 필요합니다.
+            </p>
+          </div>
+        ) : null}
         <div className="info-banner">
-          <strong>Onchain Proof</strong>
+          <strong>Execution Venue</strong>
           <p>
             {mode === 'execute'
-              ? onchainConfigured
-                ? 'Approval will also attempt to record execution proof on opBNB.'
-                : 'opBNB proof is not configured, so only the in-app audit log will be recorded.'
-              : 'For conditional orders, proof recording is decided at fill time.'}
+              ? executionConfigured
+                ? `${executionVenueLabel} 경로로 ${selectedAnnotation.strategy.bias.toUpperCase()} 방향 주문을 실행합니다.`
+                : '실행 경로가 아직 준비되지 않았습니다.'
+              : `${executionVenueLabel} 경로로 ${formatPrice(selectedAnnotation.strategy.entryPrice)} 부근 조건 주문을 시도합니다.`}
           </p>
+          {mode === 'execute' && executionConfigured && !onchainConfigured ? (
+            <p>opBNB proof recording은 선택 기능이며 현재 주문 실행과는 분리되어 있습니다.</p>
+          ) : null}
         </div>
         <div className="modal-actions">
           <button className="secondary" onClick={onClose}>
             Cancel
           </button>
-          <button disabled={!preview.guardrailCheck.passed} onClick={onConfirm}>
+          <button disabled={approvalDisabled} onClick={onConfirm}>
             Final approve
           </button>
         </div>

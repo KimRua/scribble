@@ -147,8 +147,8 @@ export interface AuditEvent {
 }
 
 export interface ExecutionPlan {
-  executionChain: 'opbnb';
-  liquidityChain: 'bsc';
+  executionChain: string;
+  liquidityChain: string;
   entryPrice: number;
   positionSize: number;
   estimatedSlippage: number;
@@ -166,8 +166,8 @@ export interface Execution {
   actionType?: 'open' | 'close';
   closeMode?: 'market' | 'price' | null;
   status: OrderStatus;
-  executionChain: 'opbnb';
-  liquidityChain: 'bsc';
+  executionChain: string;
+  liquidityChain: string;
   executionChainTxHash: string | null;
   liquidityChainTxHash: string | null;
   executionChainTxStatus?: 'pending' | 'success' | 'reverted' | 'unavailable';
@@ -192,7 +192,7 @@ export interface Execution {
   executionChainTxHashValid?: boolean;
   liquidityChainTxHashValid?: boolean;
   txHashWarning?: string | null;
-  settlementMode?: 'mock' | 'dex';
+  settlementMode?: 'mock' | 'dex' | 'perp_dex';
   dexExecuted?: boolean;
   executionTxState?: 'not_submitted' | 'receipt_observed' | 'submitted_receipt_unavailable';
   liquidityReceiptEvidence?: 'mock_fallback' | 'receipt_observed' | 'receipt_observed_hash_hidden' | 'receipt_not_observed';
@@ -202,6 +202,11 @@ export interface Execution {
   dexAmountIn?: string | null;
   dexExpectedAmountOut?: string | null;
   dexMinimumAmountOut?: string | null;
+  externalVenue?: 'hyperliquid_testnet';
+  externalOrderId?: string | null;
+  externalClientOrderId?: string | null;
+  executedQuantity?: string | null;
+  leverageUsed?: number | null;
   proofAttempted?: boolean;
   proofRetryCount?: number;
   proofErrorMessage?: string | null;
@@ -269,6 +274,29 @@ export interface MarketOption {
   baseAsset: string;
   quoteAsset: string;
   status: 'active' | 'halted';
+}
+
+export interface NewsInsight {
+  insightId: string;
+  candleIndex: number;
+  time: string;
+  priceChangePercent: number;
+  direction: 'spike' | 'crash';
+  headline: string;
+  summary: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  aiComment: string;
+}
+
+export interface NewsInsightCacheEntry {
+  cacheKey: string;
+  ownerKey: string;
+  marketSymbol: string;
+  timeframe: string;
+  threshold: number;
+  lastAnalyzedOpenTime: string | null;
+  updatedAt: string;
+  insights: NewsInsight[];
 }
 
 export interface ParserResult {

@@ -8,6 +8,7 @@ import type {
   Execution,
   ExecutionPlan,
   MarketOption,
+  NewsInsight,
   NotificationItem,
   StrategyValidation
 } from '../types/domain';
@@ -109,6 +110,7 @@ export async function getHealth() {
     marketDataProvider?: 'binance' | 'mock';
     onchainConfigured?: boolean;
     dexConfigured?: boolean;
+    hyperliquidConfigured?: boolean;
     delegatedAutomationConfigured?: boolean;
     delegatedExecutorAddress?: string | null;
     delegationVaultAddress?: string | null;
@@ -240,7 +242,7 @@ function normalizeExecution(execution: {
   execution_chain_tx_hash_valid?: boolean;
   liquidity_chain_tx_hash_valid?: boolean;
   tx_hash_warning?: string | null;
-  settlement_mode?: 'mock' | 'dex';
+  settlement_mode?: Execution['settlementMode'];
   dex_executed?: boolean;
   execution_tx_state?: Execution['executionTxState'];
   liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
@@ -250,6 +252,11 @@ function normalizeExecution(execution: {
   dex_amount_in?: string | null;
   dex_expected_amount_out?: string | null;
   dex_minimum_amount_out?: string | null;
+  external_venue?: Execution['externalVenue'];
+  external_order_id?: string | null;
+  external_client_order_id?: string | null;
+  executed_quantity?: string | null;
+  leverage_used?: number | null;
   proof_attempted?: boolean;
   proof_retry_count?: number;
   proof_error_message?: string | null;
@@ -295,6 +302,11 @@ function normalizeExecution(execution: {
     dexAmountIn: execution.dex_amount_in ?? null,
     dexExpectedAmountOut: execution.dex_expected_amount_out ?? null,
     dexMinimumAmountOut: execution.dex_minimum_amount_out ?? null,
+    externalVenue: execution.external_venue,
+    externalOrderId: execution.external_order_id ?? null,
+    externalClientOrderId: execution.external_client_order_id ?? null,
+    executedQuantity: execution.executed_quantity ?? null,
+    leverageUsed: execution.leverage_used ?? null,
     proofAttempted: execution.proof_attempted,
     proofRetryCount: execution.proof_retry_count,
     proofErrorMessage: execution.proof_error_message ?? null,
@@ -337,7 +349,7 @@ export async function getExecutions(symbol?: string, timeframe?: string) {
       execution_chain_tx_hash_valid?: boolean;
       liquidity_chain_tx_hash_valid?: boolean;
       tx_hash_warning?: string | null;
-      settlement_mode?: 'mock' | 'dex';
+      settlement_mode?: Execution['settlementMode'];
       dex_executed?: boolean;
       execution_tx_state?: Execution['executionTxState'];
       liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
@@ -347,6 +359,11 @@ export async function getExecutions(symbol?: string, timeframe?: string) {
       dex_amount_in?: string | null;
       dex_expected_amount_out?: string | null;
       dex_minimum_amount_out?: string | null;
+      external_venue?: Execution['externalVenue'];
+      external_order_id?: string | null;
+      external_client_order_id?: string | null;
+      executed_quantity?: string | null;
+      leverage_used?: number | null;
       proof_attempted?: boolean;
       proof_retry_count?: number;
       proof_error_message?: string | null;
@@ -427,6 +444,18 @@ export async function analyzeChart(input: { marketSymbol: string; timeframe: str
   return data;
 }
 
+export async function fetchNewsInsights(input: { marketSymbol: string; timeframe: string; threshold?: number }) {
+  const data = await request<{ insights: NewsInsight[]; provider: 'openai' | 'fallback' }>('/api/v1/ai/news-insights', {
+    method: 'POST',
+    body: JSON.stringify({
+      market_symbol: input.marketSymbol,
+      timeframe: input.timeframe,
+      ...(input.threshold !== undefined ? { threshold: input.threshold } : {})
+    })
+  });
+  return data;
+}
+
 export async function validateStrategyApi(strategyId: string) {
   const data = await request<{ is_valid: boolean; violations: string[]; risk_summary: { max_loss_ratio: number; max_loss_amount: number; risk_reward_ratio: number; estimated_liquidation_risk: 'low' | 'medium' | 'high'; }; }>(`/api/v1/strategies/${strategyId}/validate`, { method: 'POST' });
   const validation: StrategyValidation = {
@@ -443,7 +472,7 @@ export async function validateStrategyApi(strategyId: string) {
 }
 
 export async function previewExecution(strategyId: string) {
-  const data = await request<{ execution_plan: { execution_chain: 'opbnb'; liquidity_chain: 'bsc'; entry_price: string; position_size: string; estimated_slippage: string; estimated_fee: string; guardrail_check: { passed: boolean; violations: string[]; }; }; }>(`/api/v1/executions/preview`, {
+  const data = await request<{ execution_plan: { execution_chain: string; liquidity_chain: string; entry_price: string; position_size: string; estimated_slippage: string; estimated_fee: string; guardrail_check: { passed: boolean; violations: string[]; }; }; }>(`/api/v1/executions/preview`, {
     method: 'POST',
     body: JSON.stringify({ strategy_id: strategyId })
   });
@@ -465,6 +494,8 @@ export async function createExecution(strategyId: string) {
     action_type?: Execution['actionType'];
     close_mode?: Execution['closeMode'];
     status: Execution['status'];
+    execution_chain?: Execution['executionChain'];
+    liquidity_chain?: Execution['liquidityChain'];
     execution_chain_tx_hash: string | null;
     liquidity_chain_tx_hash: string | null;
     execution_chain_tx_status?: Execution['executionChainTxStatus'];
@@ -482,7 +513,7 @@ export async function createExecution(strategyId: string) {
     execution_chain_tx_hash_valid?: boolean;
     liquidity_chain_tx_hash_valid?: boolean;
     tx_hash_warning?: string | null;
-    settlement_mode?: 'mock' | 'dex';
+    settlement_mode?: Execution['settlementMode'];
     dex_executed?: boolean;
     execution_tx_state?: Execution['executionTxState'];
     liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
@@ -492,6 +523,11 @@ export async function createExecution(strategyId: string) {
     dex_amount_in?: string | null;
     dex_expected_amount_out?: string | null;
     dex_minimum_amount_out?: string | null;
+    external_venue?: Execution['externalVenue'];
+    external_order_id?: string | null;
+    external_client_order_id?: string | null;
+    executed_quantity?: string | null;
+    leverage_used?: number | null;
     proof_attempted?: boolean;
     proof_retry_count?: number;
     proof_error_message?: string | null;
@@ -506,11 +542,121 @@ export async function createExecution(strategyId: string) {
   return normalizeExecution({
     ...data,
     strategy_id: strategyId,
-    execution_chain: 'opbnb',
-    liquidity_chain: 'bsc',
+    execution_chain: data.execution_chain ?? 'opbnb',
+    liquidity_chain: data.liquidity_chain ?? 'bsc',
     filled_price: null,
     filled_at: null
   });
+}
+
+export async function recordDirectExecution(
+  strategyId: string,
+  input: {
+    walletAddress: string;
+    entryType: 'market' | 'limit' | 'conditional';
+    receipt: {
+      executionChain: Execution['executionChain'];
+      liquidityChain: Execution['liquidityChain'];
+      settlementMode: NonNullable<Execution['settlementMode']>;
+      externalVenue: NonNullable<Execution['externalVenue']>;
+      externalOrderId: string | null;
+      externalClientOrderId: string | null;
+      leverageUsed: number;
+      executedQuantity: string;
+      side: 'BUY' | 'SELL';
+      reduceOnly: boolean;
+      status: Execution['status'];
+      filledPrice: number | null;
+      filledAt: string;
+    };
+  }
+) {
+  const data = await request<{
+    annotation: Annotation;
+    execution: {
+      execution_id: string;
+      action_type?: Execution['actionType'];
+      close_mode?: Execution['closeMode'];
+      status: Execution['status'];
+      execution_chain?: Execution['executionChain'];
+      liquidity_chain?: Execution['liquidityChain'];
+      execution_chain_tx_hash: string | null;
+      liquidity_chain_tx_hash: string | null;
+      execution_chain_tx_status?: Execution['executionChainTxStatus'];
+      liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+      execution_chain_block_number?: number | null;
+      liquidity_chain_block_number?: number | null;
+      execution_chain_log_count?: number | null;
+      liquidity_chain_log_count?: number | null;
+      liquidity_transfer_count?: number | null;
+      liquidity_swap_event_count?: number | null;
+      liquidity_touched_contract_count?: number | null;
+      liquidity_settlement_state?: Execution['liquiditySettlementState'];
+      execution_chain_checked_at?: string | null;
+      liquidity_chain_checked_at?: string | null;
+      execution_chain_tx_hash_valid?: boolean;
+      liquidity_chain_tx_hash_valid?: boolean;
+      tx_hash_warning?: string | null;
+      settlement_mode?: Execution['settlementMode'];
+      dex_executed?: boolean;
+      execution_tx_state?: Execution['executionTxState'];
+      liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
+      dex_router_address: string | null;
+      dex_input_token_address?: string | null;
+      dex_output_token_address?: string | null;
+      dex_amount_in?: string | null;
+      dex_expected_amount_out?: string | null;
+      dex_minimum_amount_out?: string | null;
+      external_venue?: Execution['externalVenue'];
+      external_order_id?: string | null;
+      external_client_order_id?: string | null;
+      executed_quantity?: string | null;
+      leverage_used?: number | null;
+      proof_attempted?: boolean;
+      proof_retry_count?: number;
+      proof_error_message?: string | null;
+      proof_recorded: boolean;
+      proof_state?: Execution['proofState'];
+      proof_registry_id: string | null;
+      proof_contract_address: string | null;
+      filled_price?: number | null;
+      filled_at?: string | null;
+    };
+  }>(`/api/v1/executions/direct`, {
+    method: 'POST',
+    body: JSON.stringify({
+      strategy_id: strategyId,
+      wallet_address: input.walletAddress,
+      entry_type: input.entryType,
+      receipt: {
+        execution_chain: input.receipt.executionChain,
+        liquidity_chain: input.receipt.liquidityChain,
+        settlement_mode: input.receipt.settlementMode,
+        external_venue: input.receipt.externalVenue,
+        external_order_id: input.receipt.externalOrderId,
+        external_client_order_id: input.receipt.externalClientOrderId,
+        leverage_used: input.receipt.leverageUsed,
+        executed_quantity: input.receipt.executedQuantity,
+        side: input.receipt.side,
+        reduce_only: input.receipt.reduceOnly,
+        status: input.receipt.status,
+        filled_price: input.receipt.filledPrice,
+        filled_at: input.receipt.filledAt
+      }
+    })
+  });
+
+  return {
+    annotation: data.annotation,
+    execution: normalizeExecution({
+      ...data.execution,
+      strategy_id: strategyId,
+      execution_chain: data.execution.execution_chain ?? input.receipt.executionChain,
+      liquidity_chain: data.execution.liquidity_chain ?? input.receipt.liquidityChain,
+      filled_price: data.execution.filled_price ?? input.receipt.filledPrice,
+      filled_at: data.execution.filled_at ?? input.receipt.filledAt
+    })
+  };
 }
 
 export async function cancelOrder(annotationId: string) {
@@ -548,7 +694,7 @@ export async function closePosition(annotationId: string, input: { mode: 'market
       execution_chain_tx_hash_valid?: boolean;
       liquidity_chain_tx_hash_valid?: boolean;
       tx_hash_warning?: string | null;
-      settlement_mode?: 'mock' | 'dex';
+      settlement_mode?: Execution['settlementMode'];
       dex_executed?: boolean;
       execution_tx_state?: Execution['executionTxState'];
       liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
@@ -558,6 +704,11 @@ export async function closePosition(annotationId: string, input: { mode: 'market
       dex_amount_in?: string | null;
       dex_expected_amount_out?: string | null;
       dex_minimum_amount_out?: string | null;
+      external_venue?: Execution['externalVenue'];
+      external_order_id?: string | null;
+      external_client_order_id?: string | null;
+      executed_quantity?: string | null;
+      leverage_used?: number | null;
       proof_attempted?: boolean;
       proof_retry_count?: number;
       proof_error_message?: string | null;
@@ -573,6 +724,109 @@ export async function closePosition(annotationId: string, input: { mode: 'market
     body: JSON.stringify({
       mode: input.mode,
       close_price: input.mode === 'price' ? input.closePrice : undefined
+    })
+  });
+
+  return {
+    annotation: data.annotation,
+    execution: normalizeExecution(data.execution)
+  };
+}
+
+export async function recordDirectClosePosition(
+  annotationId: string,
+  input: {
+    mode: 'market' | 'price';
+    walletAddress: string;
+    receipt: {
+      executionChain: Execution['executionChain'];
+      liquidityChain: Execution['liquidityChain'];
+      settlementMode: NonNullable<Execution['settlementMode']>;
+      externalVenue: NonNullable<Execution['externalVenue']>;
+      externalOrderId: string | null;
+      externalClientOrderId: string | null;
+      leverageUsed: number;
+      executedQuantity: string;
+      side: 'BUY' | 'SELL';
+      reduceOnly: boolean;
+      status: Execution['status'];
+      filledPrice: number | null;
+      filledAt: string;
+    };
+  }
+) {
+  const data = await request<{
+    annotation: Annotation;
+    execution: {
+      execution_id: string;
+      strategy_id: string;
+      action_type?: Execution['actionType'];
+      close_mode?: Execution['closeMode'];
+      status: Execution['status'];
+      execution_chain: Execution['executionChain'];
+      liquidity_chain: Execution['liquidityChain'];
+      execution_chain_tx_hash: string | null;
+      liquidity_chain_tx_hash: string | null;
+      execution_chain_tx_status?: Execution['executionChainTxStatus'];
+      liquidity_chain_tx_status?: Execution['liquidityChainTxStatus'];
+      execution_chain_block_number?: number | null;
+      liquidity_chain_block_number?: number | null;
+      execution_chain_log_count?: number | null;
+      liquidity_chain_log_count?: number | null;
+      liquidity_transfer_count?: number | null;
+      liquidity_swap_event_count?: number | null;
+      liquidity_touched_contract_count?: number | null;
+      liquidity_settlement_state?: Execution['liquiditySettlementState'];
+      execution_chain_checked_at?: string | null;
+      liquidity_chain_checked_at?: string | null;
+      execution_chain_tx_hash_valid?: boolean;
+      liquidity_chain_tx_hash_valid?: boolean;
+      tx_hash_warning?: string | null;
+      settlement_mode?: Execution['settlementMode'];
+      dex_executed?: boolean;
+      execution_tx_state?: Execution['executionTxState'];
+      liquidity_receipt_evidence?: Execution['liquidityReceiptEvidence'];
+      dex_router_address?: string | null;
+      dex_input_token_address?: string | null;
+      dex_output_token_address?: string | null;
+      dex_amount_in?: string | null;
+      dex_expected_amount_out?: string | null;
+      dex_minimum_amount_out?: string | null;
+      external_venue?: Execution['externalVenue'];
+      external_order_id?: string | null;
+      external_client_order_id?: string | null;
+      executed_quantity?: string | null;
+      leverage_used?: number | null;
+      proof_attempted?: boolean;
+      proof_retry_count?: number;
+      proof_error_message?: string | null;
+      proof_recorded?: boolean;
+      proof_state?: Execution['proofState'];
+      proof_registry_id?: string | null;
+      proof_contract_address?: string | null;
+      filled_price?: number | null;
+      filled_at?: string | null;
+    };
+  }>(`/api/v1/annotations/${annotationId}/close-position/direct`, {
+    method: 'POST',
+    body: JSON.stringify({
+      mode: input.mode,
+      wallet_address: input.walletAddress,
+      receipt: {
+        execution_chain: input.receipt.executionChain,
+        liquidity_chain: input.receipt.liquidityChain,
+        settlement_mode: input.receipt.settlementMode,
+        external_venue: input.receipt.externalVenue,
+        external_order_id: input.receipt.externalOrderId,
+        external_client_order_id: input.receipt.externalClientOrderId,
+        leverage_used: input.receipt.leverageUsed,
+        executed_quantity: input.receipt.executedQuantity,
+        side: input.receipt.side,
+        reduce_only: input.receipt.reduceOnly,
+        status: input.receipt.status,
+        filled_price: input.receipt.filledPrice,
+        filled_at: input.receipt.filledAt
+      }
     })
   });
 

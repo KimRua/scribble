@@ -1,5 +1,5 @@
 import { parseAnnotationText } from '../../src/services/parserService';
-import type { Annotation, Candle, UserSettings } from '../../src/types/domain';
+import type { Annotation, Candle, NewsInsight, UserSettings } from '../../src/types/domain';
 import { generateAiAnnotation } from '../../src/services/aiService';
 
 type RawLlmStrategy = {
@@ -245,6 +245,158 @@ export async function parseAnnotationWithLlm(params: ParseParams) {
         annotationId: params.annotationId
       }),
       provider: 'fallback' as const
+    };
+  }
+}
+
+/* ─── News Insight helpers ─── */
+
+interface NewsInsightParams {
+  marketSymbol: string;
+  timeframe: string;
+  candles: Candle[];
+  threshold?: number;
+  indexOffset?: number;
+}
+
+interface RawNewsInsight {
+  candle_index: number;
+  price_change_percent: number;
+  direction: 'spike' | 'crash';
+  headline: string;
+  summary: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  ai_comment: string;
+}
+
+function detectLargeMoves(candles: Candle[], thresholdPercent: number) {
+  const moves: { index: number; changePercent: number; direction: 'spike' | 'crash' }[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const prev = candles[i - 1];
+    const curr = candles[i];
+    const change = ((curr.close - prev.close) / prev.close) * 100;
+    if (Math.abs(change) >= thresholdPercent) {
+      moves.push({
+        index: i,
+        changePercent: Number(change.toFixed(2)),
+        direction: change > 0 ? 'spike' : 'crash'
+      });
+    }
+  }
+  return moves.slice(-6);
+}
+
+function buildInsightId(marketSymbol: string, openTime: string, direction: 'spike' | 'crash') {
+  return `ni_${marketSymbol}_${openTime}_${direction}`.replace(/[^A-Za-z0-9_:-]/g, '_');
+}
+
+function generateFallbackInsights(
+  candles: Candle[],
+  moves: ReturnType<typeof detectLargeMoves>,
+  marketSymbol: string,
+  indexOffset: number
+): NewsInsight[] {
+  return moves.map((move, i) => {
+    const candle = candles[move.index];
+    const dir = move.direction === 'spike' ? '급등' : '급락';
+    return {
+      insightId: buildInsightId(marketSymbol, candle.openTime, move.direction),
+      candleIndex: move.index + indexOffset,
+      time: candle.openTime,
+      priceChangePercent: move.changePercent,
+      direction: move.direction,
+      headline: `${marketSymbol} ${Math.abs(move.changePercent).toFixed(1)}% ${dir}`,
+      summary: `${candle.openTime} 시점에 ${Math.abs(move.changePercent).toFixed(1)}%의 ${dir}이 발생했습니다.`,
+      sentiment: move.direction === 'spike' ? 'positive' : 'negative',
+      aiComment: `큰 ${dir} 움직임이 감지되었습니다. 거래량과 후속 캔들 흐름을 함께 확인하세요.`
+    };
+  });
+}
+
+export async function generateNewsInsights(params: NewsInsightParams): Promise<{ insights: NewsInsight[]; provider: 'openai' | 'fallback' }> {
+  const threshold = params.threshold ?? 0.5;
+  const indexOffset = params.indexOffset ?? 0;
+  const moves = detectLargeMoves(params.candles, threshold);
+
+  if (moves.length === 0) {
+    return { insights: [], provider: 'fallback' };
+  }
+
+  if (!hasOpenAiConfig()) {
+    return {
+      insights: generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset),
+      provider: 'fallback'
+    };
+  }
+
+  try {
+    const moveSummaries = moves.map((m) => ({
+      candle_index: m.index,
+      time: params.candles[m.index].openTime,
+      close_before: params.candles[m.index - 1].close,
+      close_after: params.candles[m.index].close,
+      change_percent: m.changePercent,
+      direction: m.direction
+    }));
+
+    const baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a crypto/financial news analyst. Given significant price moves, infer the most likely news or event that caused each move. Return JSON with field "insights" as an array. Each element must have: candle_index (number), price_change_percent (number), direction ("spike"|"crash"), headline (string, concise news headline in Korean), summary (string, 1-2 sentence explanation in Korean), sentiment ("positive"|"negative"|"neutral"), ai_comment (string, your professional opinion on the move in Korean, 1-2 sentences).'
+          },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              market_symbol: params.marketSymbol,
+              timeframe: params.timeframe,
+              significant_moves: moveSummaries,
+              recent_candles: params.candles.slice(-30)
+            })
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`LLM news insight request failed: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const content = payload.choices?.[0]?.message?.content ?? '';
+    const parsed = JSON.parse(content) as { insights: RawNewsInsight[] };
+
+    const insights: NewsInsight[] = parsed.insights.map((raw) => {
+      const candleTime = params.candles[raw.candle_index]?.openTime ?? new Date().toISOString();
+      return {
+      insightId: buildInsightId(params.marketSymbol, candleTime, raw.direction === 'spike' ? 'spike' : 'crash'),
+      candleIndex: raw.candle_index + indexOffset,
+      time: candleTime,
+      priceChangePercent: raw.price_change_percent,
+      direction: raw.direction === 'spike' ? 'spike' : 'crash',
+      headline: raw.headline,
+      summary: raw.summary,
+      sentiment: (['positive', 'negative', 'neutral'].includes(raw.sentiment) ? raw.sentiment : 'neutral') as NewsInsight['sentiment'],
+      aiComment: raw.ai_comment
+    };
+    });
+
+    return { insights, provider: 'openai' };
+  } catch {
+    return {
+      insights: generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset),
+      provider: 'fallback'
     };
   }
 }

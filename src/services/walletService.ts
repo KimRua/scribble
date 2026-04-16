@@ -78,6 +78,19 @@ async function buildSession(): Promise<WalletSession | null> {
   };
 }
 
+export async function getInjectedProvider() {
+  if (!window.ethereum) {
+    throw new Error('No browser wallet detected. Please install or enable MetaMask.');
+  }
+
+  return new BrowserProvider(window.ethereum);
+}
+
+export async function getInjectedSigner() {
+  const provider = await getInjectedProvider();
+  return provider.getSigner();
+}
+
 export async function connectInjectedWallet() {
   await requestAccountSelection();
   return buildSession();

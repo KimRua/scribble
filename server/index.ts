@@ -7,7 +7,18 @@ import { createAuditEvent } from '../src/services/auditLogService';
 import { armAutomation, createExecutionPreview, executeStrategy } from '../src/services/executionService';
 import { validateStrategy } from '../src/utils/strategy';
 import { isValidTxHash, normalizeTxHash } from '../src/utils/txHash';
-import type { Annotation, AutomationRule, Candle, DelegatedAutomationPolicy, Execution, NotificationItem, Strategy } from '../src/types/domain';
+import type {
+  Annotation,
+  AutomationRule,
+  Candle,
+  DelegatedAutomationPolicy,
+  EntryType,
+  Execution,
+  NewsInsight,
+  NewsInsightCacheEntry,
+  NotificationItem,
+  Strategy
+} from '../src/types/domain';
 import { createAnnotationFromText, syncAnnotationWithStrategy } from '../src/utils/annotation';
 import { getAuditRepository } from './services/auditRepository';
 import { getAutomationRepository } from './services/automationRepository';
@@ -15,9 +26,15 @@ import { getDelegatedPolicyRepository } from './services/delegatedPolicyReposito
 import { getExecutionRepository } from './services/executionRepository';
 import { getNotificationRepository } from './services/notificationRepository';
 import { getState, updateState } from './services/stateStore';
-import { analyzeChartWithLlm, parseAnnotationWithLlm } from './services/llmService';
+import { analyzeChartWithLlm, parseAnnotationWithLlm, generateNewsInsights } from './services/llmService';
 import { getAvailableMarkets, getMarketCandles, getMarketSnapshot, isRealMarketDataEnabled } from './services/marketDataService';
 import { executeDexSwap, getDexExecutionConfigStatus } from './services/dexExecutionService';
+import {
+  closeHyperliquidPosition,
+  createHyperliquidExecutionPreview,
+  executeHyperliquidOrder,
+  getHyperliquidConfigStatus
+} from './services/hyperliquidExecutionService';
 import { getDelegatedAutomationConfigStatus } from './services/delegatedAutomationService';
 import { getOnchainConfigStatus, recordOnchainExecution, retryOnchainProofRecording } from './services/onchainExecutionService';
 import { fetchAndIndexTxReceipt, indexKnownTxReceipt, refreshExecutionReceiptTracking } from './services/txReceiptTrackingService';
@@ -59,6 +76,38 @@ app.use((request, response, next) => {
 
 async function getCandles(symbol: string, timeframe: string) {
   return (await getMarketCandles(symbol, timeframe)).candles;
+}
+
+function getNewsInsightCacheKey(symbol: string, timeframe: string, threshold: number) {
+  return `${symbol}:${timeframe}:${threshold.toFixed(2)}`;
+}
+
+function reindexNewsInsights(insights: NewsInsight[], candles: Candle[]) {
+  const candleIndexByTime = new Map(candles.map((candle, index) => [candle.openTime, index]));
+  return insights
+    .map((insight) => {
+      const candleIndex = candleIndexByTime.get(insight.time);
+      if (typeof candleIndex !== 'number') {
+        return null;
+      }
+      return {
+        ...insight,
+        candleIndex
+      } satisfies NewsInsight;
+    })
+    .filter((insight): insight is NewsInsight => insight !== null)
+    .sort((left, right) => left.candleIndex - right.candleIndex);
+}
+
+function mergeNewsInsights(existing: NewsInsight[], incoming: NewsInsight[]) {
+  const merged = new Map<string, NewsInsight>();
+  for (const insight of existing) {
+    merged.set(insight.insightId, insight);
+  }
+  for (const insight of incoming) {
+    merged.set(insight.insightId, insight);
+  }
+  return [...merged.values()].sort((left, right) => new Date(left.time).getTime() - new Date(right.time).getTime());
 }
 
 function normalizeWalletAddress(value: unknown) {
@@ -117,6 +166,103 @@ function appendAudit(eventType: Parameters<typeof createAuditEvent>[0], entityTy
   auditRepository.create(createAuditEvent(eventType, entityType, entityId, metadata, sessionId));
 }
 
+const directExecutionReceiptSchema = z.object({
+  execution_chain: z.string().min(1),
+  liquidity_chain: z.string().min(1),
+  settlement_mode: z.string().min(1),
+  external_venue: z.string().min(1),
+  external_order_id: z.string().min(1).nullable().optional(),
+  external_client_order_id: z.string().min(1).nullable().optional(),
+  leverage_used: z.number().nonnegative(),
+  executed_quantity: z.string().min(1),
+  side: z.enum(['BUY', 'SELL']),
+  reduce_only: z.boolean(),
+  status: z.string().min(1),
+  filled_price: z.number().positive().nullable(),
+  filled_at: z.string().min(1)
+});
+
+function buildDirectExecutionRecord(input: {
+  strategyId: string;
+  sessionId?: string | null;
+  actionType: Execution['actionType'];
+  closeMode: Execution['closeMode'];
+  receipt: z.infer<typeof directExecutionReceiptSchema>;
+  fallbackPrice: number;
+}) {
+  return {
+    executionId: createId('exe'),
+    strategyId: input.strategyId,
+    sessionId: input.sessionId ?? null,
+    actionType: input.actionType,
+    closeMode: input.closeMode,
+    status: input.receipt.status as Execution['status'],
+    executionChain: input.receipt.execution_chain as Execution['executionChain'],
+    liquidityChain: input.receipt.liquidity_chain as Execution['liquidityChain'],
+    executionChainTxHash: null,
+    liquidityChainTxHash: null,
+    executionChainTxStatus: 'success',
+    liquidityChainTxStatus: 'success',
+    executionChainBlockNumber: null,
+    liquidityChainBlockNumber: null,
+    executionChainLogCount: null,
+    liquidityChainLogCount: null,
+    liquidityTransferCount: null,
+    liquiditySwapEventCount: null,
+    liquidityTouchedContractCount: null,
+    liquiditySettlementState: 'settled_without_decoded_events',
+    executionChainCheckedAt: input.receipt.filled_at,
+    liquidityChainCheckedAt: input.receipt.filled_at,
+    executionChainTxHashValid: true,
+    liquidityChainTxHashValid: true,
+    txHashWarning: null,
+    settlementMode: input.receipt.settlement_mode as Execution['settlementMode'],
+    dexExecuted: false,
+    executionTxState: 'receipt_observed',
+    liquidityReceiptEvidence: 'receipt_observed',
+    dexRouterAddress: null,
+    dexInputTokenAddress: null,
+    dexOutputTokenAddress: null,
+    dexAmountIn: null,
+    dexExpectedAmountOut: null,
+    dexMinimumAmountOut: null,
+    externalVenue: input.receipt.external_venue as Execution['externalVenue'],
+    externalOrderId: input.receipt.external_order_id ?? null,
+    externalClientOrderId: input.receipt.external_client_order_id ?? null,
+    executedQuantity: input.receipt.executed_quantity,
+    leverageUsed: input.receipt.leverage_used,
+    proofAttempted: false,
+    proofRetryCount: 0,
+    proofErrorMessage: null,
+    proofRecorded: false,
+    proofState: 'not_attempted',
+    proofRegistryId: null,
+    proofContractAddress: null,
+    filledPrice: input.receipt.filled_price ?? input.fallbackPrice,
+    filledAt: input.receipt.filled_at
+  } satisfies Execution;
+}
+
+function isFilledExecutionStatus(status: Execution['status']) {
+  return status === 'Filled' || status === 'PartiallyFilled';
+}
+
+function isCancellableExecutionStatus(status: Execution['status']) {
+  return status === 'Pending' || status === 'ReadyToExecute' || status === 'Executing' || status === 'PartiallyFilled';
+}
+
+function deriveAnnotationStatusForDirectOpen(status: Execution['status'], entryType: EntryType) {
+  if (isFilledExecutionStatus(status)) {
+    return 'Executed' as const;
+  }
+
+  return entryType === 'conditional' ? ('Triggered' as const) : ('Active' as const);
+}
+
+function deriveAnnotationStatusForDirectClose(status: Execution['status']) {
+  return isFilledExecutionStatus(status) ? ('Closed' as const) : ('Executed' as const);
+}
+
 function getTxHashWarningLabel(kind: 'execution' | 'liquidity') {
   return kind === 'execution' ? 'Execution Tx' : 'Liquidity Tx';
 }
@@ -158,9 +304,18 @@ function deriveProofState(execution: Pick<Execution, 'proofRecorded' | 'proofReg
   return 'not_attempted' as const;
 }
 
+function usesExternalVenueSettlement(settlementMode: Execution['settlementMode']) {
+  return settlementMode === 'perp_dex';
+}
+
 function deriveExecutionTxState(execution: Pick<Execution, 'settlementMode' | 'dexExecuted'> & {
   liquidityChainTxHash: string | null;
+  externalOrderId?: string | null;
 }) {
+  if (usesExternalVenueSettlement(execution.settlementMode)) {
+    return execution.externalOrderId ? 'receipt_observed' as const : 'submitted_receipt_unavailable' as const;
+  }
+
   if (execution.settlementMode !== 'dex' || !execution.dexExecuted) {
     return 'not_submitted' as const;
   }
@@ -175,7 +330,12 @@ function deriveExecutionTxState(execution: Pick<Execution, 'settlementMode' | 'd
 function deriveLiquidityReceiptEvidence(execution: Pick<Execution, 'settlementMode' | 'dexExecuted'> & {
   liquidityChainTxHash: string | null;
   liquidityChainTxHashValid?: boolean;
+  externalOrderId?: string | null;
 }) {
+  if (usesExternalVenueSettlement(execution.settlementMode)) {
+    return execution.externalOrderId ? 'receipt_observed' as const : 'receipt_not_observed' as const;
+  }
+
   if (execution.settlementMode !== 'dex' || !execution.dexExecuted) {
     return 'mock_fallback' as const;
   }
@@ -197,6 +357,18 @@ function deriveLiquiditySettlementState(execution: Pick<
 >) {
   if (execution.liquiditySettlementState) {
     return execution.liquiditySettlementState;
+  }
+
+  if (usesExternalVenueSettlement(execution.settlementMode)) {
+    if (execution.liquidityChainTxStatus === 'reverted') {
+      return 'reverted' as const;
+    }
+
+    if (execution.liquidityChainTxStatus === 'pending') {
+      return 'pending_receipt' as const;
+    }
+
+    return 'settled_without_decoded_events' as const;
   }
 
   if (execution.settlementMode !== 'dex' || !execution.dexExecuted) {
@@ -254,13 +426,15 @@ function toExecutionResponse(execution: Execution) {
   const executionTxState = deriveExecutionTxState({
     settlementMode: execution.settlementMode,
     dexExecuted: execution.dexExecuted,
-    liquidityChainTxHash: sanitizedHashes.liquidityChainTxHash
+    liquidityChainTxHash: sanitizedHashes.liquidityChainTxHash,
+    externalOrderId: execution.externalOrderId ?? null
   });
   const liquidityReceiptEvidence = deriveLiquidityReceiptEvidence({
     settlementMode: execution.settlementMode,
     dexExecuted: execution.dexExecuted,
     liquidityChainTxHash: sanitizedHashes.liquidityChainTxHash,
-    liquidityChainTxHashValid: sanitizedHashes.liquidityChainTxHashValid
+    liquidityChainTxHashValid: sanitizedHashes.liquidityChainTxHashValid,
+    externalOrderId: execution.externalOrderId ?? null
   });
   const liquiditySettlementState = deriveLiquiditySettlementState(execution);
   const liquiditySettlementResult = deriveLiquiditySettlementResult(execution);
@@ -301,6 +475,11 @@ function toExecutionResponse(execution: Execution) {
     dex_amount_in: execution.dexAmountIn ?? null,
     dex_expected_amount_out: execution.dexExpectedAmountOut ?? null,
     dex_minimum_amount_out: execution.dexMinimumAmountOut ?? null,
+    external_venue: execution.externalVenue ?? null,
+    external_order_id: execution.externalOrderId ?? null,
+    external_client_order_id: execution.externalClientOrderId ?? null,
+    executed_quantity: execution.executedQuantity ?? null,
+    leverage_used: execution.leverageUsed ?? null,
     proof_recorded: execution.proofRecorded ?? false,
     proof_attempted: execution.proofAttempted ?? false,
     proof_retry_count: execution.proofRetryCount ?? 0,
@@ -324,6 +503,11 @@ function buildExecutionAuditMetadata(
     | 'dexAmountIn'
     | 'dexExpectedAmountOut'
     | 'dexMinimumAmountOut'
+    | 'externalVenue'
+    | 'externalOrderId'
+    | 'externalClientOrderId'
+    | 'executedQuantity'
+    | 'leverageUsed'
   >,
   receipt: {
     executionTxState: ReturnType<typeof deriveExecutionTxState>;
@@ -350,8 +534,8 @@ function buildExecutionAuditMetadata(
   }
 ) {
   return {
-    executionChain: 'opbnb',
-    liquidityChain: 'bsc',
+    executionChain: usesExternalVenueSettlement(execution.settlementMode) ? 'hyperliquid-testnet' : 'opbnb',
+    liquidityChain: usesExternalVenueSettlement(execution.settlementMode) ? 'hyperliquid-testnet' : 'bsc',
     settlementMode: execution.settlementMode ?? 'mock',
     dexExecuted: execution.dexExecuted ?? false,
     dexReady: dex.dexReady,
@@ -385,7 +569,12 @@ function buildExecutionAuditMetadata(
     ...(execution.dexOutputTokenAddress ? { dexOutputTokenAddress: execution.dexOutputTokenAddress } : {}),
     ...(execution.dexAmountIn ? { dexAmountIn: execution.dexAmountIn } : {}),
     ...(execution.dexExpectedAmountOut ? { dexExpectedAmountOut: execution.dexExpectedAmountOut } : {}),
-    ...(execution.dexMinimumAmountOut ? { dexMinimumAmountOut: execution.dexMinimumAmountOut } : {})
+    ...(execution.dexMinimumAmountOut ? { dexMinimumAmountOut: execution.dexMinimumAmountOut } : {}),
+    ...(execution.externalVenue ? { externalVenue: execution.externalVenue } : {}),
+    ...(execution.externalOrderId ? { externalOrderId: execution.externalOrderId } : {}),
+    ...(execution.externalClientOrderId ? { externalClientOrderId: execution.externalClientOrderId } : {}),
+    ...(execution.executedQuantity ? { executedQuantity: execution.executedQuantity } : {}),
+    ...(execution.leverageUsed != null ? { leverageUsed: execution.leverageUsed } : {})
   };
 }
 
@@ -397,6 +586,7 @@ app.get('/api/v1/health', (_request, response) => {
     marketDataProvider: isRealMarketDataEnabled() ? 'binance' : 'mock',
     onchainConfigured: getOnchainConfigStatus().ready,
     dexConfigured: getDexExecutionConfigStatus().ready,
+    hyperliquidConfigured: getHyperliquidConfigStatus().ready,
     delegatedAutomationConfigured: getDelegatedAutomationConfigStatus().ready,
     delegatedExecutorAddress: getDelegatedAutomationConfigStatus().executorAddress,
     delegationVaultAddress: getDelegatedAutomationConfigStatus().vaultAddress
@@ -762,14 +952,27 @@ app.post('/api/v1/annotations/:annotationId/cancel-order', (request, response) =
     return sendError(response, 'NOT_FOUND', 'annotation not found');
   }
 
-  if (annotation.status === 'Executed' || annotation.status === 'Closed' || annotation.status === 'Archived') {
+  const latestCancellableExecution = executionRepository
+    .list()
+    .filter(
+      (execution) =>
+        execution.strategyId === annotation.strategy.strategyId &&
+        Boolean(execution.externalOrderId) &&
+        isCancellableExecutionStatus(execution.status)
+    )
+    .sort((left, right) => new Date(right.filledAt ?? 0).getTime() - new Date(left.filledAt ?? 0).getTime())[0] ?? null;
+
+  if (!latestCancellableExecution && (annotation.status === 'Executed' || annotation.status === 'Closed' || annotation.status === 'Archived')) {
     return sendError(response, 'INVALID_STATE', 'only pending orders can be cancelled');
   }
 
+  const now = new Date().toISOString();
+  const nextStatus = latestCancellableExecution?.actionType === 'close' ? ('Executed' as const) : ('Invalidated' as const);
+
   const nextAnnotation = {
     ...annotation,
-    status: 'Invalidated' as const,
-    updatedAt: new Date().toISOString()
+    status: nextStatus,
+    updatedAt: now
   };
 
   updateState((current) => ({
@@ -777,18 +980,31 @@ app.post('/api/v1/annotations/:annotationId/cancel-order', (request, response) =
     annotations: current.annotations.map((item) => (item.annotationId === nextAnnotation.annotationId ? nextAnnotation : item))
   }));
 
+  if (latestCancellableExecution) {
+    executionRepository.update(latestCancellableExecution.executionId, (execution) => ({
+      ...execution,
+      status: 'Cancelled',
+      filledAt: execution.filledAt ?? now
+    }));
+  }
+
   appendNotification({
     notificationId: createId('noti'),
-    type: 'strategy_invalidated',
-    title: '주문 취소 완료',
-    body: `${annotation.marketSymbol} 대기 주문이 취소되었습니다.`,
+    type: latestCancellableExecution?.actionType === 'close' ? 'strategy_triggered' : 'strategy_invalidated',
+    title: latestCancellableExecution?.actionType === 'close' ? '청산 주문 취소 완료' : '주문 취소 완료',
+    body:
+      latestCancellableExecution?.actionType === 'close'
+        ? `${annotation.marketSymbol} 리듀스온리 청산 주문이 취소되었습니다.`
+        : `${annotation.marketSymbol} 대기 주문이 취소되었습니다.`,
     annotationId: annotation.annotationId,
     sessionId,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
     read: false
   });
   appendAudit('status_changed', 'annotation', annotation.annotationId, {
-    action: 'cancel_order',
+    action: latestCancellableExecution?.actionType === 'close' ? 'cancel_close_order' : 'cancel_order',
+    executionId: latestCancellableExecution?.executionId ?? 'none',
+    executionStatus: latestCancellableExecution?.status ?? 'none',
     previousStatus: annotation.status,
     nextStatus: nextAnnotation.status
   }, sessionId);
@@ -820,6 +1036,110 @@ app.post('/api/v1/annotations/:annotationId/close-position', async (request, res
 
   const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
   const marketPrice = candles.at(-1)?.close ?? annotation.strategy.entryPrice;
+  const latestExecution = executionRepository
+    .list()
+    .filter((execution) => execution.strategyId === annotation.strategy.strategyId)
+    .sort((left, right) => new Date(right.filledAt ?? 0).getTime() - new Date(left.filledAt ?? 0).getTime())[0] ?? null;
+
+  if (latestExecution?.settlementMode === 'perp_dex' && getHyperliquidConfigStatus().ready) {
+    try {
+      const futuresCloseReceipt = await closeHyperliquidPosition(annotation.marketSymbol, marketPrice, parsedBody.data);
+      const now = futuresCloseReceipt.filledAt;
+      const closeExecution: Execution = {
+        executionId: createId('exe'),
+        strategyId: annotation.strategy.strategyId,
+        sessionId,
+        actionType: 'close',
+        closeMode: parsedBody.data.mode,
+        status: futuresCloseReceipt.status,
+        executionChain: futuresCloseReceipt.executionChain,
+        liquidityChain: futuresCloseReceipt.liquidityChain,
+        executionChainTxHash: null,
+        liquidityChainTxHash: null,
+        executionChainTxStatus: 'success',
+        liquidityChainTxStatus: 'success',
+        executionChainBlockNumber: null,
+        liquidityChainBlockNumber: null,
+        executionChainLogCount: null,
+        liquidityChainLogCount: null,
+        liquidityTransferCount: null,
+        liquiditySwapEventCount: null,
+        liquidityTouchedContractCount: null,
+        liquiditySettlementState: 'settled_without_decoded_events',
+        executionChainCheckedAt: now,
+        liquidityChainCheckedAt: now,
+        executionChainTxHashValid: true,
+        liquidityChainTxHashValid: true,
+        txHashWarning: null,
+        settlementMode: futuresCloseReceipt.settlementMode,
+        dexExecuted: false,
+        executionTxState: 'receipt_observed',
+        liquidityReceiptEvidence: 'receipt_observed',
+        dexRouterAddress: null,
+        dexInputTokenAddress: null,
+        dexOutputTokenAddress: null,
+        dexAmountIn: null,
+        dexExpectedAmountOut: null,
+        dexMinimumAmountOut: null,
+        externalVenue: futuresCloseReceipt.externalVenue,
+        externalOrderId: futuresCloseReceipt.externalOrderId,
+        externalClientOrderId: futuresCloseReceipt.externalClientOrderId,
+        executedQuantity: futuresCloseReceipt.executedQuantity,
+        leverageUsed: futuresCloseReceipt.leverageUsed,
+        proofAttempted: false,
+        proofRetryCount: 0,
+        proofErrorMessage: null,
+        proofRecorded: false,
+        proofState: 'not_attempted',
+        proofRegistryId: null,
+        proofContractAddress: null,
+        filledPrice: futuresCloseReceipt.filledPrice ?? marketPrice,
+        filledAt: now
+      };
+
+      updateState((current) => ({
+        ...current,
+        annotations: current.annotations.map((item) =>
+          item.annotationId === annotation.annotationId
+            ? { ...item, status: 'Closed', updatedAt: now }
+            : item
+        )
+      }));
+      executionRepository.create(closeExecution);
+
+      appendNotification({
+        notificationId: createId('noti'),
+        type: 'execution_filled',
+        title: '포지션 정리 완료',
+        body: `${annotation.marketSymbol} 포지션이 Hyperliquid testnet 시장가로 정리되었습니다.`,
+        annotationId: annotation.annotationId,
+        sessionId,
+        createdAt: now,
+        read: false
+      });
+      appendAudit('status_changed', 'execution', closeExecution.executionId, {
+        action: 'close_position',
+        mode: parsedBody.data.mode,
+        closePrice: closeExecution.filledPrice ?? marketPrice,
+        previousStatus: annotation.status,
+        nextStatus: 'Closed',
+        settlementMode: 'perp_dex',
+        externalOrderId: futuresCloseReceipt.externalOrderId ?? 'unknown'
+      }, sessionId);
+
+      return sendSuccess(response, {
+        annotation: {
+          ...annotation,
+          status: 'Closed',
+          updatedAt: now
+        },
+        execution: toExecutionResponse(closeExecution)
+      });
+    } catch (error) {
+      return sendError(response, 'EXECUTION_ERROR', error instanceof Error ? error.message : 'unable to close Hyperliquid position');
+    }
+  }
+
   const closePrice = parsedBody.data.mode === 'market' ? marketPrice : parsedBody.data.close_price;
   if (!closePrice || !Number.isFinite(closePrice)) {
     return sendError(response, 'VALIDATION_ERROR', 'close price is required');
@@ -911,6 +1231,93 @@ app.post('/api/v1/annotations/:annotationId/close-position', async (request, res
   });
 });
 
+app.post('/api/v1/annotations/:annotationId/close-position/direct', (request, response) => {
+  const bodySchema = z.object({
+    mode: z.enum(['market', 'price']).default('market'),
+    wallet_address: z.string().min(1),
+    receipt: directExecutionReceiptSchema
+  });
+  const parsedBody = bodySchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid direct close payload', parsedBody.error.flatten());
+  }
+
+  const walletAddress = normalizeWalletAddress(parsedBody.data.wallet_address);
+  if (!walletAddress) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid wallet address');
+  }
+
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  if (ownerKey !== `wallet:${walletAddress}`) {
+    return sendError(response, 'AUTH_REQUIRED', 'connected wallet does not match the execution wallet');
+  }
+
+  const state = getState();
+  const { sessionId } = getRequestContext(response);
+  const annotation = findScopedAnnotation(state, request.params.annotationId, ownerKey);
+  if (!annotation) {
+    return sendError(response, 'NOT_FOUND', 'annotation not found');
+  }
+
+  if (annotation.status !== 'Executed') {
+    return sendError(response, 'INVALID_STATE', 'only active positions can be closed');
+  }
+
+  const fallbackPrice = parsedBody.data.receipt.filled_price ?? annotation.strategy.entryPrice;
+  const closeExecution = buildDirectExecutionRecord({
+    strategyId: annotation.strategy.strategyId,
+    sessionId,
+    actionType: 'close',
+    closeMode: parsedBody.data.mode,
+    receipt: parsedBody.data.receipt,
+    fallbackPrice
+  });
+  const nextAnnotationStatus = deriveAnnotationStatusForDirectClose(closeExecution.status);
+  const nextUpdatedAt = closeExecution.filledAt ?? new Date().toISOString();
+
+  updateState((current) => ({
+    ...current,
+    annotations: current.annotations.map((item) =>
+      item.annotationId === annotation.annotationId
+        ? { ...item, status: nextAnnotationStatus, updatedAt: nextUpdatedAt }
+        : item
+    )
+  }));
+  executionRepository.create(closeExecution);
+
+  appendNotification({
+    notificationId: createId('noti'),
+    type: isFilledExecutionStatus(closeExecution.status) ? 'execution_filled' : 'strategy_triggered',
+    title: isFilledExecutionStatus(closeExecution.status) ? '포지션 정리 완료' : '청산 주문 등록 완료',
+    body: isFilledExecutionStatus(closeExecution.status)
+      ? `${annotation.marketSymbol} 포지션이 연결된 지갑으로 직접 정리되었습니다.`
+      : `${annotation.marketSymbol} 리듀스온리 청산 주문이 Hyperliquid testnet에 등록되었습니다.`,
+    annotationId: annotation.annotationId,
+    sessionId,
+    createdAt: nextUpdatedAt,
+    read: false
+  });
+  appendAudit('status_changed', 'execution', closeExecution.executionId, {
+    action: 'close_position',
+    mode: parsedBody.data.mode,
+    closePrice: closeExecution.filledPrice ?? fallbackPrice,
+    previousStatus: annotation.status,
+    nextStatus: nextAnnotationStatus,
+    settlementMode: closeExecution.settlementMode ?? 'perp_dex',
+    externalOrderId: closeExecution.externalOrderId ?? 'unknown',
+    walletAddress
+  }, sessionId);
+
+  return sendSuccess(response, {
+    annotation: {
+      ...annotation,
+      status: nextAnnotationStatus,
+      updatedAt: nextUpdatedAt
+    },
+    execution: toExecutionResponse(closeExecution)
+  });
+});
+
 app.post('/api/v1/alerts', (request, response) => {
   const annotationId = String(request.body.annotation_id ?? '');
   const value = String(request.body.value ?? '');
@@ -935,6 +1342,82 @@ app.post('/api/v1/alerts', (request, response) => {
   appendNotification(notification);
   appendAudit('status_changed', 'annotation', annotationId, { alertValue: value }, sessionId);
   return sendSuccess(response, { notification });
+});
+
+app.post('/api/v1/ai/news-insights', async (request, response) => {
+  const bodySchema = z.object({
+    market_symbol: z.string(),
+    timeframe: z.string(),
+    threshold: z.number().min(0.1).max(20).optional()
+  });
+  const parsedBody = bodySchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid news insights payload', parsedBody.error.flatten());
+  }
+
+  const { market_symbol, timeframe } = parsedBody.data;
+  const threshold = parsedBody.data.threshold ?? 0.5;
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  const candles = await getCandles(market_symbol, timeframe);
+  const cacheKey = getNewsInsightCacheKey(market_symbol, timeframe, threshold);
+  const state = getState();
+  const cachedEntry =
+    state.newsInsightCache.find((entry) => entry.cacheKey === cacheKey && entry.ownerKey === ownerKey) ?? null;
+  const currentLastOpenTime = candles.at(-1)?.openTime ?? null;
+
+  let cachedInsights = reindexNewsInsights(cachedEntry?.insights ?? [], candles);
+
+  if (!currentLastOpenTime) {
+    return sendSuccess(response, { insights: cachedInsights, provider: 'fallback' as const, cached: Boolean(cachedEntry) });
+  }
+
+  if (cachedEntry?.lastAnalyzedOpenTime === currentLastOpenTime) {
+    return sendSuccess(response, { insights: cachedInsights, provider: 'openai' as const, cached: true });
+  }
+
+  let incrementalCandles = candles;
+  let indexOffset = 0;
+  if (cachedEntry?.lastAnalyzedOpenTime) {
+    const lastAnalyzedIndex = candles.findIndex((candle) => candle.openTime === cachedEntry.lastAnalyzedOpenTime);
+    if (lastAnalyzedIndex >= 0 && lastAnalyzedIndex < candles.length - 1) {
+      indexOffset = Math.max(lastAnalyzedIndex, 0);
+      incrementalCandles = candles.slice(indexOffset);
+    }
+  }
+
+  if (incrementalCandles.length < 2) {
+    return sendSuccess(response, { insights: cachedInsights, provider: 'openai' as const, cached: true });
+  }
+
+  const result = await generateNewsInsights({
+    marketSymbol: market_symbol,
+    timeframe,
+    candles: incrementalCandles,
+    threshold,
+    indexOffset
+  });
+
+  const mergedInsights = reindexNewsInsights(mergeNewsInsights(cachedInsights, result.insights), candles);
+  const nextEntry: NewsInsightCacheEntry = {
+    cacheKey,
+    ownerKey,
+    marketSymbol: market_symbol,
+    timeframe,
+    threshold,
+    lastAnalyzedOpenTime: currentLastOpenTime,
+    updatedAt: new Date().toISOString(),
+    insights: mergedInsights
+  };
+
+  updateState((current) => ({
+    ...current,
+    newsInsightCache: [
+      ...current.newsInsightCache.filter((entry) => !(entry.cacheKey === cacheKey && entry.ownerKey === ownerKey)),
+      nextEntry
+    ]
+  }));
+
+  return sendSuccess(response, { insights: mergedInsights, provider: result.provider, cached: false });
 });
 
 app.post('/api/v1/ai/analyze', async (request, response) => {
@@ -1053,7 +1536,10 @@ app.post('/api/v1/executions/preview', async (request, response) => {
     return sendError(response, 'NOT_FOUND', 'strategy not found');
   }
   const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
-  const preview = createExecutionPreview(annotation.strategy, candles.at(-1)?.close ?? annotation.strategy.entryPrice, defaultUserSettings);
+  const currentPrice = candles.at(-1)?.close ?? annotation.strategy.entryPrice;
+  const preview = getHyperliquidConfigStatus().ready
+    ? await createHyperliquidExecutionPreview(annotation.strategy, annotation.marketSymbol, currentPrice, defaultUserSettings)
+    : createExecutionPreview(annotation.strategy, currentPrice, defaultUserSettings);
   return sendSuccess(response, {
     execution_plan: {
       execution_chain: preview.executionChain,
@@ -1134,13 +1620,15 @@ app.post('/api/v1/executions/:executionId/refresh-receipts', async (request, res
   const executionTxState = deriveExecutionTxState({
     settlementMode: refreshedExecution.settlementMode,
     dexExecuted: refreshedExecution.dexExecuted,
-    liquidityChainTxHash: refreshedExecution.liquidityChainTxHash
+    liquidityChainTxHash: refreshedExecution.liquidityChainTxHash,
+    externalOrderId: refreshedExecution.externalOrderId ?? null
   });
   const liquidityReceiptEvidence = deriveLiquidityReceiptEvidence({
     settlementMode: refreshedExecution.settlementMode,
     dexExecuted: refreshedExecution.dexExecuted,
     liquidityChainTxHash: refreshedExecution.liquidityChainTxHash,
-    liquidityChainTxHashValid: refreshedExecution.liquidityChainTxHashValid
+    liquidityChainTxHashValid: refreshedExecution.liquidityChainTxHashValid,
+    externalOrderId: refreshedExecution.externalOrderId ?? null
   });
   const liquiditySettlementState = deriveLiquiditySettlementState(refreshedExecution);
   const liquiditySettlementResult = deriveLiquiditySettlementResult(refreshedExecution);
@@ -1298,6 +1786,95 @@ app.post('/api/v1/executions', async (request, response) => {
     const annotation = state.annotations.find((item) => item.strategy.strategyId === strategyId);
     if (!annotation) {
       return sendError(response, 'NOT_FOUND', 'strategy not found');
+    }
+
+    if (getHyperliquidConfigStatus().ready) {
+      const candles = await getCandles(annotation.marketSymbol, annotation.timeframe);
+      const marketPrice = candles.at(-1)?.close ?? annotation.strategy.entryPrice;
+      const futuresReceipt = await executeHyperliquidOrder(annotation.strategy, annotation.marketSymbol, marketPrice);
+      const persistedExecution: Execution = {
+        executionId: createId('exe'),
+        strategyId: annotation.strategy.strategyId,
+        sessionId,
+        actionType: 'open',
+        closeMode: null,
+        status: futuresReceipt.status,
+        executionChain: futuresReceipt.executionChain,
+        liquidityChain: futuresReceipt.liquidityChain,
+        executionChainTxHash: null,
+        liquidityChainTxHash: null,
+        executionChainTxStatus: 'success',
+        liquidityChainTxStatus: 'success',
+        executionChainBlockNumber: null,
+        liquidityChainBlockNumber: null,
+        executionChainLogCount: null,
+        liquidityChainLogCount: null,
+        liquidityTransferCount: null,
+        liquiditySwapEventCount: null,
+        liquidityTouchedContractCount: null,
+        liquiditySettlementState: 'settled_without_decoded_events',
+        executionChainCheckedAt: futuresReceipt.filledAt,
+        liquidityChainCheckedAt: futuresReceipt.filledAt,
+        executionChainTxHashValid: true,
+        liquidityChainTxHashValid: true,
+        txHashWarning: null,
+        settlementMode: futuresReceipt.settlementMode,
+        dexExecuted: false,
+        executionTxState: 'receipt_observed',
+        liquidityReceiptEvidence: 'receipt_observed',
+        dexRouterAddress: null,
+        dexInputTokenAddress: null,
+        dexOutputTokenAddress: null,
+        dexAmountIn: null,
+        dexExpectedAmountOut: null,
+        dexMinimumAmountOut: null,
+        externalVenue: futuresReceipt.externalVenue,
+        externalOrderId: futuresReceipt.externalOrderId,
+        externalClientOrderId: futuresReceipt.externalClientOrderId,
+        executedQuantity: futuresReceipt.executedQuantity,
+        leverageUsed: futuresReceipt.leverageUsed,
+        proofAttempted: false,
+        proofRetryCount: 0,
+        proofErrorMessage: null,
+        proofRecorded: false,
+        proofState: 'not_attempted',
+        proofRegistryId: null,
+        proofContractAddress: null,
+        filledPrice: futuresReceipt.filledPrice ?? marketPrice,
+        filledAt: futuresReceipt.filledAt
+      };
+
+      updateState((current) => ({
+        ...current,
+        annotations: current.annotations.map((item) =>
+          item.annotationId === annotation.annotationId
+            ? { ...item, status: 'Executed', updatedAt: persistedExecution.filledAt ?? new Date().toISOString() }
+            : item
+        )
+      }));
+      executionRepository.create(persistedExecution);
+      appendNotification({
+        notificationId: createId('noti'),
+        type: 'execution_filled',
+        title: '주문 실행 완료',
+        body: `${annotation.marketSymbol} 전략이 Hyperliquid testnet perp 실주문으로 실행되었습니다.`,
+        annotationId: annotation.annotationId,
+        sessionId,
+        createdAt: persistedExecution.filledAt ?? new Date().toISOString(),
+        read: false
+      });
+      appendAudit('execute_confirmed', 'execution', persistedExecution.executionId, {
+        settlementMode: 'perp_dex',
+        externalVenue: futuresReceipt.externalVenue,
+        externalOrderId: futuresReceipt.externalOrderId ?? 'unknown',
+        executedQuantity: futuresReceipt.executedQuantity,
+        leverageUsed: futuresReceipt.leverageUsed,
+        side: futuresReceipt.side,
+        reduceOnly: futuresReceipt.reduceOnly,
+        sessionId: sessionId ?? 'unknown'
+      });
+
+      return sendSuccess(response, toExecutionResponse(persistedExecution));
     }
 
     const execution = executeStrategy(annotation.strategy);
@@ -1474,6 +2051,96 @@ app.post('/api/v1/executions', async (request, response) => {
     });
     return sendError(response, 'EXECUTION_ERROR', error instanceof Error ? error.message : 'execution failed');
   }
+});
+
+app.post('/api/v1/executions/direct', (request, response) => {
+  const bodySchema = z.object({
+    strategy_id: z.string().min(1),
+    wallet_address: z.string().min(1),
+    entry_type: z.enum(['market', 'limit', 'conditional']).optional(),
+    receipt: directExecutionReceiptSchema
+  });
+  const parsedBody = bodySchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid direct execution payload', parsedBody.error.flatten());
+  }
+
+  const walletAddress = normalizeWalletAddress(parsedBody.data.wallet_address);
+  if (!walletAddress) {
+    return sendError(response, 'VALIDATION_ERROR', 'invalid wallet address');
+  }
+
+  const ownerKey = resolveAnnotationOwnerKey(request, response);
+  if (ownerKey !== `wallet:${walletAddress}`) {
+    return sendError(response, 'AUTH_REQUIRED', 'connected wallet does not match the execution wallet');
+  }
+
+  const { sessionId } = getRequestContext(response);
+  const state = getState();
+  const annotation = state.annotations.find(
+    (item) => item.strategy.strategyId === parsedBody.data.strategy_id && item.ownerKey === ownerKey
+  );
+  if (!annotation) {
+    return sendError(response, 'NOT_FOUND', 'strategy not found');
+  }
+
+  const fallbackPrice = parsedBody.data.receipt.filled_price ?? annotation.strategy.entryPrice;
+  const persistedExecution = buildDirectExecutionRecord({
+    strategyId: annotation.strategy.strategyId,
+    sessionId,
+    actionType: 'open',
+    closeMode: null,
+    receipt: parsedBody.data.receipt,
+    fallbackPrice
+  });
+  const entryType = parsedBody.data.entry_type ?? annotation.strategy.entryType;
+  const nextAnnotationStatus = deriveAnnotationStatusForDirectOpen(persistedExecution.status, entryType);
+  const nextUpdatedAt = persistedExecution.filledAt ?? new Date().toISOString();
+
+  updateState((current) => ({
+    ...current,
+    annotations: current.annotations.map((item) =>
+      item.annotationId === annotation.annotationId
+        ? { ...item, status: nextAnnotationStatus, updatedAt: nextUpdatedAt }
+        : item
+    )
+  }));
+  executionRepository.create(persistedExecution);
+
+  appendNotification({
+    notificationId: createId('noti'),
+    type: isFilledExecutionStatus(persistedExecution.status) ? 'execution_filled' : 'strategy_triggered',
+    title: isFilledExecutionStatus(persistedExecution.status) ? '주문 실행 완료' : '대기 주문 등록 완료',
+    body: isFilledExecutionStatus(persistedExecution.status)
+      ? `${annotation.marketSymbol} 전략이 연결된 지갑으로 Hyperliquid testnet에 직접 실행되었습니다.`
+      : `${annotation.marketSymbol} ${entryType} 주문이 Hyperliquid testnet에 등록되었습니다.`,
+    annotationId: annotation.annotationId,
+    sessionId,
+    createdAt: nextUpdatedAt,
+    read: false
+  });
+  appendAudit('execute_confirmed', 'execution', persistedExecution.executionId, {
+    settlementMode: persistedExecution.settlementMode ?? 'perp_dex',
+    externalVenue: persistedExecution.externalVenue ?? 'hyperliquid_testnet',
+    externalOrderId: persistedExecution.externalOrderId ?? 'unknown',
+    executedQuantity: persistedExecution.executedQuantity ?? '0',
+    leverageUsed: persistedExecution.leverageUsed ?? 0,
+    side: parsedBody.data.receipt.side,
+    reduceOnly: parsedBody.data.receipt.reduce_only,
+    entryType,
+    annotationStatus: nextAnnotationStatus,
+    walletAddress,
+    sessionId: sessionId ?? 'unknown'
+  });
+
+  return sendSuccess(response, {
+    annotation: {
+      ...annotation,
+      status: nextAnnotationStatus,
+      updatedAt: nextUpdatedAt
+    },
+    execution: toExecutionResponse(persistedExecution)
+  });
 });
 
 app.post('/api/v1/automations', (request, response) => {

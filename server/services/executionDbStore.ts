@@ -41,6 +41,11 @@ type ExecutionRow = {
   dex_amount_in: string | null;
   dex_expected_amount_out: string | null;
   dex_minimum_amount_out: string | null;
+  external_venue: Execution['externalVenue'] | null;
+  external_order_id: string | null;
+  external_client_order_id: string | null;
+  executed_quantity: string | null;
+  leverage_used: number | null;
   proof_attempted: number | null;
   proof_retry_count: number | null;
   proof_error_message: string | null;
@@ -98,6 +103,11 @@ function getDatabase() {
       dex_amount_in TEXT,
       dex_expected_amount_out TEXT,
       dex_minimum_amount_out TEXT,
+      external_venue TEXT,
+      external_order_id TEXT,
+      external_client_order_id TEXT,
+      executed_quantity TEXT,
+      leverage_used REAL,
       proof_attempted INTEGER,
       proof_retry_count INTEGER,
       proof_error_message TEXT,
@@ -164,6 +174,21 @@ function getDatabase() {
   if (!columns.some((column) => column.name === 'close_mode')) {
     database.exec('ALTER TABLE executions ADD COLUMN close_mode TEXT');
   }
+  if (!columns.some((column) => column.name === 'external_venue')) {
+    database.exec('ALTER TABLE executions ADD COLUMN external_venue TEXT');
+  }
+  if (!columns.some((column) => column.name === 'external_order_id')) {
+    database.exec('ALTER TABLE executions ADD COLUMN external_order_id TEXT');
+  }
+  if (!columns.some((column) => column.name === 'external_client_order_id')) {
+    database.exec('ALTER TABLE executions ADD COLUMN external_client_order_id TEXT');
+  }
+  if (!columns.some((column) => column.name === 'executed_quantity')) {
+    database.exec('ALTER TABLE executions ADD COLUMN executed_quantity TEXT');
+  }
+  if (!columns.some((column) => column.name === 'leverage_used')) {
+    database.exec('ALTER TABLE executions ADD COLUMN leverage_used REAL');
+  }
 
   return database;
 }
@@ -221,6 +246,11 @@ function toExecutionRow(execution: Execution): ExecutionRow {
     dex_amount_in: execution.dexAmountIn ?? null,
     dex_expected_amount_out: execution.dexExpectedAmountOut ?? null,
     dex_minimum_amount_out: execution.dexMinimumAmountOut ?? null,
+    external_venue: execution.externalVenue ?? null,
+    external_order_id: execution.externalOrderId ?? null,
+    external_client_order_id: execution.externalClientOrderId ?? null,
+    executed_quantity: execution.executedQuantity ?? null,
+    leverage_used: execution.leverageUsed ?? null,
     proof_attempted: toDbBoolean(execution.proofAttempted),
     proof_retry_count: execution.proofRetryCount ?? null,
     proof_error_message: execution.proofErrorMessage ?? null,
@@ -270,6 +300,11 @@ function fromExecutionRow(row: ExecutionRow): Execution {
     dexAmountIn: row.dex_amount_in,
     dexExpectedAmountOut: row.dex_expected_amount_out,
     dexMinimumAmountOut: row.dex_minimum_amount_out,
+    externalVenue: row.external_venue ?? undefined,
+    externalOrderId: row.external_order_id,
+    externalClientOrderId: row.external_client_order_id,
+    executedQuantity: row.executed_quantity,
+    leverageUsed: row.leverage_used,
     proofAttempted: fromDbBoolean(row.proof_attempted),
     proofRetryCount: row.proof_retry_count ?? undefined,
     proofErrorMessage: row.proof_error_message,
@@ -329,6 +364,11 @@ const sqliteExecutionStore: ExecutionDbStore = {
           dex_amount_in,
           dex_expected_amount_out,
           dex_minimum_amount_out,
+          external_venue,
+          external_order_id,
+          external_client_order_id,
+          executed_quantity,
+          leverage_used,
           proof_attempted,
           proof_retry_count,
           proof_error_message,
@@ -374,6 +414,11 @@ const sqliteExecutionStore: ExecutionDbStore = {
           :dex_amount_in,
           :dex_expected_amount_out,
           :dex_minimum_amount_out,
+          :external_venue,
+          :external_order_id,
+          :external_client_order_id,
+          :executed_quantity,
+          :leverage_used,
           :proof_attempted,
           :proof_retry_count,
           :proof_error_message,

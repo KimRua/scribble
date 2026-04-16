@@ -3,12 +3,12 @@ import { defaultUserSettings, marketOptions as fallbackMarkets } from '../data/m
 import {
   analyzeChart,
   cancelOrder,
-  closePosition,
+  createExecution,
   createAlert,
   createAnnotation,
   createAutomation,
   createDelegationPolicy,
-  createExecution,
+  fetchNewsInsights,
   getDelegationConfig,
   getDelegationPolicies,
   getExecutions,
@@ -21,10 +21,18 @@ import {
   getMarkets,
   getNotifications,
   previewExecution,
+  recordDirectClosePosition,
+  recordDirectExecution,
   setClientWalletAddress,
   subscribeMarketStream,
   updateAnnotation
 } from '../services/apiClient';
+import {
+  cancelDirectHyperliquidOrder,
+  closeDirectHyperliquidPosition,
+  createDirectHyperliquidExecutionPreview,
+  executeDirectHyperliquidOrder
+} from '../services/hyperliquidDirectExecutionService';
 import { connectInjectedWallet, getInjectedWalletSession, subscribeInjectedWalletSession, switchInjectedWallet } from '../services/walletService';
 import type {
   Annotation,
@@ -37,6 +45,7 @@ import type {
   Execution,
   ExecutionPlan,
   MarketOption,
+  NewsInsight,
   NotificationItem,
   Strategy,
   StrategyValidation,
@@ -85,6 +94,36 @@ function normalizeNativeAssetSymbol(symbol?: string | null) {
   return upper;
 }
 
+function getExecutionDisabledReason(
+  annotation: Annotation | null,
+  validation: StrategyValidation | null,
+  mode: 'execute' | 'conditional',
+  manualExecutionReady: boolean,
+  dexExecutionReady: boolean
+) {
+  if (!annotation) {
+    return '주문을 실행할 전략을 먼저 선택하세요.';
+  }
+
+  if (!validation?.isValid) {
+    return validation?.violations[0] ?? '전략 검증을 먼저 통과해야 합니다.';
+  }
+
+  if (manualExecutionReady) {
+    return null;
+  }
+
+  if (mode === 'conditional') {
+    return '조건부 주문은 현재 연결 지갑을 통한 Hyperliquid 경로에서만 지원됩니다.';
+  }
+
+  if (!dexExecutionReady) {
+    return '지갑을 연결하거나 서버 DEX 실행 설정을 활성화해야 주문을 실행할 수 있습니다.';
+  }
+
+  return null;
+}
+
 export function TradingPage() {
   const [selectedSymbol, setSelectedSymbol] = useState('BNBUSDT');
   const [timeframe, setTimeframe] = useState('1h');
@@ -110,6 +149,7 @@ export function TradingPage() {
   const [, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const [llmConfigured, setLlmConfigured] = useState(false);
   const [onchainConfigured, setOnchainConfigured] = useState(false);
+  const [dexConfigured, setDexConfigured] = useState(false);
   const [delegationConfig, setDelegationConfig] = useState<DelegatedAutomationConfig>({
     ready: false,
     executorAddress: null,
@@ -120,15 +160,23 @@ export function TradingPage() {
   const [walletSession, setWalletSession] = useState<WalletSession | null>(null);
   const [nativeUsdtPrice, setNativeUsdtPrice] = useState<number | null>(null);
   const [aiRequestPending, setAiRequestPending] = useState(false);
+  const [newsInsights, setNewsInsights] = useState<NewsInsight[]>([]);
+  const [selectedNewsInsightId, setSelectedNewsInsightId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
   const [syncRevision, setSyncRevision] = useState(0);
   const [pendingSyncAnnotationId, setPendingSyncAnnotationId] = useState<string | null>(null);
 
   const selectedAnnotation = useMemo(
     () => annotations.find((annotation) => annotation.annotationId === selectedAnnotationId) ?? null,
     [annotations, selectedAnnotationId]
+  );
+
+  const selectedNewsInsight = useMemo(
+    () => newsInsights.find((insight) => insight.insightId === selectedNewsInsightId) ?? null,
+    [newsInsights, selectedNewsInsightId]
   );
 
   const portfolioSummary = useMemo(() => {
@@ -238,8 +286,81 @@ export function TradingPage() {
     return selectedAnnotation ? validateStrategy(selectedAnnotation.strategy, currentPrice, defaultUserSettings) : null;
   }, [selectedAnnotation, currentPrice]);
 
+  const latestExecutionByStrategyId = useMemo(() => {
+    const latest = new Map<string, Execution>();
+    executions.forEach((execution) => {
+      const current = latest.get(execution.strategyId);
+      const currentTime = current?.filledAt ? Date.parse(current.filledAt) : 0;
+      const nextTime = execution.filledAt ? Date.parse(execution.filledAt) : 0;
+      if (!current || nextTime >= currentTime) {
+        latest.set(execution.strategyId, execution);
+      }
+    });
+    return latest;
+  }, [executions]);
+
+  const selectedLatestExecution = useMemo(() => {
+    if (!selectedAnnotation) {
+      return null;
+    }
+
+    return latestExecutionByStrategyId.get(selectedAnnotation.strategy.strategyId) ?? null;
+  }, [latestExecutionByStrategyId, selectedAnnotation]);
+
   const parsingNotes = selectedAnnotation ? parsingNotesByAnnotationId[selectedAnnotation.annotationId] ?? [] : [];
   const annotationCreationLocked = !walletSession?.address;
+  const manualExecutionReady = Boolean(walletSession?.address);
+  const dexExecutionReady = dexConfigured;
+  const executionReady = manualExecutionReady || dexExecutionReady;
+  const executionVenueLabel = manualExecutionReady ? 'Hyperliquid testnet direct' : 'BSC testnet DEX spot';
+  const executeDisabledReason = getExecutionDisabledReason(
+    selectedAnnotation,
+    validation,
+    'execute',
+    manualExecutionReady,
+    dexExecutionReady
+  );
+  const conditionalDisabledReason = getExecutionDisabledReason(
+    selectedAnnotation,
+    validation,
+    'conditional',
+    manualExecutionReady,
+    dexExecutionReady
+  );
+  const autoExecuteDisabledReason = !selectedAnnotation
+    ? '자동화를 설정할 전략을 먼저 선택하세요.'
+    : !validation?.isValid
+      ? validation?.violations[0] ?? '전략 검증을 먼저 통과해야 합니다.'
+      : !manualExecutionReady
+        ? '자동화는 연결된 지갑 기반 실행에서만 지원됩니다.'
+        : null;
+
+  const isPendingExecutionStatus = (status?: Execution['status'] | null) => {
+    return status === 'Pending' || status === 'ReadyToExecute' || status === 'Executing' || status === 'PartiallyFilled';
+  };
+
+  const findLatestCancellableExecution = (annotation: Annotation) => {
+    return executions
+      .filter(
+        (execution) =>
+          execution.strategyId === annotation.strategy.strategyId &&
+          execution.settlementMode === 'perp_dex' &&
+          Boolean(execution.externalOrderId) &&
+          isPendingExecutionStatus(execution.status)
+      )
+      .sort((left, right) => new Date(right.filledAt ?? 0).getTime() - new Date(left.filledAt ?? 0).getTime())[0] ?? null;
+  };
+
+  const deriveAnnotationStatusFromExecution = (
+    entryType: Annotation['strategy']['entryType'],
+    status: Execution['status']
+  ): Annotation['status'] => {
+    if (status === 'Filled' || status === 'PartiallyFilled') {
+      return 'Executed';
+    }
+
+    return entryType === 'conditional' ? 'Triggered' : 'Active';
+  };
 
   const ensureWalletForAnnotations = () => {
     if (walletSession?.address) {
@@ -266,6 +387,7 @@ export function TradingPage() {
         setConnectionStatus(health.ok ? 'connected' : 'disconnected');
         setLlmConfigured(health.llmConfigured);
         setOnchainConfigured(health.onchainConfigured ?? false);
+        setDexConfigured(health.dexConfigured ?? false);
         setDelegationConfig({
           ready: health.delegatedAutomationConfigured ?? false,
           executorAddress: health.delegatedExecutorAddress ?? null,
@@ -282,6 +404,10 @@ export function TradingPage() {
         setNotifications([]);
         setExecutions([]);
         setLastExecution(null);
+
+        fetchNewsInsights({ marketSymbol: symbol, timeframe: nextTimeframe, threshold: 0.5 })
+          .then((r) => setNewsInsights(r.insights))
+          .catch(() => setNewsInsights([]));
         return;
       }
 
@@ -297,6 +423,7 @@ export function TradingPage() {
       setConnectionStatus(health.ok ? 'connected' : 'disconnected');
       setLlmConfigured(health.llmConfigured);
       setOnchainConfigured(health.onchainConfigured ?? false);
+      setDexConfigured(health.dexConfigured ?? false);
       setDelegationConfig({
         ready: health.delegatedAutomationConfigured ?? false,
         executorAddress: health.delegatedExecutorAddress ?? null,
@@ -315,6 +442,10 @@ export function TradingPage() {
       setNotifications(nextNotifications);
       setExecutions(nextExecutions);
       setLastExecution(nextExecutions[0] ?? null);
+
+      fetchNewsInsights({ marketSymbol: symbol, timeframe: nextTimeframe, threshold: 0.5 })
+        .then((r) => setNewsInsights(r.insights))
+        .catch(() => setNewsInsights([]));
     } catch (error) {
       setConnectionStatus('disconnected');
       setErrorMessage(error instanceof Error ? error.message : 'Unable to load workspace data.');
@@ -322,6 +453,18 @@ export function TradingPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!successToast) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSuccessToast(null);
+    }, 2400);
+
+    return () => window.clearTimeout(timer);
+  }, [successToast]);
 
   useEffect(() => {
     setClientWalletAddress(walletSession?.address ?? null);
@@ -510,6 +653,7 @@ export function TradingPage() {
       });
       setAnnotations((prev) => [result.annotation, ...prev]);
       setSelectedAnnotationId(result.annotation.annotationId);
+      setSelectedNewsInsightId(null);
       setParsingNotesByAnnotationId((prev) => ({
         ...prev,
         [result.annotation.annotationId]: [result.provider === 'openai' ? 'Generated by LLM analysis' : 'Generated by fallback analysis']
@@ -536,6 +680,7 @@ export function TradingPage() {
       });
       setAnnotations((prev) => [result.annotation, ...prev]);
       setSelectedAnnotationId(result.annotation.annotationId);
+      setSelectedNewsInsightId(null);
       setDrawingMode('none');
       setParsingNotesByAnnotationId((prev) => ({ ...prev, [result.annotation.annotationId]: result.parsing_notes }));
     } catch (error) {
@@ -553,6 +698,16 @@ export function TradingPage() {
       updatedAt: new Date().toISOString()
     }));
     markDirty(selectedAnnotation.annotationId);
+  };
+
+  const handleSelectAnnotation = (annotationId: string | null) => {
+    setSelectedAnnotationId(annotationId);
+    setSelectedNewsInsightId(null);
+  };
+
+  const handleSelectNewsInsight = (insightId: string | null) => {
+    setSelectedNewsInsightId(insightId);
+    setSelectedAnnotationId(null);
   };
 
   const handleStrategyChange = <K extends keyof Strategy>(key: K, value: Strategy[K]) => {
@@ -641,8 +796,29 @@ export function TradingPage() {
     if (!selectedAnnotation) {
       return;
     }
+
+    const latestCancellableExecution = findLatestCancellableExecution(selectedAnnotation);
+    if (latestCancellableExecution?.actionType !== 'close') {
+      setErrorMessage('이미 Hyperliquid testnet에 대기 중인 주문이 있습니다. 먼저 취소한 뒤 다시 시도하세요.');
+      return;
+    }
+
+    const disabledReason = getExecutionDisabledReason(selectedAnnotation, validation, mode, manualExecutionReady, dexExecutionReady);
+    if (disabledReason) {
+      setErrorMessage(disabledReason);
+      return;
+    }
+
     try {
-      const preview = await previewExecution(selectedAnnotation.strategy.strategyId);
+      const preview = manualExecutionReady
+        ? await createDirectHyperliquidExecutionPreview(
+            selectedAnnotation.strategy,
+            selectedAnnotation.marketSymbol,
+            currentPrice,
+            defaultUserSettings,
+            walletSession?.address ?? ''
+          )
+        : await previewExecution(selectedAnnotation.strategy.strategyId);
       setExecutionPreview(preview);
       setExecutionMode(mode);
       setExecutionModalOpen(true);
@@ -655,11 +831,22 @@ export function TradingPage() {
     if (!selectedAnnotation) {
       return;
     }
+
+    const disabledReason = getExecutionDisabledReason(
+      selectedAnnotation,
+      validation,
+      executionMode,
+      manualExecutionReady,
+      dexExecutionReady
+    );
+    if (disabledReason) {
+      setErrorMessage(disabledReason);
+      setExecutionModalOpen(false);
+      return;
+    }
+
     try {
-      if (executionMode === 'conditional') {
-        await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
-        activateSelectedAnnotation();
-      } else {
+      if (!manualExecutionReady) {
         const result = await createExecution(selectedAnnotation.strategy.strategyId);
         const nextExecution = {
           ...result,
@@ -667,13 +854,44 @@ export function TradingPage() {
           filledAt: result.filledAt ?? new Date().toISOString()
         };
         setLastExecution(nextExecution);
-        setExecutions((prev) => [nextExecution, ...prev.filter((execution) => execution.executionId !== nextExecution.executionId)].slice(0, 8));
+        setExecutions((prev) => [nextExecution, ...prev.filter((execution) => execution.executionId !== nextExecution.executionId)].slice(0, 12));
         upsertAnnotation(selectedAnnotation.annotationId, (annotation) => ({
           ...annotation,
           status: 'Executed',
-          updatedAt: new Date().toISOString()
+          updatedAt: nextExecution.filledAt ?? new Date().toISOString()
         }));
+        setSuccessToast(nextExecution.settlementMode === 'dex' ? 'DEX 현물 주문이 실행되었습니다.' : '주문이 기록되었습니다.');
+        setNotifications(await getNotifications());
+        setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
+        setExecutionModalOpen(false);
+        return;
       }
+
+      const entryType = executionMode === 'conditional' ? 'conditional' : selectedAnnotation.strategy.entryType;
+      const receipt = await executeDirectHyperliquidOrder(
+        selectedAnnotation.strategy,
+        selectedAnnotation.marketSymbol,
+        currentPrice,
+        { entryType }
+      );
+      const result = await recordDirectExecution(selectedAnnotation.strategy.strategyId, {
+        walletAddress: walletSession?.address ?? '',
+        entryType,
+        receipt
+      });
+      const nextExecution = {
+        ...result.execution,
+        filledPrice: result.execution.filledPrice ?? selectedAnnotation.strategy.entryPrice,
+        filledAt: result.execution.filledAt ?? new Date().toISOString()
+      };
+      setLastExecution(nextExecution);
+      setExecutions((prev) => [nextExecution, ...prev.filter((execution) => execution.executionId !== nextExecution.executionId)].slice(0, 12));
+      upsertAnnotation(selectedAnnotation.annotationId, () => result.annotation);
+      setSuccessToast(
+        deriveAnnotationStatusFromExecution(entryType, nextExecution.status) === 'Executed'
+          ? '주문이 실행되었습니다.'
+          : '대기 주문이 등록되었습니다.'
+      );
 
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
@@ -690,6 +908,7 @@ export function TradingPage() {
     try {
       await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
       setNotifications(await getNotifications());
+      setSuccessToast('알림이 설정되었습니다.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to register the alert.');
     }
@@ -701,36 +920,38 @@ export function TradingPage() {
       return;
     }
 
-    const previousAnnotations = annotations;
-    const wasSelected = selectedAnnotation?.annotationId === targetAnnotationId;
+    const targetAnnotation = annotations.find((annotation) => annotation.annotationId === targetAnnotationId);
+    if (!targetAnnotation) {
+      return;
+    }
+
+    const cancellableExecution = findLatestCancellableExecution(targetAnnotation);
 
     try {
-      setAnnotations((prev) =>
-        prev.map((annotation) =>
-          annotation.annotationId === targetAnnotationId
-            ? {
-                ...annotation,
-                status: 'Invalidated',
-                updatedAt: new Date().toISOString()
-              }
-            : annotation
-        )
-      );
-      if (wasSelected) {
-        setSelectedAnnotationId(null);
+      if (cancellableExecution?.externalOrderId) {
+        await cancelDirectHyperliquidOrder(targetAnnotation.marketSymbol, cancellableExecution.externalOrderId);
       }
 
       const nextAnnotation = await cancelOrder(targetAnnotationId);
       setAnnotations((prev) =>
         prev.map((annotation) => (annotation.annotationId === targetAnnotationId ? nextAnnotation : annotation))
       );
+      if (cancellableExecution) {
+        setExecutions((prev) =>
+          prev.map((execution) =>
+            execution.executionId === cancellableExecution.executionId
+              ? {
+                  ...execution,
+                  status: 'Cancelled'
+                }
+              : execution
+          )
+        );
+      }
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: targetAnnotationId }));
+      setSuccessToast(cancellableExecution?.actionType === 'close' ? '청산 주문을 취소했습니다.' : '대기 주문을 취소했습니다.');
     } catch (error) {
-      setAnnotations(previousAnnotations);
-      if (wasSelected) {
-        setSelectedAnnotationId(targetAnnotationId);
-      }
       setErrorMessage(error instanceof Error ? error.message : 'Unable to cancel the order.');
     }
   };
@@ -741,12 +962,26 @@ export function TradingPage() {
     }
 
     try {
-      const result = await closePosition(selectedAnnotation.annotationId, input);
+      if (!walletSession?.address) {
+        throw new Error('지갑을 연결해야 포지션을 직접 정리할 수 있습니다.');
+      }
+
+      if (selectedLatestExecution?.actionType === 'close' && isPendingExecutionStatus(selectedLatestExecution.status)) {
+        throw new Error('이미 대기 중인 청산 주문이 있습니다. 먼저 취소한 뒤 다시 시도하세요.');
+      }
+
+      const receipt = await closeDirectHyperliquidPosition(selectedAnnotation.marketSymbol, currentPrice, input);
+      const result = await recordDirectClosePosition(selectedAnnotation.annotationId, {
+        mode: input.mode,
+        walletAddress: walletSession.address,
+        receipt
+      });
       upsertAnnotation(selectedAnnotation.annotationId, () => result.annotation);
       setExecutions((prev) =>
         [result.execution, ...prev.filter((execution) => execution.executionId !== result.execution.executionId)].slice(0, 12)
       );
       setLastExecution(result.execution);
+      setSuccessToast(result.annotation.status === 'Closed' ? '포지션을 정리했습니다.' : '청산 주문을 등록했습니다.');
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
     } catch (error) {
@@ -890,6 +1125,17 @@ export function TradingPage() {
         onDisconnectWallet={handleDisconnectWallet}
       />
 
+      {successToast ? (
+        <div className="toast-banner toast-success" role="status" aria-live="polite">
+          <div className="toast-icon" aria-hidden>
+            ✓
+          </div>
+          <div className="toast-copy">
+            <strong>Alert ready</strong>
+            <span>{successToast}</span>
+          </div>
+        </div>
+      ) : null}
       {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
       {loading ? <div className="loading-banner panel">Loading workspace data...</div> : null}
       {annotationCreationLocked ? (
@@ -1018,17 +1264,20 @@ export function TradingPage() {
           marketData={candles}
           annotations={annotations}
           selectedAnnotationId={selectedAnnotationId}
+          selectedNewsInsightId={selectedNewsInsightId}
           timeframe={timeframe}
           drawingMode={drawingMode}
           currentPrice={currentPrice}
           annotationCreationLocked={annotationCreationLocked}
           onChangeMode={setDrawingMode}
-          onSelectAnnotation={setSelectedAnnotationId}
+          onSelectAnnotation={handleSelectAnnotation}
+          onSelectNewsInsight={handleSelectNewsInsight}
           onCreateAnnotation={handleCreateAnnotation}
           onAddLineToSelected={handleAddLineToSelected}
           onAddBoxToSelected={handleAddBoxToSelected}
           onAddSegmentToSelected={handleAddSegmentToSelected}
           aiRequestPending={aiRequestPending}
+          newsInsights={newsInsights}
           onRequestAi={handleRequestAi}
           onNudgePrice={(deltaRatio) => advancePrice(Number((currentPrice * (1 + deltaRatio)).toFixed(2)))}
           onTriggerSelected={handleTriggerSelected}
@@ -1036,11 +1285,19 @@ export function TradingPage() {
 
         <RightPanel
           selectedAnnotation={selectedAnnotation}
+          selectedNewsInsight={selectedNewsInsight}
           validation={validation}
+          latestExecution={selectedLatestExecution}
+          manualExecutionReady={manualExecutionReady}
           currentPrice={currentPrice}
           parsingNotes={[
             ...parsingNotes,
             llmConfigured ? 'LLM connection ready' : 'No LLM key found: using fallback analysis',
+            manualExecutionReady
+              ? 'Connected wallet ready for direct Hyperliquid testnet trading'
+              : dexExecutionReady
+                ? 'Server DEX execution ready for BSC testnet spot swaps'
+                : 'Connect a wallet or enable server DEX execution to trade',
             onchainConfigured ? 'opBNB proof recording ready' : 'opBNB proof not configured: recording local audit logs only',
             saving ? 'Saving changes' : 'Auto-save enabled'
           ]}
@@ -1070,13 +1327,23 @@ export function TradingPage() {
           </strong>
           {lastExecution ? (
             <div className="status-meta">
-              <span className={`pill ${lastExecution.proofRecorded ? 'executed' : 'triggered'}`}>
-                {lastExecution.proofRecorded ? 'Proof recorded' : 'Proof pending'}
+              <span className={`pill ${lastExecution.settlementMode === 'perp_dex' || lastExecution.proofRecorded ? 'executed' : 'triggered'}`}>
+                {lastExecution.settlementMode === 'perp_dex'
+                  ? 'Hyperliquid live'
+                  : lastExecution.proofRecorded
+                    ? 'Proof recorded'
+                    : 'Proof pending'}
               </span>
               <div className="status-links">
-                <a href={getOpbnbTxUrl(lastExecution.executionChainTxHash)} target="_blank" rel="noreferrer">
-                  Execution tx
-                </a>
+                {lastExecution.executionChainTxHash ? (
+                  <a href={getOpbnbTxUrl(lastExecution.executionChainTxHash)} target="_blank" rel="noreferrer">
+                    Execution tx
+                  </a>
+                ) : lastExecution.externalOrderId ? (
+                  <span className="muted">Venue order #{lastExecution.externalOrderId}</span>
+                ) : (
+                  <span className="muted">No onchain tx</span>
+                )}
                 {lastExecution.proofContractAddress ? (
                   <a href={getOpbnbAddressUrl(lastExecution.proofContractAddress)} target="_blank" rel="noreferrer">
                     Registry
@@ -1099,12 +1366,15 @@ export function TradingPage() {
         annotations={annotations}
         executions={executions}
         onCancelOrder={(annotationId) => void handleCancelOrder(annotationId)}
-        onSelectAnnotation={setSelectedAnnotationId}
+        onSelectAnnotation={handleSelectAnnotation}
       />
 
       <BottomActionBar
         selectedAnnotation={selectedAnnotation}
-        validation={validation}
+        executeDisabledReason={executeDisabledReason}
+        conditionalDisabledReason={conditionalDisabledReason}
+        autoExecuteDisabledReason={autoExecuteDisabledReason}
+        executionVenueLabel={executionVenueLabel}
         onExecute={() => void openExecutionFlow('execute')}
         onConditionalOrder={() => void openExecutionFlow('conditional')}
         onSetAlert={() => void handleSetAlert()}
@@ -1117,6 +1387,8 @@ export function TradingPage() {
         preview={executionPreview}
         validation={validation}
         mode={executionMode}
+        executionConfigured={executionReady}
+        executionVenueLabel={executionVenueLabel}
         onchainConfigured={onchainConfigured}
         onClose={() => setExecutionModalOpen(false)}
         onConfirm={() => void confirmExecution()}
@@ -1140,7 +1412,7 @@ export function TradingPage() {
         notifications={notifications}
         onClose={() => setNotificationsOpen(false)}
         onSelectAnnotation={(annotationId) => {
-          setSelectedAnnotationId(annotationId);
+          handleSelectAnnotation(annotationId);
           setNotificationsOpen(false);
         }}
       />
@@ -1150,7 +1422,7 @@ export function TradingPage() {
         annotations={annotations}
         onClose={() => setStrategiesOpen(false)}
         onSelect={(annotationId) => {
-          setSelectedAnnotationId(annotationId);
+          handleSelectAnnotation(annotationId);
           setStrategiesOpen(false);
         }}
       />

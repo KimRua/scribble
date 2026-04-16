@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import type { Annotation, AuditEvent, Strategy, StrategyValidation } from '../types/domain';
+import type { Annotation, AuditEvent, Execution, NewsInsight, Strategy, StrategyValidation } from '../types/domain';
 import { formatPercent, formatPrice } from '../utils/strategy';
 
 interface RightPanelProps {
   selectedAnnotation: Annotation | null;
+  selectedNewsInsight: NewsInsight | null;
   validation: StrategyValidation | null;
+  latestExecution: Execution | null;
+  manualExecutionReady: boolean;
   currentPrice: number;
   parsingNotes: string[];
   auditEvents: AuditEvent[];
@@ -18,7 +21,10 @@ interface RightPanelProps {
 
 export function RightPanel({
   selectedAnnotation,
+  selectedNewsInsight,
   validation,
+  latestExecution,
+  manualExecutionReady,
   currentPrice,
   parsingNotes,
   auditEvents,
@@ -29,6 +35,66 @@ export function RightPanel({
   onCancelOrder,
   onClosePosition
 }: RightPanelProps) {
+  if (selectedNewsInsight) {
+    return (
+      <aside className="right-panel panel">
+        <section className="card-block news-detail-block">
+          <div className="list-row">
+            <div>
+              <p className="eyebrow">News Insight</p>
+              <h3>{selectedNewsInsight.direction === 'spike' ? 'Bullish Event' : 'Risk Event'}</h3>
+            </div>
+            <span className={`news-sentiment-pill ${selectedNewsInsight.sentiment}`}>
+              {selectedNewsInsight.direction === 'spike' ? '▲' : '▼'} {Math.abs(selectedNewsInsight.priceChangePercent).toFixed(1)}%
+            </span>
+          </div>
+          <div className="summary-grid">
+            <div>
+              <span>Headline</span>
+              <strong>{selectedNewsInsight.headline}</strong>
+            </div>
+            <div>
+              <span>Time</span>
+              <strong>{new Date(selectedNewsInsight.time).toLocaleString('ko-KR')}</strong>
+            </div>
+            <div>
+              <span>Sentiment</span>
+              <strong>{selectedNewsInsight.sentiment}</strong>
+            </div>
+            <div>
+              <span>Move</span>
+              <strong>{selectedNewsInsight.priceChangePercent.toFixed(2)}%</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="card-block news-detail-block">
+          <p className="eyebrow">Summary</p>
+          <p className="news-detail-copy">{selectedNewsInsight.summary}</p>
+        </section>
+
+        <section className="card-block news-detail-block">
+          <p className="eyebrow">AI Opinion</p>
+          <p className="news-detail-copy news-detail-highlight">{selectedNewsInsight.aiComment}</p>
+        </section>
+
+        <section className="card-block news-detail-block">
+          <p className="eyebrow">Chart Context</p>
+          <div className="summary-grid risk">
+            <div>
+              <span>Candle Index</span>
+              <strong>{selectedNewsInsight.candleIndex}</strong>
+            </div>
+            <div>
+              <span>Current Price</span>
+              <strong>{formatPrice(currentPrice)}</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+    );
+  }
+
   if (!selectedAnnotation || !validation) {
     return (
       <aside className="right-panel panel empty-panel">
@@ -53,6 +119,17 @@ export function RightPanel({
     selectedAnnotation.status !== 'Archived' &&
     (strategy.entryType === 'limit' || strategy.entryType === 'conditional');
   const canClosePosition = selectedAnnotation.status === 'Executed';
+  const hasPendingCloseOrder =
+    canClosePosition &&
+    latestExecution?.actionType === 'close' &&
+    (
+      latestExecution.status === 'Pending' ||
+      latestExecution.status === 'ReadyToExecute' ||
+      latestExecution.status === 'Executing' ||
+      latestExecution.status === 'PartiallyFilled'
+    ) &&
+    Boolean(latestExecution.externalOrderId);
+  const closePriceValid = Number.isFinite(Number(closePriceInput)) && Number(closePriceInput) > 0;
 
   return (
     <aside className="right-panel panel">
@@ -291,12 +368,23 @@ export function RightPanel({
       {canClosePosition ? (
         <section className="card-block">
           <p className="eyebrow">Position Controls</p>
+          <div className="info-banner">
+            <strong>Hyperliquid testnet</strong>
+            <p>
+              {manualExecutionReady
+                ? hasPendingCloseOrder
+                  ? '현재 리듀스온리 청산 주문이 대기 중입니다. 먼저 취소한 뒤 새 청산 주문을 넣으세요.'
+                  : 'Market close sends a reduce-only market order, and limit close places a live reduce-only limit order on Hyperliquid testnet.'
+                : '지갑을 연결해야 실제 시장가/지정가 청산을 보낼 수 있습니다.'}
+            </p>
+          </div>
           <div className="form-grid compact">
             <label>
               <span>Close price</span>
               <input
                 type="number"
                 value={closePriceInput}
+                disabled={!manualExecutionReady || hasPendingCloseOrder}
                 onChange={(event) => setClosePriceInput(event.target.value)}
               />
             </label>
@@ -305,18 +393,25 @@ export function RightPanel({
               <input type="text" value={formatPrice(currentPrice)} disabled />
             </label>
           </div>
-          <p className="muted">Market close exits at the live price, while limit close records an exit at the specified price.</p>
+          <p className="muted">Market close exits immediately, while limit close leaves a live reduce-only exit order at the specified price.</p>
           <div className="modal-actions">
-            <button className="secondary" onClick={() => onClosePosition({ mode: 'market' })}>
+            <button className="secondary" disabled={!manualExecutionReady || hasPendingCloseOrder} onClick={() => onClosePosition({ mode: 'market' })}>
               Market close
             </button>
             <button
               onClick={() => onClosePosition({ mode: 'price', closePrice: Number(closePriceInput) })}
-              disabled={!Number.isFinite(Number(closePriceInput)) || Number(closePriceInput) <= 0}
+              disabled={!manualExecutionReady || hasPendingCloseOrder || !closePriceValid}
             >
               Limit close
             </button>
           </div>
+          {hasPendingCloseOrder ? (
+            <div className="modal-actions">
+              <button className="secondary" onClick={onCancelOrder}>
+                Cancel pending close
+              </button>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
