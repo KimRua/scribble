@@ -269,6 +269,14 @@ interface RawNewsInsight {
   ai_comment: string;
 }
 
+interface GdeltArticle {
+  title?: string;
+  url?: string;
+  seendate?: string;
+  domain?: string;
+  sourcecountry?: string;
+}
+
 function detectLargeMoves(candles: Candle[], thresholdPercent: number) {
   const moves: { index: number; changePercent: number; direction: 'spike' | 'crash' }[] = [];
   for (let i = 1; i < candles.length; i++) {
@@ -288,6 +296,79 @@ function detectLargeMoves(candles: Candle[], thresholdPercent: number) {
 
 function buildInsightId(marketSymbol: string, openTime: string, direction: 'spike' | 'crash') {
   return `ni_${marketSymbol}_${openTime}_${direction}`.replace(/[^A-Za-z0-9_:-]/g, '_');
+}
+
+function buildGlobalInsightId(article: GdeltArticle, index: number) {
+  return `ni_global_${article.seendate ?? index}_${article.url ?? article.title ?? index}`.replace(/[^A-Za-z0-9_:-]/g, '_').slice(0, 160);
+}
+
+function parseGdeltSeenDate(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const compact = value.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})Z?$/);
+  if (compact) {
+    return new Date(`${compact[1]}-${compact[2]}-${compact[3]}T${compact[4]}:${compact[5]}:${compact[6]}Z`);
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function fetchGlobalNewsInsights(candles: Candle[], marketSymbol: string): Promise<NewsInsight[]> {
+  const latestCandle = candles.at(-1);
+  if (!latestCandle) {
+    return [];
+  }
+
+  const query = [
+    '(geopolitics OR diplomacy OR sanctions OR conflict OR election OR "central bank" OR inflation OR energy OR "supply chain")',
+    '-sourcecountry:US'
+  ].join(' ');
+  const params = new URLSearchParams({
+    query,
+    mode: 'ArtList',
+    format: 'json',
+    maxrecords: '6',
+    timespan: '24h',
+    sort: 'datedesc'
+  });
+
+  try {
+    const response = await fetch(`https://api.gdeltproject.org/api/v2/doc/doc?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { articles?: GdeltArticle[] };
+    const articles = (payload.articles ?? [])
+      .filter((article) => article.title && article.url)
+      .slice(0, 4);
+
+    return articles.map((article, index) => {
+      const seenAt = parseGdeltSeenDate(article.seendate);
+      const anchorIndex = Math.max(candles.length - 1 - index * 3, 0);
+      const anchorCandle = candles[anchorIndex] ?? latestCandle;
+      const seenLabel = seenAt?.toISOString() ?? article.seendate ?? 'recent';
+      return {
+        insightId: buildGlobalInsightId(article, index),
+        candleIndex: anchorIndex,
+        time: anchorCandle.openTime,
+        priceChangePercent: 0,
+        direction: 'spike',
+        category: 'global',
+        headline: article.title!,
+        summary: `${article.sourcecountry ?? 'Global'} 국제 뉴스 흐름입니다. 관측 시각 ${seenLabel}. ${marketSymbol} 리스크 선호와 유동성 환경에 간접 영향을 줄 수 있습니다.`,
+        sentiment: 'neutral',
+        aiComment: '차트 급변 원인으로 단정하지 말고, 거시/지정학 리스크 레이어로 함께 확인하세요.',
+        sourceName: article.domain ?? null,
+        url: article.url ?? null
+      } satisfies NewsInsight;
+    });
+  } catch {
+    return [];
+  }
 }
 
 function generateFallbackInsights(
@@ -317,14 +398,15 @@ export async function generateNewsInsights(params: NewsInsightParams): Promise<{
   const threshold = params.threshold ?? 0.5;
   const indexOffset = params.indexOffset ?? 0;
   const moves = detectLargeMoves(params.candles, threshold);
+  const globalInsights = await fetchGlobalNewsInsights(params.candles, params.marketSymbol);
 
   if (moves.length === 0) {
-    return { insights: [], provider: 'fallback' };
+    return { insights: globalInsights, provider: globalInsights.length > 0 ? 'openai' : 'fallback' };
   }
 
   if (!hasOpenAiConfig()) {
     return {
-      insights: generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset),
+      insights: [...globalInsights, ...generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset)],
       provider: 'fallback'
     };
   }
@@ -354,7 +436,7 @@ export async function generateNewsInsights(params: NewsInsightParams): Promise<{
           {
             role: 'system',
             content:
-              'You are a crypto/financial news analyst. Given significant price moves, infer the most likely news or event that caused each move. Return JSON with field "insights" as an array. Each element must have: candle_index (number), price_change_percent (number), direction ("spike"|"crash"), headline (string, concise news headline in Korean), summary (string, 1-2 sentence explanation in Korean), sentiment ("positive"|"negative"|"neutral"), ai_comment (string, your professional opinion on the move in Korean, 1-2 sentences).'
+              'You are a crypto/financial news analyst. Given significant price moves, infer the most likely market news or event that caused each move. Focus on market-moving catalysts only here; separate global society/geopolitical headlines are supplied by the app. Return JSON with field "insights" as an array. Each element must have: candle_index (number), price_change_percent (number), direction ("spike"|"crash"), headline (string, concise news headline in Korean), summary (string, 1-2 sentence explanation in Korean), sentiment ("positive"|"negative"|"neutral"), ai_comment (string, your professional opinion on the move in Korean, 1-2 sentences).'
           },
           {
             role: 'user',
@@ -385,6 +467,7 @@ export async function generateNewsInsights(params: NewsInsightParams): Promise<{
       time: candleTime,
       priceChangePercent: raw.price_change_percent,
       direction: raw.direction === 'spike' ? 'spike' : 'crash',
+      category: 'market',
       headline: raw.headline,
       summary: raw.summary,
       sentiment: (['positive', 'negative', 'neutral'].includes(raw.sentiment) ? raw.sentiment : 'neutral') as NewsInsight['sentiment'],
@@ -392,10 +475,10 @@ export async function generateNewsInsights(params: NewsInsightParams): Promise<{
     };
     });
 
-    return { insights, provider: 'openai' };
+    return { insights: [...globalInsights, ...insights], provider: 'openai' };
   } catch {
     return {
-      insights: generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset),
+      insights: [...globalInsights, ...generateFallbackInsights(params.candles, moves, params.marketSymbol, indexOffset)],
       provider: 'fallback'
     };
   }

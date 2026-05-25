@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 contract ExecutionRegistry {
     struct StrategyRegistration {
@@ -17,17 +18,9 @@ contract ExecutionRegistry {
     event ExecutionTriggered(bytes32 strategyId, address user);
     event ExecutionRecorded(bytes32 strategyId, bool success);
 
-    error StrategyAlreadyRegistered(bytes32 strategyId);
-    error StrategyNotRegistered(bytes32 strategyId);
-    error InvalidUser();
-
     function registerStrategy(bytes32 strategyId, address user) external {
-        if (user == address(0)) {
-            revert InvalidUser();
-        }
-        if (registrations[strategyId].registered) {
-            revert StrategyAlreadyRegistered(strategyId);
-        }
+        require(user != address(0), "invalid user");
+        require(!registrations[strategyId].registered, "strategy already registered");
 
         registrations[strategyId] = StrategyRegistration({
             user: user,
@@ -43,12 +36,8 @@ contract ExecutionRegistry {
 
     function triggerExecution(bytes32 strategyId, address user) external {
         StrategyRegistration storage registration = registrations[strategyId];
-        if (!registration.registered) {
-            revert StrategyNotRegistered(strategyId);
-        }
-        if (registration.user != user || user == address(0)) {
-            revert InvalidUser();
-        }
+        require(registration.registered, "strategy not registered");
+        require(registration.user == user && user != address(0), "invalid user");
 
         registration.triggerCount += 1;
         registration.lastTriggeredAt = block.timestamp;
@@ -58,9 +47,7 @@ contract ExecutionRegistry {
 
     function recordResult(bytes32 strategyId, bool success) external {
         StrategyRegistration storage registration = registrations[strategyId];
-        if (!registration.registered) {
-            revert StrategyNotRegistered(strategyId);
-        }
+        require(registration.registered, "strategy not registered");
 
         registration.lastResult = success;
 

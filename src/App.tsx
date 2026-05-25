@@ -1,5 +1,10 @@
-import { TradingPage } from './components/TradingPage';
+import { ProductShell } from './components/ProductShell';
+import { ToastProvider } from './components/ToastProvider';
 
 export default function App() {
-  return <TradingPage />;
+  return (
+    <ToastProvider>
+      <ProductShell />
+    </ToastProvider>
+  );
 }

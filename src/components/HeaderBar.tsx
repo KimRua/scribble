@@ -37,16 +37,18 @@ export function HeaderBar(props: HeaderBarProps) {
         <div className="header-brand-mark">S</div>
         <div className="header-copy">
           <div className="header-copy-top">
-            <p className="eyebrow">Scribble</p>
+            <p className="eyebrow">Scribble Workspace</p>
             <span className="header-divider">·</span>
-            <span className="header-mode">Trading Workspace</span>
+            <span className="header-mode">지갑 기반 트레이딩</span>
           </div>
+          <strong className="header-title">{selectedSymbol}</strong>
         </div>
       </div>
+
       <div className="header-controls">
         <div className="header-fields">
           <label className="header-field">
-            <span>Market</span>
+            <span>마켓</span>
             <select value={selectedSymbol} onChange={(event) => onChangeSymbol(event.target.value)}>
               {markets.map((market) => (
                 <option key={market.symbol} value={market.symbol}>
@@ -55,8 +57,9 @@ export function HeaderBar(props: HeaderBarProps) {
               ))}
             </select>
           </label>
+
           <label className="header-field">
-            <span>Timeframe</span>
+            <span>타임프레임</span>
             <select value={timeframe} onChange={(event) => onChangeTimeframe(event.target.value)}>
               {timeframes.map((value) => (
                 <option key={value} value={value}>
@@ -68,32 +71,42 @@ export function HeaderBar(props: HeaderBarProps) {
         </div>
 
         <div className="header-meta">
-          {walletAddress ? <div className="header-wallet-chip">{walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}</div> : null}
+          {walletAddress ? (
+            <div className="header-wallet-chip">
+              <span>연결 지갑</span>
+              <strong>{walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}</strong>
+            </div>
+          ) : (
+            <div className="header-wallet-chip header-wallet-chip-muted">
+              <span>지갑 상태</span>
+              <strong>미연결</strong>
+            </div>
+          )}
         </div>
 
         <div className="header-wallet-actions">
           {walletAddress ? (
             <>
               <button className="secondary header-wallet-button" onClick={onSwitchWallet}>
-                Switch wallet
+                지갑 전환
               </button>
               <button className="ghost-button header-wallet-button" onClick={onDisconnectWallet}>
-                Disconnect
+                연결 해제
               </button>
             </>
           ) : (
             <button className="secondary header-wallet-button" onClick={onConnectWallet}>
-              Connect wallet
+              지갑 연결
             </button>
           )}
         </div>
 
         <div className="header-shortcuts">
           <button className="ghost-button" onClick={onToggleNotifications}>
-            Alerts
+            알림
           </button>
           <button className="ghost-button" onClick={onToggleStrategies}>
-            Strategies
+            전략
           </button>
         </div>
       </div>

@@ -1,4 +1,6 @@
 import type {
+  AdminSession,
+  AdminOverview,
   Annotation,
   AuditEvent,
   AutomationRule,
@@ -16,8 +18,9 @@ import { normalizeTxHash } from '../utils/txHash';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787';
 const OPBNB_EXPLORER_BASE_URL = import.meta.env.VITE_OPBNB_EXPLORER_BASE_URL ?? 'https://opbnb-testnet.bscscan.com';
-const CLIENT_SESSION_STORAGE_KEY = 'scribble.clientSessionId';
 const CLIENT_WALLET_STORAGE_KEY = 'scribble.clientWalletAddress';
+const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH ?? '/ops/scribble-admin-7f3a9x';
+const ADMIN_TOKEN_STORAGE_KEY = 'scribble.adminToken';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -29,47 +32,43 @@ interface ApiResponse<T> {
   };
 }
 
-async function request<T>(path: string, init?: RequestInit) {
-  const sessionId = getClientSessionId();
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  options: {
+    requiresWallet?: boolean;
+    admin?: boolean;
+    adminAuth?: boolean;
+  } = {}
+) {
   const walletAddress = getClientWalletAddress();
+  if (options.requiresWallet !== false && !walletAddress) {
+    throw new Error('Connect a wallet to continue.');
+  }
+
+  const adminToken = getAdminToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(walletAddress ? { 'X-Wallet-Address': walletAddress } : {}),
+      ...(options.admin ? { 'X-Admin-Path': getAdminPath() } : {}),
+      ...(options.adminAuth && adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
       ...(init?.headers ?? {})
     },
     ...init
   });
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    const fallbackText = await response.text();
+    throw new Error(fallbackText.trim() || 'API request failed');
+  }
 
   const payload = (await response.json()) as ApiResponse<T>;
   if (!response.ok || !payload.success) {
     throw new Error(payload.error?.message ?? 'API request failed');
   }
   return payload.data;
-}
-
-function getClientSessionId() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const stored = window.localStorage.getItem(CLIENT_SESSION_STORAGE_KEY);
-  if (stored && /^[A-Za-z0-9._:-]{1,64}$/.test(stored)) {
-    return stored;
-  }
-
-  const nextSessionId =
-    typeof window.crypto?.randomUUID === 'function'
-      ? `web-${window.crypto.randomUUID()}`
-      : `web-${Math.random().toString(36).slice(2, 12)}`;
-
-  if (/^[A-Za-z0-9._:-]{1,64}$/.test(nextSessionId)) {
-    window.localStorage.setItem(CLIENT_SESSION_STORAGE_KEY, nextSessionId);
-    return nextSessionId;
-  }
-
-  return null;
 }
 
 function getClientWalletAddress() {
@@ -98,8 +97,38 @@ export function setClientWalletAddress(address: string | null) {
   window.localStorage.removeItem(CLIENT_WALLET_STORAGE_KEY);
 }
 
+function getAdminToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
+export function setAdminToken(token: string | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (token) {
+    window.localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
+    return;
+  }
+
+  window.localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
 function normalizeAnnotation(annotation: Annotation) {
   return annotation;
+}
+
+export function getAdminPath() {
+  return ADMIN_PATH.startsWith('/') ? ADMIN_PATH : `/${ADMIN_PATH}`;
+}
+
+export function isAdminLocation(pathname?: string) {
+  const currentPath = pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
+  return currentPath === getAdminPath();
 }
 
 export async function getHealth() {
@@ -114,7 +143,70 @@ export async function getHealth() {
     delegatedAutomationConfigured?: boolean;
     delegatedExecutorAddress?: string | null;
     delegationVaultAddress?: string | null;
-  }>('/api/v1/health');
+  }>('/api/v1/health', undefined, { requiresWallet: false });
+}
+
+export async function loginAdmin(username: string, password: string) {
+  return request<{ token: string; session: AdminSession }>(
+    '/api/v1/admin/login',
+    {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    },
+    { requiresWallet: false, admin: true }
+  );
+}
+
+export async function getAdminSession() {
+  return request<AdminSession>('/api/v1/admin/session', undefined, {
+    requiresWallet: false,
+    admin: true,
+    adminAuth: true
+  });
+}
+
+export async function changeAdminPassword(currentPassword: string, nextPassword: string) {
+  return request<{ ok: boolean }>(
+    '/api/v1/admin/change-password',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        current_password: currentPassword,
+        next_password: nextPassword
+      })
+    },
+    {
+      requiresWallet: false,
+      admin: true,
+      adminAuth: true
+    }
+  );
+}
+
+export async function updateAdminSettings(updates: Record<string, string>) {
+  return request<{ updatedBy: string; settings: Array<{ key: string; value: string }> }>(
+    '/api/v1/admin/settings',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ updates })
+    },
+    {
+      requiresWallet: false,
+      admin: true,
+      adminAuth: true
+    }
+  );
+}
+
+export async function getAdminOverview(filters?: { startDate?: string; endDate?: string }) {
+  const query = new URLSearchParams();
+  if (filters?.startDate) query.set('start_date', filters.startDate);
+  if (filters?.endDate) query.set('end_date', filters.endDate);
+  return request<AdminOverview>(`/api/v1/admin/overview${query.toString() ? `?${query.toString()}` : ''}`, undefined, {
+    requiresWallet: false,
+    admin: true,
+    adminAuth: true
+  });
 }
 
 function normalizeDelegatedPolicy(policy: DelegatedAutomationPolicy) {
@@ -125,7 +217,7 @@ function normalizeDelegatedPolicy(policy: DelegatedAutomationPolicy) {
 }
 
 export async function getDelegationConfig() {
-  return request<DelegatedAutomationConfig>('/api/v1/delegations/config');
+  return request<DelegatedAutomationConfig>('/api/v1/delegations/config', undefined, { requiresWallet: false });
 }
 
 export async function getDelegationPolicies(filters?: { ownerAddress?: string; strategyId?: string }) {
@@ -196,12 +288,16 @@ export async function createDelegationPolicy(input: {
 }
 
 export async function getMarkets() {
-  const data = await request<{ markets: MarketOption[] }>('/api/v1/markets');
+  const data = await request<{ markets: MarketOption[] }>('/api/v1/markets', undefined, { requiresWallet: false });
   return data.markets;
 }
 
 export async function getCandles(symbol: string, timeframe: string) {
-  const data = await request<{ symbol: string; timeframe: string; source?: 'binance' | 'mock'; candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>; }>(`/api/v1/market-data/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`);
+  const data = await request<{ symbol: string; timeframe: string; source?: 'binance' | 'mock'; candles: Array<{ open_time: string; open: string; high: string; low: string; close: string; volume: string; }>; }>(
+    `/api/v1/market-data/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`,
+    undefined,
+    { requiresWallet: false }
+  );
   return data.candles.map<Candle>((candle) => ({
     openTime: candle.open_time,
     open: Number(candle.open),

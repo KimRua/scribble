@@ -261,6 +261,129 @@ export interface WalletSession {
   nativeSymbol?: string;
 }
 
+export interface AdminServiceStatus {
+  key: string;
+  label: string;
+  ready: boolean;
+  detail: string;
+}
+
+export interface AdminMetric {
+  label: string;
+  value: number;
+  tone: 'neutral' | 'good' | 'warn';
+  detail: string;
+}
+
+export interface AdminMarketInsight {
+  symbol: string;
+  strategies: number;
+  executed: number;
+  pending: number;
+  avgConfidence: number;
+}
+
+export interface AdminRecentStrategy {
+  annotationId: string;
+  strategyId: string;
+  walletAddress: string | null;
+  marketSymbol: string;
+  timeframe: string;
+  status: AnnotationStatus;
+  bias: Bias;
+  entryType: EntryType;
+  confidence: number;
+  updatedAt: string;
+  text: string;
+}
+
+export interface AdminRecentExecution {
+  executionId: string;
+  strategyId: string;
+  walletAddress: string | null;
+  marketSymbol: string;
+  status: OrderStatus;
+  actionType: Execution['actionType'];
+  settlementMode: Execution['settlementMode'];
+  externalVenue: Execution['externalVenue'] | null;
+  filledAt?: string;
+  createdAt: string;
+}
+
+export interface AdminRecentNotification {
+  notificationId: string;
+  walletAddress: string | null;
+  type: NotificationItem['type'];
+  title: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface AdminRecentAuditEvent {
+  eventId: string;
+  walletAddress: string | null;
+  eventType: AuditEvent['eventType'];
+  entityType: AuditEvent['entityType'];
+  entityId: string;
+  timestamp: string;
+}
+
+export interface AdminCodeItem {
+  key: string;
+  category: 'runtime' | 'integration' | 'deployment';
+  label: string;
+  value: string;
+  status: 'healthy' | 'warning' | 'inactive';
+  description: string;
+  editable: boolean;
+  requiresRestart?: boolean;
+  inputType?: 'text' | 'number' | 'boolean' | 'select';
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
+}
+
+export interface AdminPeriodOption {
+  key: string;
+  label: string;
+}
+
+export interface AdminSession {
+  username: string;
+}
+
+export interface AdminOverview {
+  generatedAt: string;
+  period: {
+    key: string;
+    label: string;
+    startedAt: string | null;
+    endedAt: string | null;
+  };
+  availablePeriods: AdminPeriodOption[];
+  headline: {
+    totalStrategies: number;
+    liveStrategies: number;
+    executedStrategies: number;
+    openExecutions: number;
+    unreadNotifications: number;
+    automationCoverageRatio: number;
+    delegatedPoliciesActive: number;
+    invalidStrategies: number;
+    grossExposureUsd: number;
+    avgConfidence: number;
+  };
+  services: AdminServiceStatus[];
+  metrics: AdminMetric[];
+  marketInsights: AdminMarketInsight[];
+  recentStrategies: AdminRecentStrategy[];
+  recentExecutions: AdminRecentExecution[];
+  recentNotifications: AdminRecentNotification[];
+  recentAuditEvents: AdminRecentAuditEvent[];
+  codeItems: AdminCodeItem[];
+}
+
 export interface UserSettings {
   riskLevel: RiskLevel;
   defaultPositionSize: number;
@@ -282,10 +405,13 @@ export interface NewsInsight {
   time: string;
   priceChangePercent: number;
   direction: 'spike' | 'crash';
+  category?: 'market' | 'global';
   headline: string;
   summary: string;
   sentiment: 'positive' | 'negative' | 'neutral';
   aiComment: string;
+  sourceName?: string | null;
+  url?: string | null;
 }
 
 export interface NewsInsightCacheEntry {

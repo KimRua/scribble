@@ -1,35 +1,26 @@
-import { Wallet, getAddress } from 'ethers';
+import { getAddress } from 'ethers';
 
-export interface DelegatedAutomationConfigStatus {
-  ready: boolean;
-  executorAddress: string | null;
-  vaultAddress: string | null;
-  missing: string[];
+import type { DelegatedAutomationConfig } from '../../src/types/domain';
+
+function normalizeOptionalAddress(value: string | undefined) {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  try {
+    return getAddress(value.trim());
+  } catch {
+    return null;
+  }
 }
 
-export function getDelegatedExecutorAddress() {
-  if (process.env.DELEGATED_EXECUTOR_ADDRESS) {
-    return getAddress(process.env.DELEGATED_EXECUTOR_ADDRESS);
-  }
-
-  if (process.env.EXECUTOR_PRIVATE_KEY) {
-    return new Wallet(process.env.EXECUTOR_PRIVATE_KEY).address;
-  }
-
-  return null;
-}
-
-export function getDelegatedAutomationConfigStatus(): DelegatedAutomationConfigStatus {
-  const executorAddress = getDelegatedExecutorAddress();
-  const vaultAddress = process.env.DELEGATION_VAULT_ADDRESS ? getAddress(process.env.DELEGATION_VAULT_ADDRESS) : null;
-
-  const missing: string[] = [];
-  if (!executorAddress) {
-    missing.push('DELEGATED_EXECUTOR_ADDRESS|EXECUTOR_PRIVATE_KEY');
-  }
-  if (!vaultAddress) {
-    missing.push('DELEGATION_VAULT_ADDRESS');
-  }
+export function getDelegatedAutomationConfigStatus(): DelegatedAutomationConfig {
+  const executorAddress = normalizeOptionalAddress(process.env.DELEGATED_EXECUTOR_ADDRESS);
+  const vaultAddress = normalizeOptionalAddress(process.env.DELEGATION_VAULT_ADDRESS);
+  const missing = [
+    ...(executorAddress ? [] : ['DELEGATED_EXECUTOR_ADDRESS']),
+    ...(vaultAddress ? [] : ['DELEGATION_VAULT_ADDRESS'])
+  ];
 
   return {
     ready: missing.length === 0,

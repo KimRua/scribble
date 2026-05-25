@@ -28,23 +28,23 @@ export function BottomActionBar({
   const conditionalOrderDisabled = !selectedAnnotation;
   const autoExecuteDisabled = Boolean(autoExecuteDisabledReason);
   const primaryReason = executeDisabledReason ?? conditionalDisabledReason ?? autoExecuteDisabledReason;
-  const note = primaryReason ?? (selectedAnnotation ? selectedAnnotation.text : 'Select an annotation');
+  const note = primaryReason ?? (selectedAnnotation ? selectedAnnotation.text : '차트에서 전략을 선택하세요');
 
   return (
     <div className="bottom-action-bar panel">
       <div className="bottom-action-copy">
-        <p className="eyebrow">Quick Actions</p>
+        <p className="eyebrow">빠른 실행</p>
         <strong>
           {selectedAnnotation
             ? `${selectedAnnotation.marketSymbol} · ${selectedAnnotation.strategy.bias.toUpperCase()} · ${formatPrice(selectedAnnotation.strategy.entryPrice)}`
-            : 'No strategy selected'}
+            : '선택된 전략 없음'}
         </strong>
         <p className="bottom-action-note">{note}</p>
-        {selectedAnnotation && !primaryReason ? <p className="bottom-action-hint">Execution venue: {executionVenueLabel}</p> : null}
+        {selectedAnnotation && !primaryReason ? <p className="bottom-action-hint">실행 경로: {executionVenueLabel}</p> : null}
       </div>
       <div className="action-buttons">
         <button disabled={executeDisabled} onClick={onExecute} title={executeDisabledReason ?? executionVenueLabel}>
-          Execute order
+          즉시 실행
         </button>
         <button
           disabled={conditionalOrderDisabled}
@@ -52,13 +52,13 @@ export function BottomActionBar({
           onClick={onConditionalOrder}
           title={conditionalDisabledReason ?? executionVenueLabel}
         >
-          Conditional order
+          조건부 주문
         </button>
         <button disabled={!selectedAnnotation} className="secondary" onClick={onSetAlert}>
-          Set alert
+          알림 설정
         </button>
         <button disabled={autoExecuteDisabled} className="accent" onClick={onAutoExecute} title={autoExecuteDisabledReason ?? executionVenueLabel}>
-          Auto-execute
+          자동 실행
         </button>
       </div>
     </div>

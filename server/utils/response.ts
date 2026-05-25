@@ -7,11 +7,19 @@ export function sendSuccess(response: Response, data: unknown) {
 }
 
 export function sendError(response: Response, code: string, message: string, details: unknown = {}) {
-  const statusCode = code === 'NOT_FOUND' ? 404 : code === 'VALIDATION_ERROR' ? 400 : 500;
-  const { requestId, sessionId } = getRequestContext(response);
+  const statusCode =
+    code === 'NOT_FOUND'
+      ? 404
+      : code === 'VALIDATION_ERROR'
+        ? 400
+        : code === 'AUTH_REQUIRED'
+          ? 401
+          : 500;
+  const { requestId, sessionId, walletAddress } = getRequestContext(response);
   logError('api_error_response', {
     requestId,
     ...(sessionId ? { sessionId } : {}),
+    ...(walletAddress ? { walletAddress } : {}),
     path: response.req.path,
     method: response.req.method,
     statusCode,

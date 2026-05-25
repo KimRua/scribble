@@ -52,7 +52,7 @@ import type {
   WalletSession
 } from '../types/domain';
 import { syncAnnotationWithStrategy } from '../utils/annotation';
-import { determineAnnotationStatus, validateStrategy } from '../utils/strategy';
+import { formatPrice, validateStrategy } from '../utils/strategy';
 import { AutomationModal } from './AutomationModal';
 import { BottomActionBar } from './BottomActionBar';
 import { ChartCanvas } from './ChartCanvas';
@@ -62,24 +62,7 @@ import { HeaderBar } from './HeaderBar';
 import { MyStrategiesPanel } from './MyStrategiesPanel';
 import { NotificationDrawer } from './NotificationDrawer';
 import { RightPanel } from './RightPanel';
-
-const WALLET_LOGIN_STORAGE_KEY = 'scribble.walletLoginEnabled';
-
-function readWalletLoginEnabled() {
-  if (typeof window === 'undefined') {
-    return true;
-  }
-
-  return window.localStorage.getItem(WALLET_LOGIN_STORAGE_KEY) !== 'false';
-}
-
-function writeWalletLoginEnabled(enabled: boolean) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(WALLET_LOGIN_STORAGE_KEY, enabled ? 'true' : 'false');
-}
+import { useToast } from './ToastProvider';
 
 function normalizeNativeAssetSymbol(symbol?: string | null) {
   if (!symbol) {
@@ -92,6 +75,11 @@ function normalizeNativeAssetSymbol(symbol?: string | null) {
   }
 
   return upper;
+}
+
+function formatSignedPercent(value: number, maximumFractionDigits = 2) {
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(maximumFractionDigits)}%`;
 }
 
 function getExecutionDisabledReason(
@@ -125,6 +113,7 @@ function getExecutionDisabledReason(
 }
 
 export function TradingPage() {
+  const { showToast } = useToast();
   const [selectedSymbol, setSelectedSymbol] = useState('BNBUSDT');
   const [timeframe, setTimeframe] = useState('1h');
   const [markets, setMarkets] = useState<MarketOption[]>(fallbackMarkets);
@@ -156,7 +145,6 @@ export function TradingPage() {
     vaultAddress: null,
     missing: []
   });
-  const [walletLoginEnabled, setWalletLoginEnabled] = useState(readWalletLoginEnabled);
   const [walletSession, setWalletSession] = useState<WalletSession | null>(null);
   const [nativeUsdtPrice, setNativeUsdtPrice] = useState<number | null>(null);
   const [aiRequestPending, setAiRequestPending] = useState(false);
@@ -165,9 +153,12 @@ export function TradingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successToast, setSuccessToast] = useState<string | null>(null);
   const [syncRevision, setSyncRevision] = useState(0);
   const [pendingSyncAnnotationId, setPendingSyncAnnotationId] = useState<string | null>(null);
+
+  const pushSuccessToast = (message: string) => {
+    showToast(message, { tone: 'success', durationMs: 1100 });
+  };
 
   const selectedAnnotation = useMemo(
     () => annotations.find((annotation) => annotation.annotationId === selectedAnnotationId) ?? null,
@@ -282,6 +273,17 @@ export function TradingPage() {
     }).format(walletSession.nativeBalance * nativeUsdtPrice);
   }, [walletSession?.nativeBalance, nativeUsdtPrice]);
 
+  const currentPriceLabel = useMemo(() => formatPrice(currentPrice), [currentPrice]);
+
+  const marketStrip = useMemo(() => {
+    const first = candles[0]?.open;
+    const last = candles[candles.length - 1]?.close;
+    const changePct = typeof first === 'number' && typeof last === 'number' && first !== 0 ? ((last - first) / first) * 100 : 0;
+    return {
+      changePct
+    };
+  }, [candles]);
+
   const validation: StrategyValidation | null = useMemo(() => {
     return selectedAnnotation ? validateStrategy(selectedAnnotation.strategy, currentPrice, defaultUserSettings) : null;
   }, [selectedAnnotation, currentPrice]);
@@ -377,7 +379,7 @@ export function TradingPage() {
     setErrorMessage(null);
 
     try {
-      if (!walletLoginEnabled) {
+      if (!walletSession?.address) {
         const [health, nextMarkets, nextCandles] = await Promise.all([
           getHealth(),
           getMarkets(),
@@ -405,9 +407,7 @@ export function TradingPage() {
         setExecutions([]);
         setLastExecution(null);
 
-        fetchNewsInsights({ marketSymbol: symbol, timeframe: nextTimeframe, threshold: 0.5 })
-          .then((r) => setNewsInsights(r.insights))
-          .catch(() => setNewsInsights([]));
+        setNewsInsights([]);
         return;
       }
 
@@ -455,36 +455,18 @@ export function TradingPage() {
   };
 
   useEffect(() => {
-    if (!successToast) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setSuccessToast(null);
-    }, 2400);
-
-    return () => window.clearTimeout(timer);
-  }, [successToast]);
-
-  useEffect(() => {
     setClientWalletAddress(walletSession?.address ?? null);
     void loadWorkspace();
-  }, [selectedSymbol, timeframe, walletLoginEnabled, walletSession?.address]);
+  }, [selectedSymbol, timeframe, walletSession?.address]);
 
   useEffect(() => {
-    if (!walletLoginEnabled) {
-      setWalletSession(null);
-      setClientWalletAddress(null);
-      return () => undefined;
-    }
-
     void getInjectedWalletSession().then(setWalletSession).catch(() => undefined);
     void getDelegationConfig().then(setDelegationConfig).catch(() => undefined);
 
     return subscribeInjectedWalletSession((session) => {
       setWalletSession(session);
     });
-  }, [walletLoginEnabled]);
+  }, []);
 
   useEffect(() => {
     if (!walletSession?.address) {
@@ -560,21 +542,24 @@ export function TradingPage() {
   }, [walletSession?.nativeSymbol, selectedSymbol, currentPrice, timeframe]);
 
   useEffect(() => {
+    if (!walletSession?.address) {
+      return () => undefined;
+    }
     const interval = window.setInterval(() => {
       void getNotifications().then(setNotifications).catch(() => undefined);
     }, 8000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [walletSession?.address]);
 
   useEffect(() => {
-    if (!selectedAnnotation) {
+    if (!selectedAnnotation || !walletSession?.address) {
       setAuditEvents([]);
       return;
     }
     void getAuditLogs({ annotationId: selectedAnnotation.annotationId })
       .then(setAuditEvents)
       .catch(() => undefined);
-  }, [selectedAnnotation?.annotationId]);
+  }, [selectedAnnotation?.annotationId, walletSession?.address]);
 
   useEffect(() => {
     if (!selectedAnnotation || pendingSyncAnnotationId !== selectedAnnotation.annotationId || syncRevision === 0) {
@@ -860,7 +845,7 @@ export function TradingPage() {
           status: 'Executed',
           updatedAt: nextExecution.filledAt ?? new Date().toISOString()
         }));
-        setSuccessToast(nextExecution.settlementMode === 'dex' ? 'DEX 현물 주문이 실행되었습니다.' : '주문이 기록되었습니다.');
+        pushSuccessToast(nextExecution.settlementMode === 'dex' ? 'DEX 현물 주문이 실행되었습니다.' : '주문이 기록되었습니다.');
         setNotifications(await getNotifications());
         setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
         setExecutionModalOpen(false);
@@ -887,7 +872,7 @@ export function TradingPage() {
       setLastExecution(nextExecution);
       setExecutions((prev) => [nextExecution, ...prev.filter((execution) => execution.executionId !== nextExecution.executionId)].slice(0, 12));
       upsertAnnotation(selectedAnnotation.annotationId, () => result.annotation);
-      setSuccessToast(
+      pushSuccessToast(
         deriveAnnotationStatusFromExecution(entryType, nextExecution.status) === 'Executed'
           ? '주문이 실행되었습니다.'
           : '대기 주문이 등록되었습니다.'
@@ -908,7 +893,7 @@ export function TradingPage() {
     try {
       await createAlert(selectedAnnotation.annotationId, selectedAnnotation.strategy.entryPrice);
       setNotifications(await getNotifications());
-      setSuccessToast('알림이 설정되었습니다.');
+      pushSuccessToast('알림이 설정되었습니다.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to register the alert.');
     }
@@ -950,7 +935,7 @@ export function TradingPage() {
       }
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: targetAnnotationId }));
-      setSuccessToast(cancellableExecution?.actionType === 'close' ? '청산 주문을 취소했습니다.' : '대기 주문을 취소했습니다.');
+      pushSuccessToast(cancellableExecution?.actionType === 'close' ? '청산 주문을 취소했습니다.' : '대기 주문을 취소했습니다.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to cancel the order.');
     }
@@ -981,7 +966,7 @@ export function TradingPage() {
         [result.execution, ...prev.filter((execution) => execution.executionId !== result.execution.executionId)].slice(0, 12)
       );
       setLastExecution(result.execution);
-      setSuccessToast(result.annotation.status === 'Closed' ? '포지션을 정리했습니다.' : '청산 주문을 등록했습니다.');
+      pushSuccessToast(result.annotation.status === 'Closed' ? '포지션을 정리했습니다.' : '청산 주문을 등록했습니다.');
       setNotifications(await getNotifications());
       setAuditEvents(await getAuditLogs({ annotationId: selectedAnnotation.annotationId }));
     } catch (error) {
@@ -1069,12 +1054,11 @@ export function TradingPage() {
     try {
       setErrorMessage(null);
       const session = await connectInjectedWallet();
-      writeWalletLoginEnabled(true);
-      setWalletLoginEnabled(true);
       setWalletSession(session);
+      if (session?.address) {
+        showToast('지갑이 연결되었습니다.', { tone: 'success', durationMs: 1000 });
+      }
     } catch (error) {
-      writeWalletLoginEnabled(false);
-      setWalletLoginEnabled(false);
       setWalletSession(null);
       setErrorMessage(error instanceof Error ? error.message : 'Unable to connect the wallet.');
     }
@@ -1084,13 +1068,9 @@ export function TradingPage() {
     try {
       setErrorMessage(null);
       const session = await switchInjectedWallet();
-      writeWalletLoginEnabled(true);
-      setWalletLoginEnabled(true);
       setWalletSession(session);
     } catch (error) {
       if (!walletSession?.address) {
-        writeWalletLoginEnabled(false);
-        setWalletLoginEnabled(false);
         setWalletSession(null);
       }
       setErrorMessage(error instanceof Error ? error.message : 'Unable to switch wallets.');
@@ -1098,8 +1078,6 @@ export function TradingPage() {
   };
 
   const handleDisconnectWallet = () => {
-    writeWalletLoginEnabled(false);
-    setWalletLoginEnabled(false);
     setClientWalletAddress(null);
     setWalletSession(null);
     setAnnotations([]);
@@ -1110,7 +1088,7 @@ export function TradingPage() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell workspace-hl">
       <HeaderBar
         selectedSymbol={selectedSymbol}
         timeframe={timeframe}
@@ -1125,21 +1103,10 @@ export function TradingPage() {
         onDisconnectWallet={handleDisconnectWallet}
       />
 
-      {successToast ? (
-        <div className="toast-banner toast-success" role="status" aria-live="polite">
-          <div className="toast-icon" aria-hidden>
-            ✓
-          </div>
-          <div className="toast-copy">
-            <strong>Alert ready</strong>
-            <span>{successToast}</span>
-          </div>
-        </div>
-      ) : null}
-      {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
-      {loading ? <div className="loading-banner panel">Loading workspace data...</div> : null}
-      {annotationCreationLocked ? (
-        <div className="info-banner annotation-auth-banner panel">
+	      {errorMessage ? <div className="error-banner panel">{errorMessage}</div> : null}
+	      {loading ? <div className="loading-banner panel">Loading workspace data...</div> : null}
+	      {annotationCreationLocked ? (
+	        <div className="info-banner annotation-auth-banner panel">
           <div>
             <strong>Wallet required for annotation tools</strong>
             <p>Annotations, AI drafts, and chart objects are stored against the connected wallet.</p>
@@ -1147,239 +1114,319 @@ export function TradingPage() {
           <button className="secondary" onClick={() => void handleConnectWallet()}>
             Connect wallet
           </button>
-        </div>
-      ) : null}
+	        </div>
+	      ) : null}
 
-      <section className="asset-allocation panel">
-        <div className="asset-allocation-main">
-          <div className="asset-allocation-copy">
-            <p className="eyebrow">Portfolio</p>
-            <h3>Strategy Portfolio</h3>
-            <p className="muted">
-              {portfolioSummary.liveStrategies} live strategies · {portfolioSummary.openPositions} open positions · {portfolioSummary.pendingOrders} pending orders
-            </p>
+      <section className="workspace-hl-strip panel" aria-label="마켓 요약">
+        <div className="workspace-hl-strip-grid">
+          <div className="workspace-hl-strip-item">
+            <span>마크 가격</span>
+            <strong>{currentPriceLabel}</strong>
+            <em className={marketStrip.changePct >= 0 ? 'tone-up' : 'tone-down'}>
+              {selectedSymbol} · {formatSignedPercent(marketStrip.changePct, 2)}
+            </em>
           </div>
-          <div className="allocation-donut-wrap" aria-hidden>
-            <svg viewBox="0 0 120 120" className="allocation-donut">
-              <circle className="allocation-donut-track" cx="60" cy="60" r="44" />
-              <circle
-                className="allocation-donut-segment"
-                cx="60"
-                cy="60"
-                r="44"
-                stroke="#0ecb81"
-                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.bullish} ${2 * Math.PI * 44}`}
-                strokeDashoffset="0"
-              />
-              <circle
-                className="allocation-donut-segment"
-                cx="60"
-                cy="60"
-                r="44"
-                stroke="#f6465d"
-                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.bearish} ${2 * Math.PI * 44}`}
-                strokeDashoffset={`${-2 * Math.PI * 44 * portfolioSummary.biasRatios.bullish}`}
-              />
-              <circle
-                className="allocation-donut-segment"
-                cx="60"
-                cy="60"
-                r="44"
-                stroke="#fcd535"
-                strokeDasharray={`${2 * Math.PI * 44 * portfolioSummary.biasRatios.neutral} ${2 * Math.PI * 44}`}
-                strokeDashoffset={`${-2 * Math.PI * 44 * (portfolioSummary.biasRatios.bullish + portfolioSummary.biasRatios.bearish)}`}
-              />
-            </svg>
-            <div className="allocation-donut-center">
-              <strong>{portfolioSummary.totalStrategies}</strong>
-              <span>strategies</span>
-            </div>
+          <div className="workspace-hl-strip-item">
+            <span>AI 주석</span>
+            <strong>{portfolioSummary.liveStrategies}</strong>
+            <em>live / {portfolioSummary.totalStrategies} total</em>
           </div>
-        </div>
-
-        <div className="allocation-breakdown allocation-breakdown-compact">
-          <div className="allocation-item">
-            <div>
-              <span>Total assets</span>
-              <strong>{formattedTotalAssetsUsd}</strong>
-            </div>
-          </div>
-          <div className="allocation-item">
-            <div>
-              <span>Wallet</span>
-              <strong>{formattedWalletBalance}</strong>
-              {formattedWalletUsd ? <span>{formattedWalletUsd}</span> : null}
-            </div>
-          </div>
-          <div className="allocation-item">
-            <div>
-              <span>Open exposure</span>
-              <strong>{formattedExposureUsd}</strong>
-              <span>{portfolioSummary.openPositions} open positions</span>
-            </div>
-          </div>
-          <div className="allocation-item allocation-item-pending">
-            <div>
-              <span>Pending</span>
-              <strong>{portfolioSummary.pendingOrders} orders</strong>
-              <span>Ready for trigger</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="allocation-legend allocation-legend-inline">
-          <div className="allocation-legend-row">
-            <div className="allocation-legend-copy">
-              <span className="allocation-legend-dot" style={{ background: '#0ecb81' }} />
-              <span>Bullish</span>
-            </div>
-            <strong>{portfolioSummary.biasCounts.bullish}</strong>
-          </div>
-          <div className="allocation-legend-row">
-            <div className="allocation-legend-copy">
-              <span className="allocation-legend-dot" style={{ background: '#f6465d' }} />
-              <span>Bearish</span>
-            </div>
-            <strong>{portfolioSummary.biasCounts.bearish}</strong>
-          </div>
-          <div className="allocation-legend-row">
-            <div className="allocation-legend-copy">
-              <span className="allocation-legend-dot" style={{ background: '#fcd535' }} />
-              <span>Neutral</span>
-            </div>
-            <strong>{portfolioSummary.biasCounts.neutral}</strong>
-          </div>
-          <div className="allocation-legend-row">
-            <div className="allocation-legend-copy">
-              <span className="allocation-legend-dot" style={{ background: '#7c8797' }} />
-              <span>Auto</span>
-            </div>
+          <div className="workspace-hl-strip-item">
+            <span>자동 실행</span>
             <strong>{portfolioSummary.autoEnabled}</strong>
+            <em>armed</em>
+          </div>
+          <div className="workspace-hl-strip-item">
+            <span>포지션</span>
+            <strong>{portfolioSummary.openPositions}</strong>
+            <em>open</em>
+          </div>
+          <div className="workspace-hl-strip-item">
+            <span>익스포저</span>
+            <strong>{formattedExposureUsd}</strong>
+            <em>open</em>
           </div>
         </div>
       </section>
 
-      <main className="workspace-grid">
-        <ChartCanvas
-          marketData={candles}
-          annotations={annotations}
-          selectedAnnotationId={selectedAnnotationId}
-          selectedNewsInsightId={selectedNewsInsightId}
-          timeframe={timeframe}
-          drawingMode={drawingMode}
-          currentPrice={currentPrice}
-          annotationCreationLocked={annotationCreationLocked}
-          onChangeMode={setDrawingMode}
-          onSelectAnnotation={handleSelectAnnotation}
-          onSelectNewsInsight={handleSelectNewsInsight}
-          onCreateAnnotation={handleCreateAnnotation}
-          onAddLineToSelected={handleAddLineToSelected}
-          onAddBoxToSelected={handleAddBoxToSelected}
-          onAddSegmentToSelected={handleAddSegmentToSelected}
-          aiRequestPending={aiRequestPending}
-          newsInsights={newsInsights}
-          onRequestAi={handleRequestAi}
-          onNudgePrice={(deltaRatio) => advancePrice(Number((currentPrice * (1 + deltaRatio)).toFixed(2)))}
-          onTriggerSelected={handleTriggerSelected}
-        />
+      <main className="workspace-hl-layout" aria-label="워크스페이스">
+        <section className="workspace-hl-chart" aria-label="차트 영역">
+          <div className="workspace-hl-market-grid">
+            <div className="workspace-hl-chart-main">
+              <ChartCanvas
+                marketData={candles}
+                annotations={annotations}
+                selectedAnnotationId={selectedAnnotationId}
+                selectedNewsInsightId={selectedNewsInsightId}
+                timeframe={timeframe}
+                drawingMode={drawingMode}
+                currentPrice={currentPrice}
+                annotationCreationLocked={annotationCreationLocked}
+                onChangeMode={setDrawingMode}
+                onSelectAnnotation={(annotationId) => {
+                  handleSelectAnnotation(annotationId);
+                }}
+                onSelectNewsInsight={(insightId) => {
+                  handleSelectNewsInsight(insightId);
+                }}
+                onCreateAnnotation={handleCreateAnnotation}
+                onAddLineToSelected={handleAddLineToSelected}
+                onAddBoxToSelected={handleAddBoxToSelected}
+                onAddSegmentToSelected={handleAddSegmentToSelected}
+                aiRequestPending={aiRequestPending}
+                newsInsights={newsInsights}
+                onRequestAi={handleRequestAi}
+                onNudgePrice={(deltaRatio) => advancePrice(Number((currentPrice * (1 + deltaRatio)).toFixed(2)))}
+                onTriggerSelected={handleTriggerSelected}
+              />
+            </div>
 
-        <RightPanel
-          selectedAnnotation={selectedAnnotation}
-          selectedNewsInsight={selectedNewsInsight}
-          validation={validation}
-          latestExecution={selectedLatestExecution}
-          manualExecutionReady={manualExecutionReady}
-          currentPrice={currentPrice}
-          parsingNotes={[
-            ...parsingNotes,
-            llmConfigured ? 'LLM connection ready' : 'No LLM key found: using fallback analysis',
-            manualExecutionReady
-              ? 'Connected wallet ready for direct Hyperliquid testnet trading'
-              : dexExecutionReady
-                ? 'Server DEX execution ready for BSC testnet spot swaps'
-                : 'Connect a wallet or enable server DEX execution to trade',
-            onchainConfigured ? 'opBNB proof recording ready' : 'opBNB proof not configured: recording local audit logs only',
-            saving ? 'Saving changes' : 'Auto-save enabled'
-          ]}
-          auditEvents={auditEvents}
-          onChangeText={handleTextChange}
-          onChangeStrategy={handleStrategyChange}
-          onActivate={activateSelectedAnnotation}
-          onRemoveDrawingObject={handleRemoveDrawingObject}
-          onCancelOrder={() => void handleCancelOrder()}
-          onClosePosition={(input) => void handleClosePosition(input)}
-        />
-      </main>
+            <div className="workspace-ai-rail" aria-label="AI 주석 레일">
+              <section className="workspace-ai-actions panel" aria-label="AI 주석">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">AI Layer</p>
+                    <h3>뉴스 + 주석</h3>
+                  </div>
+                  <span className="section-count">{newsInsights.length} signals</span>
+                </div>
 
-      <section className="status-strip">
-        <div className="status-card">
-          <p className="eyebrow">Lifecycle</p>
-          <strong>
-            {selectedAnnotation ? `${selectedAnnotation.status} → ${determineAnnotationStatus(selectedAnnotation, currentPrice)}` : 'No strategy'}
-          </strong>
-        </div>
-        <div className="status-card">
-          <p className="eyebrow">Execution</p>
-          <strong>
-            {lastExecution
-              ? `${lastExecution.actionType === 'close' ? 'Close' : 'Open'} · ${lastExecution.status} · ${lastExecution.executionChain}`
-              : 'No executions yet'}
-          </strong>
-          {lastExecution ? (
-            <div className="status-meta">
-              <span className={`pill ${lastExecution.settlementMode === 'perp_dex' || lastExecution.proofRecorded ? 'executed' : 'triggered'}`}>
-                {lastExecution.settlementMode === 'perp_dex'
-                  ? 'Hyperliquid live'
-                  : lastExecution.proofRecorded
-                    ? 'Proof recorded'
-                    : 'Proof pending'}
-              </span>
-              <div className="status-links">
-                {lastExecution.executionChainTxHash ? (
+                <div className="workspace-ai-actions-row">
+                  <button
+                    className={aiRequestPending ? 'ai-cta-button is-loading' : 'ai-cta-button'}
+                    disabled={annotationCreationLocked || aiRequestPending}
+                    onClick={() => void handleRequestAi()}
+                  >
+                    <span className="ai-cta-icon" aria-hidden>
+                      {aiRequestPending ? '◌' : '✦'}
+                    </span>
+                    <span className="ai-cta-label">{aiRequestPending ? '분석 중…' : 'AI 주석 생성'}</span>
+                    <span className="ai-cta-badge" aria-hidden>
+                      AI
+                    </span>
+                  </button>
+                  <button className="ghost-button" onClick={() => handleSelectNewsInsight(null)}>
+                    뉴스 닫기
+                  </button>
+                </div>
+
+                <div className="workspace-ai-feed" role="list">
+                  {newsInsights.length === 0 ? <p className="muted">아직 감지된 뉴스 이벤트가 없습니다.</p> : null}
+                  {newsInsights.slice(0, 8).map((insight) => (
+                    <button
+                      key={insight.insightId}
+                      type="button"
+                      className={selectedNewsInsightId === insight.insightId ? 'workspace-ai-feed-item is-active' : 'workspace-ai-feed-item'}
+                      onClick={() => handleSelectNewsInsight(insight.insightId)}
+                    >
+                      <span className={insight.direction === 'spike' ? 'workspace-ai-feed-pill tone-up' : 'workspace-ai-feed-pill tone-down'}>
+                        {insight.direction === 'spike' ? '▲' : '▼'} {Math.abs(insight.priceChangePercent).toFixed(1)}%
+                      </span>
+                      <div className="workspace-ai-feed-copy">
+                        <strong>{insight.headline}</strong>
+                        <span>{new Date(insight.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <RightPanel
+                selectedAnnotation={selectedAnnotation}
+                selectedNewsInsight={selectedNewsInsight}
+                validation={validation}
+                latestExecution={selectedLatestExecution}
+                manualExecutionReady={manualExecutionReady}
+                currentPrice={currentPrice}
+                parsingNotes={[
+                  ...parsingNotes,
+                  llmConfigured ? 'AI 분석 준비 완료' : 'LLM 키가 없어 대체 분석을 사용 중입니다.',
+                  manualExecutionReady
+                    ? '연결된 지갑으로 Hyperliquid testnet 직접 주문이 가능합니다.'
+                    : dexExecutionReady
+                      ? '서버 DEX 실행 경로가 준비되어 있습니다.'
+                      : '지갑 연결 또는 서버 DEX 설정이 필요합니다.',
+                  onchainConfigured ? 'opBNB 증빙 기록이 활성화되어 있습니다.' : '온체인 기록이 없어 로컬 감사 로그만 저장합니다.',
+                  saving ? '변경사항을 저장하고 있습니다.' : '자동 저장이 켜져 있습니다.'
+                ]}
+                auditEvents={auditEvents}
+                onChangeText={handleTextChange}
+                onChangeStrategy={handleStrategyChange}
+                onActivate={activateSelectedAnnotation}
+                onRemoveDrawingObject={handleRemoveDrawingObject}
+                onCancelOrder={() => void handleCancelOrder()}
+                onClosePosition={(input) => void handleClosePosition(input)}
+              />
+            </div>
+          </div>
+        </section>
+
+        <aside className="workspace-hl-right" aria-label="주문 패널">
+          <div className="workspace-hl-summary panel">
+            <div className="workspace-hl-summary-row">
+              <div>
+                <span>현재가</span>
+                <strong>{currentPriceLabel}</strong>
+              </div>
+              <div>
+                <span>총 자산</span>
+                <strong>{formattedTotalAssetsUsd}</strong>
+              </div>
+              <div>
+                <span>익스포저</span>
+                <strong>{formattedExposureUsd}</strong>
+              </div>
+            </div>
+            <p className="workspace-hl-summary-note">
+              {formattedWalletBalance}
+              {formattedWalletUsd ? ` · ${formattedWalletUsd}` : ''} · 포지션 {portfolioSummary.openPositions} · 대기 {portfolioSummary.pendingOrders}
+            </p>
+          </div>
+
+          <section className="workspace-hl-exec panel" aria-label="자동 거래 실행">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Auto Trade</p>
+                <h3>AI 추천 → 자동 실행</h3>
+              </div>
+              <span className="section-count">{executionVenueLabel}</span>
+            </div>
+
+            {!selectedAnnotation ? (
+              <div className="workspace-hl-exec-empty">
+                <strong>먼저 AI 주석을 생성하세요</strong>
+                <p className="muted">차트 위에 뉴스와 주석이 생성되고, 그 내용을 기반으로 추천 포지션이 만들어집니다.</p>
+              </div>
+            ) : (
+              <div className="workspace-hl-exec-grid" aria-label="추천 포지션">
+                <div>
+                  <span>방향</span>
+                  <strong>
+                    {selectedAnnotation.strategy.bias === 'bullish'
+                      ? '상승'
+                      : selectedAnnotation.strategy.bias === 'bearish'
+                        ? '하락'
+                        : '중립'}
+                  </strong>
+                </div>
+                <div>
+                  <span>진입</span>
+                  <strong>
+                    {selectedAnnotation.strategy.entryType === 'market'
+                      ? '시장가'
+                      : selectedAnnotation.strategy.entryType === 'limit'
+                        ? '지정가'
+                        : '조건부'}
+                  </strong>
+                </div>
+                <div>
+                  <span>진입가</span>
+                  <strong>{formatPrice(selectedAnnotation.strategy.entryPrice)}</strong>
+                </div>
+                <div>
+                  <span>손절</span>
+                  <strong>{formatPrice(selectedAnnotation.strategy.stopLossPrice)}</strong>
+                </div>
+                <div>
+                  <span>익절</span>
+                  <strong>
+                    {selectedAnnotation.strategy.takeProfitPrices.length > 0
+                      ? selectedAnnotation.strategy.takeProfitPrices.map((p) => formatPrice(p)).join(' · ')
+                      : '—'}
+                  </strong>
+                </div>
+                <div>
+                  <span>레버리지/비중</span>
+                  <strong>
+                    {selectedAnnotation.strategy.leverage}x · {Math.round(selectedAnnotation.strategy.positionSizeRatio * 100)}%
+                  </strong>
+                </div>
+              </div>
+            )}
+
+            {annotationCreationLocked ? (
+              <div className="workspace-hl-exec-gate">
+                <p className="muted">자동 실행은 연결 지갑 기준으로 동작합니다. 지갑을 연결하면 주석/실행이 활성화됩니다.</p>
+                <button className="secondary" onClick={() => void handleConnectWallet()}>
+                  지갑 연결
+                </button>
+              </div>
+            ) : null}
+
+            <BottomActionBar
+              selectedAnnotation={selectedAnnotation}
+              executeDisabledReason={executeDisabledReason}
+              conditionalDisabledReason={conditionalDisabledReason}
+              autoExecuteDisabledReason={autoExecuteDisabledReason}
+              executionVenueLabel={executionVenueLabel}
+              onExecute={() => void openExecutionFlow('execute')}
+              onConditionalOrder={() => void openExecutionFlow('conditional')}
+              onSetAlert={() => void handleSetAlert()}
+              onAutoExecute={() => setAutomationModalOpen(true)}
+            />
+          </section>
+
+          <section className="workspace-hl-system panel" aria-label="실행 컨텍스트">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">System</p>
+                <h3>실행 컨텍스트</h3>
+              </div>
+              <span className="section-count">{portfolioSummary.liveStrategies} active</span>
+            </div>
+            <div className="workspace-hl-system-grid">
+              <div>
+                <span>AI 분석</span>
+                <strong>{llmConfigured ? '준비됨' : '대체 분석 사용 중'}</strong>
+              </div>
+              <div>
+                <span>주문 실행</span>
+                <strong>
+                  {manualExecutionReady
+                    ? '연결 지갑으로 직접 실행'
+                    : dexExecutionReady
+                      ? '서버 DEX 실행 준비됨'
+                      : '실행 준비 필요'}
+                </strong>
+              </div>
+              <div>
+                <span>온체인 기록</span>
+                <strong>{onchainConfigured ? 'opBNB 기록 활성' : '로컬 감사 로그만 사용'}</strong>
+              </div>
+              <div>
+                <span>자동 저장</span>
+                <strong>{saving ? '저장 중' : '활성화됨'}</strong>
+              </div>
+              <div className="workspace-hl-system-span2">
+                <span>최근 실행</span>
+                <strong>
+                  {lastExecution ? `${lastExecution.actionType === 'close' ? '청산' : '진입'} · ${lastExecution.status}` : '실행 이력 없음'}
+                </strong>
+                {lastExecution?.executionChainTxHash ? (
                   <a href={getOpbnbTxUrl(lastExecution.executionChainTxHash)} target="_blank" rel="noreferrer">
-                    Execution tx
+                    실행 트랜잭션
                   </a>
-                ) : lastExecution.externalOrderId ? (
-                  <span className="muted">Venue order #{lastExecution.externalOrderId}</span>
-                ) : (
-                  <span className="muted">No onchain tx</span>
-                )}
-                {lastExecution.proofContractAddress ? (
+                ) : lastExecution?.proofContractAddress ? (
                   <a href={getOpbnbAddressUrl(lastExecution.proofContractAddress)} target="_blank" rel="noreferrer">
-                    Registry
+                    레지스트리
                   </a>
                 ) : null}
               </div>
-              {lastExecution.proofRegistryId ? <small className="muted">{lastExecution.proofRegistryId.slice(0, 12)}…</small> : null}
             </div>
-          ) : null}
-        </div>
-        <div className="status-card">
-          <p className="eyebrow">Automation</p>
-          <strong>
-            {selectedAnnotation ? automationByStrategyId[selectedAnnotation.strategy.strategyId]?.status ?? 'Disabled' : 'Disabled'}
-          </strong>
-        </div>
+          </section>
+        </aside>
+      </main>
+
+      <section className="workspace-hl-bottom panel" aria-label="포지션 및 이력">
+        <ExecutionHistoryPanel
+          annotations={annotations}
+          executions={executions}
+          onCancelOrder={(annotationId) => void handleCancelOrder(annotationId)}
+          onSelectAnnotation={(annotationId) => {
+            handleSelectAnnotation(annotationId);
+          }}
+        />
       </section>
-
-      <ExecutionHistoryPanel
-        annotations={annotations}
-        executions={executions}
-        onCancelOrder={(annotationId) => void handleCancelOrder(annotationId)}
-        onSelectAnnotation={handleSelectAnnotation}
-      />
-
-      <BottomActionBar
-        selectedAnnotation={selectedAnnotation}
-        executeDisabledReason={executeDisabledReason}
-        conditionalDisabledReason={conditionalDisabledReason}
-        autoExecuteDisabledReason={autoExecuteDisabledReason}
-        executionVenueLabel={executionVenueLabel}
-        onExecute={() => void openExecutionFlow('execute')}
-        onConditionalOrder={() => void openExecutionFlow('conditional')}
-        onSetAlert={() => void handleSetAlert()}
-        onAutoExecute={() => setAutomationModalOpen(true)}
-      />
 
       <ExecutionModal
         open={executionModalOpen}
